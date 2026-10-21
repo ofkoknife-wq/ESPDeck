@@ -1,0 +1,237 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" fill="none">
+  <title>ESPDeck — ESP32 Learning Lab</title>
+  <desc>An interactive ESP32 learning lab for beginners, featuring a development board, code editor, and hardware learning tools.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="70" y1="30" x2="1210" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14263A"/>
+      <stop offset="1" stop-color="#09121F"/>
+    </linearGradient>
+    <linearGradient id="board" x1="790" y1="155" x2="1110" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#245E5A"/>
+      <stop offset="1" stop-color="#153D42"/>
+    </linearGradient>
+    <linearGradient id="chip" x1="860" y1="235" x2="1025" y2="365" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#233749"/>
+      <stop offset="1" stop-color="#101C2A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="110" y1="0" x2="540" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#42F5BD"/>
+      <stop offset="1" stop-color="#45C9F0"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" stroke="#7894AC" stroke-opacity=".09" stroke-width="1"/>
+    </pattern>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="720" rx="28" fill="url(#bg)"/>
+  <rect width="1280" height="720" rx="28" fill="url(#grid)"/>
+
+  <circle cx="1010" cy="340" r="245" fill="#35DDB0" fill-opacity=".06"/>
+  <circle cx="1010" cy="340" r="185" stroke="#47DDB7" stroke-opacity=".12"/>
+  <circle cx="1010" cy="340" r="220" stroke="#47DDB7" stroke-opacity=".08" stroke-dasharray="5 12"/>
+
+  <!-- Decorative circuit traces -->
+  <g stroke="#3CE0B2" stroke-opacity=".24" stroke-width="2">
+    <path d="M680 112H760V145H825"/>
+    <path d="M690 570H755V610H840"/>
+    <path d="M1080 115V145H1140V190"/>
+    <path d="M1115 520H1170V570H1215"/>
+  </g>
+  <g fill="#42E6B8" fill-opacity=".65">
+    <circle cx="825" cy="145" r="3"/>
+    <circle cx="840" cy="610" r="3"/>
+    <circle cx="1140" cy="190" r="3"/>
+    <circle cx="1215" cy="570" r="3"/>
+  </g>
+
+  <!-- Left content -->
+  <g transform="translate(82 84)">
+    <!-- Logo mark -->
+    <rect width="58" height="58" rx="16" fill="#1D474A" stroke="#3BE5B5" stroke-opacity=".7"/>
+    <path d="M15 19H22V39H15M43 19H36V39H43" stroke="#43F1BE" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M26 24L22 29L26 34M32 24L36 29L32 34" stroke="#F1C66D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="76" y="25" fill="#F4F8FC" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="750" letter-spacing="-1">ESPDeck</text>
+    <text x="77" y="48" fill="#8CA8BB" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2.6">ESP32 LEARNING LAB</text>
+
+    <!-- Headline -->
+    <text x="0" y="175" fill="#F5F8FC" font-family="Inter, Arial, sans-serif" font-size="59" font-weight="780" letter-spacing="-2.4">Learn ESP32.</text>
+    <text x="0" y="242" fill="url(#accent)" font-family="Inter, Arial, sans-serif" font-size="59" font-weight="780" letter-spacing="-2.4">Build for real.</text>
+
+    <text x="2" y="294" fill="#B4C4D3" font-family="Inter, Arial, sans-serif" font-size="20">
+      <tspan x="2" dy="0">Explore hardware, understand circuits,</tspan>
+      <tspan x="2" dy="31">and bring your first projects to life.</tspan>
+    </text>
+
+    <!-- Feature pills -->
+    <g transform="translate(0 375)">
+      <rect width="145" height="42" rx="21" fill="#1B3043" stroke="#365267"/>
+      <circle cx="19" cy="21" r="4" fill="#43E6B6"/>
+      <text x="32" y="26" fill="#E2EDF5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">3D Hardware</text>
+
+      <rect x="157" width="134" height="42" rx="21" fill="#1B3043" stroke="#365267"/>
+      <circle cx="176" cy="21" r="4" fill="#F1C66D"/>
+      <text x="189" y="26" fill="#E2EDF5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Code &amp; Run</text>
+
+      <rect x="303" width="142" height="42" rx="21" fill="#1B3043" stroke="#365267"/>
+      <circle cx="322" cy="21" r="4" fill="#6BC9F4"/>
+      <text x="335" y="26" fill="#E2EDF5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Learn by Doing</text>
+    </g>
+
+    <!-- Bottom note -->
+    <path d="M0 475H438" stroke="#52697D" stroke-opacity=".55"/>
+    <circle cx="7" cy="505" r="3" fill="#40E6B6"/>
+    <text x="20" y="510" fill="#8FA8BB" font-family="Inter, Arial, sans-serif" font-size="14" letter-spacing=".3">No account required</text>
+    <circle cx="205" cy="505" r="3" fill="#40E6B6"/>
+    <text x="218" y="510" fill="#8FA8BB" font-family="Inter, Arial, sans-serif" font-size="14" letter-spacing=".3">Progress saved locally</text>
+  </g>
+
+  <!-- Right: floating interface panel -->
+  <g>
+    <rect x="712" y="95" width="494" height="532" rx="24" fill="#06101A" fill-opacity=".45" stroke="#8BA7BC" stroke-opacity=".19"/>
+    <rect x="727" y="110" width="464" height="502" rx="17" fill="#122233" stroke="#30495B"/>
+
+    <!-- Window header -->
+    <path d="M727 127Q727 110 744 110H1174Q1191 110 1191 127V158H727V127Z" fill="#1A3043"/>
+    <circle cx="749" cy="134" r="4" fill="#F07878"/>
+    <circle cx="765" cy="134" r="4" fill="#EFC36B"/>
+    <circle cx="781" cy="134" r="4" fill="#4ADDB0"/>
+    <text x="959" y="139" text-anchor="middle" fill="#AFC3D2" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600">ESP32 WORKBENCH</text>
+
+    <!-- Left mini lesson list -->
+    <rect x="742" y="174" width="112" height="422" rx="10" fill="#0E1B29"/>
+    <text x="754" y="195" fill="#7792A6" font-family="Inter, Arial, sans-serif" font-size="9" font-weight="700" letter-spacing="1.2">LESSONS</text>
+
+    <rect x="749" y="207" width="98" height="43" rx="7" fill="#1C4849" stroke="#3EE5B5" stroke-opacity=".55"/>
+    <circle cx="761" cy="221" r="3" fill="#48E8B8"/>
+    <text x="770" y="224" fill="#E4F8F1" font-family="Inter, Arial, sans-serif" font-size="9" font-weight="700">Board Basics</text>
+    <text x="760" y="238" fill="#8CC9BA" font-family="Inter, Arial, sans-serif" font-size="8">Getting started</text>
+
+    <g fill="#A7BBCB" font-family="Inter, Arial, sans-serif" font-size="9">
+      <circle cx="761" cy="269" r="3" fill="#526F84"/>
+      <text x="770" y="272">Digital Output</text>
+      <circle cx="761" cy="301" r="3" fill="#526F84"/>
+      <text x="770" y="304">RGB LED</text>
+      <circle cx="761" cy="333" r="3" fill="#526F84"/>
+      <text x="770" y="336">Servo Motor</text>
+      <circle cx="761" cy="365" r="3" fill="#526F84"/>
+      <text x="770" y="368">OLED Display</text>
+      <circle cx="761" cy="397" r="3" fill="#526F84"/>
+      <text x="770" y="400">Wi-Fi Basics</text>
+      <circle cx="761" cy="429" r="3" fill="#526F84"/>
+      <text x="770" y="432">Sensors</text>
+    </g>
+
+    <path d="M754 458H842" stroke="#30495B"/>
+    <text x="754" y="477" fill="#7792A6" font-family="Inter, Arial, sans-serif" font-size="8" font-weight="700" letter-spacing="1">YOUR PROGRESS</text>
+    <rect x="754" y="489" width="80" height="4" rx="2" fill="#294253"/>
+    <rect x="754" y="489" width="49" height="4" rx="2" fill="#42E4B5"/>
+    <text x="754" y="509" fill="#A7BBCB" font-family="Inter, Arial, sans-serif" font-size="9">3 of 8 explored</text>
+
+    <!-- Main canvas -->
+    <rect x="865" y="174" width="311" height="245" rx="10" fill="#0B1723" stroke="#2D4859"/>
+    <text x="880" y="194" fill="#91AFC1" font-family="Inter, Arial, sans-serif" font-size="10" font-weight="600">DEVELOPMENT BOARD</text>
+
+    <!-- Board pins -->
+    <g fill="#D5B66E">
+      {Array.from({length: 10}, (_, i) => `<rect x="${892 + i*22}" y="214" width="10" height="7" rx="1.5"/>`).join("")}
+      {Array.from({length: 10}, (_, i) => `<rect x="${892 + i*22}" y="365" width="10" height="7" rx="1.5"/>`).join("")}
+    </g>
+
+    <!-- Board body -->
+    <rect x="884" y="221" width="273" height="144" rx="9" fill="url(#board)" stroke="#4C9B8C" stroke-width="1.2"/>
+
+    <!-- USB connector -->
+    <rect x="985" y="221" width="68" height="19" rx="3" fill="#C6D0D6" stroke="#F0F4F6"/>
+    <rect x="995" y="225" width="48" height="9" rx="2" fill="#657987"/>
+    <path d="M1003 229H1035" stroke="#D6E1E6" stroke-width="1.5"/>
+
+    <!-- Antenna -->
+    <rect x="901" y="236" width="39" height="38" rx="3" fill="#B8D6CB" fill-opacity=".13" stroke="#7EB9A8" stroke-opacity=".65"/>
+    <path d="M907 242H934M907 248H934M907 254H934M907 260H934M907 266H934" stroke="#B4E3D5" stroke-opacity=".8" stroke-width="2"/>
+
+    <!-- Main ESP module -->
+    <rect x="950" y="248" width="150" height="81" rx="7" fill="url(#chip)" stroke="#8CA5B7" stroke-opacity=".8"/>
+    <g stroke="#A8BAC5" stroke-width="2">
+      <path d="M959 242V248M971 242V248M983 242V248M995 242V248M1007 242V248M1019 242V248M1031 242V248M1043 242V248M1055 242V248M1067 242V248M1079 242V248M1091 242V248"/>
+      <path d="M959 329V335M971 329V335M983 329V335M995 329V335M1007 329V335M1019 329V335M1031 329V335M1043 329V335M1055 329V335M1067 329V335M1079 329V335M1091 329V335"/>
+    </g>
+    <text x="1025" y="278" text-anchor="middle" fill="#E9F1F5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="750">ESP32</text>
+    <text x="1025" y="297" text-anchor="middle" fill="#8EA8BA" font-family="Inter, Arial, sans-serif" font-size="9" letter-spacing="1.6">WIRELESS MCU</text>
+    <path d="M1000 307H1050" stroke="#3DE6B5" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Onboard components -->
+    <rect x="903" y="285" width="31" height="22" rx="3" fill="#152B35" stroke="#6E9F91"/>
+    <text x="918.5" y="299" text-anchor="middle" fill="#B4DCCF" font-family="Inter, Arial, sans-serif" font-size="7" font-weight="700">EN</text>
+    <rect x="903" y="312" width="31" height="22" rx="3" fill="#152B35" stroke="#6E9F91"/>
+    <text x="918.5" y="326" text-anchor="middle" fill="#B4DCCF" font-family="Inter, Arial, sans-serif" font-size="7" font-weight="700">BOOT</text>
+
+    <rect x="1112" y="283" width="27" height="18" rx="4" fill="#142A34" stroke="#4F8D7F"/>
+    <circle cx="1125" cy="292" r="4" fill="#42F2B9"/>
+    <circle cx="1125" cy="292" r="11" fill="#42F2B9" fill-opacity=".25" filter="url(#glow)"/>
+    <text x="1125" y="316" text-anchor="middle" fill="#B9D9D0" font-family="Inter, Arial, sans-serif" font-size="7">LED</text>
+
+    <!-- Connection traces -->
+    <g stroke="#7BBBA7" stroke-width="1.3" stroke-opacity=".75">
+      <path d="M941 251H950M941 262H950M941 273H950"/>
+      <path d="M1100 260H1110V251H1124"/>
+      <path d="M1100 315H1110V326H1124"/>
+    </g>
+
+    <!-- Schematic / code cards -->
+    <rect x="865" y="432" width="148" height="164" rx="10" fill="#0B1723" stroke="#2D4859"/>
+    <text x="879" y="452" fill="#91AFC1" font-family="Inter, Arial, sans-serif" font-size="10" font-weight="600">CODE EDITOR</text>
+    <circle cx="989" cy="449" r="3" fill="#46DAB0"/>
+
+    <g font-family="monospace" font-size="10">
+      <text x="879" y="478" fill="#6F879A">01</text>
+      <text x="898" y="478" fill="#C792EA">void</text>
+      <text x="924" y="478" fill="#80C7F2"> setup()</text>
+      <text x="879" y="495" fill="#6F879A">02</text>
+      <text x="898" y="495" fill="#DCE8EF">{</text>
+      <text x="879" y="512" fill="#6F879A">03</text>
+      <text x="898" y="512" fill="#80C7F2"> pinMode</text>
+      <text x="944" y="512" fill="#DCE8EF">(LED,</text>
+      <text x="898" y="529" fill="#F1C66D">OUTPUT</text>
+      <text x="944" y="529" fill="#DCE8EF">);</text>
+      <text x="879" y="546" fill="#6F879A">04</text>
+      <text x="898" y="546" fill="#DCE8EF">}</text>
+    </g>
+    <rect x="879" y="563" width="120" height="22" rx="6" fill="#1A4845" stroke="#3DE5B4" stroke-opacity=".5"/>
+    <path d="M890 574L894 578L901 570" stroke="#4AE9B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="908" y="578" fill="#B5F5E2" font-family="Inter, Arial, sans-serif" font-size="9" font-weight="700">Ready to run</text>
+
+    <rect x="1024" y="432" width="152" height="164" rx="10" fill="#0B1723" stroke="#2D4859"/>
+    <text x="1038" y="452" fill="#91AFC1" font-family="Inter, Arial, sans-serif" font-size="10" font-weight="600">LIVE OUTPUT</text>
+
+    <!-- LED visualization -->
+    <rect x="1038" y="464" width="124" height="51" rx="7" fill="#122A35" stroke="#2A4D5B"/>
+    <circle cx="1058" cy="489" r="8" fill="#42F0B7"/>
+    <circle cx="1058" cy="489" r="17" fill="#42F0B7" fill-opacity=".13"/>
+    <text x="1076" y="486" fill="#D8E8EE" font-family="Inter, Arial, sans-serif" font-size="9" font-weight="600">LED STATUS</text>
+    <text x="1076" y="501" fill="#49E4B6" font-family="Inter, Arial, sans-serif" font-size="9">ON</text>
+
+    <!-- Signal chart -->
+    <text x="1038" y="535" fill="#8BA6B9" font-family="Inter, Arial, sans-serif" font-size="9">SIGNAL MONITOR</text>
+    <path d="M1038 568H1162" stroke="#314B5B" stroke-width="1"/>
+    <path d="M1038 556H1162M1038 544H1162" stroke="#314B5B" stroke-width="1" stroke-opacity=".6"/>
+    <path d="M1038 567L1050 567L1050 546L1064 546L1064 567L1078 567L1078 546L1092 546L1092 567L1106 567L1106 546L1120 546L1120 567L1134 567L1134 546L1148 546L1148 567L1162 567" stroke="#42E6B5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <text x="1038" y="585" fill="#6E8B9F" font-family="Inter, Arial, sans-serif" font-size="8">0 ms</text>
+    <text x="1162" y="585" text-anchor="end" fill="#6E8B9F" font-family="Inter, Arial, sans-serif" font-size="8">500 ms</text>
+  </g>
+
+  <!-- Small floating status tag -->
+  <g transform="translate(1040 82)">
+    <rect width="151" height="35" rx="17.5" fill="#163B3B" stroke="#3FE6B6" stroke-opacity=".6"/>
+    <circle cx="17" cy="17.5" r="4" fill="#43E8B7"/>
+    <text x="30" y="22" fill="#C8F6E8" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="700">INTERACTIVE LAB</text>
+  </g>
+
+  <!-- Bottom-right corner label -->
+  <text x="1190" y="675" text-anchor="end" fill="#60798D" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="600" letter-spacing="1.8">LEARN · BUILD · EXPLORE</text>
+</svg>
