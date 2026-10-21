@@ -21,12 +21,14 @@ const BOX = { mcu: [108, 64] as const, default: [128, 56] as const }
 export function SchematicView({
   graph,
   fault,
+  viewBox = '0 0 720 420',
   onSelectNet,
   onSelectPart,
 }: {
   graph: CircuitGraph
   fault?: Fault
   solved: string[]
+  viewBox?: string
   onSelectNet: (id: string) => void
   onSelectPart: (id: string) => void
 }) {
@@ -34,7 +36,7 @@ export function SchematicView({
   const sizeOf = (kind: string) => (kind === 'mcu' ? BOX.mcu : BOX.default)
 
   return (
-    <svg viewBox="0 0 720 420" className="h-full w-full" role="img" aria-label="原理图">
+    <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" className="h-full w-full" role="img" aria-label="原理图">
       <defs>
         <pattern id="sch-grid" width="20" height="20" patternUnits="userSpaceOnUse">
           <path d="M20 0H0V20" fill="none" stroke="#d8cbb8" strokeWidth="0.8" />

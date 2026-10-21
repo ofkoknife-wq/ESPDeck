@@ -60,16 +60,6 @@ export function lessonMastery(id: string, record: LessonRecord | undefined, unlo
   return 'in-progress'
 }
 
-export function isLessonUnlocked(id: string, records: Record<string, LessonRecord>) {
-  const playable = completeLessonIds()
-  const index = playable.indexOf(id)
-  if (index < 0) return true
-  if (index === 0) return true
-  const previousId = playable[index - 1]
-  const previous = lessonMastery(previousId, records[previousId], true)
-  return previous === 'passed' || previous === 'mastered'
-}
-
 export function trackProgress(trackId: CurriculumTrack['id'], records: Record<string, LessonRecord>, basicDone: number, basicTotal: number) {
   if (trackId === 'foundations') {
     return { done: basicDone, total: basicTotal }

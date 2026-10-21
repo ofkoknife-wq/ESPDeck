@@ -5,18 +5,20 @@ import type { CircuitGraph, Fault } from '@/lib/advanced-types'
 export function PcbView({
   graph,
   fault,
+  viewBox = '0 0 720 420',
   onSelectNet,
   onSelectPart,
 }: {
   graph: CircuitGraph
   fault?: Fault
+  viewBox?: string
   onSelectNet: (id: string) => void
   onSelectPart: (id: string) => void
 }) {
   const part = (id: string) => graph.parts.find((item) => item.id === id)
 
   return (
-    <svg viewBox="0 0 720 420" className="h-full w-full" role="img" aria-label="PCB 俯视图">
+    <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" className="h-full w-full" role="img" aria-label="PCB 俯视图">
       <defs>
         <pattern id="pcb-grid" width="12" height="12" patternUnits="userSpaceOnUse">
           <circle cx="1" cy="1" r="0.7" fill="#1f5a3c" />

@@ -1,12 +1,11 @@
 'use client'
 
-import { ChevronRight, Lock } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { ADVANCED_PACKAGES, ADVANCED_STAGES, getAdvancedLesson } from '@/lib/advanced-lessons'
 import type { LessonRecord } from '@/lib/advanced-types'
-import { TRACKS, isLessonUnlocked, lessonMastery, trackProgress } from '@/lib/curriculum'
+import { TRACKS, lessonMastery, trackProgress } from '@/lib/curriculum'
 import { LESSONS } from '@/lib/lessons'
-import { cn } from '@/lib/utils'
 import { AdvancedLessonLab } from './advanced-lesson-lab'
 
 export function AdvancedWorkbench({
@@ -113,17 +112,12 @@ export function AdvancedWorkbench({
                 <ul className="mt-3 space-y-2">
                   {stage.lessonIds.map((id) => {
                     const pack = ADVANCED_PACKAGES.find((item) => item.id === id)!
-                    const unlocked = isLessonUnlocked(id, records)
-                    const mastery = lessonMastery(id, records[id], unlocked)
+                    const mastery = lessonMastery(id, records[id], true)
                     return (
                       <li key={id}>
                         <button
-                          onClick={() => unlocked && setLessonId(id)}
-                          disabled={!unlocked}
-                          className={cn(
-                            'flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm',
-                            unlocked ? 'hover:bg-secondary' : 'opacity-60',
-                          )}
+                          onClick={() => setLessonId(id)}
+                          className="flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm hover:bg-secondary"
                         >
                           <span>
                             <span className="font-bold">{pack.title}</span>
@@ -131,7 +125,7 @@ export function AdvancedWorkbench({
                               {pack.type} · {pack.complete ? '完整工位' : '建设中'} · {masteryLabel(mastery)}
                             </span>
                           </span>
-                          {unlocked ? <ChevronRight className="size-4" /> : <Lock className="size-4" />}
+                          <ChevronRight className="size-4" />
                         </button>
                       </li>
                     )
@@ -149,6 +143,5 @@ export function AdvancedWorkbench({
 function masteryLabel(mastery: string) {
   if (mastery === 'mastered') return '已掌握'
   if (mastery === 'passed') return '已通过'
-  if (mastery === 'locked') return '未解锁'
   return '进行中'
 }

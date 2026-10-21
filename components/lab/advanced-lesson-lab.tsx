@@ -187,11 +187,26 @@ export function AdvancedLessonLab({
           <section className="relative min-h-80 flex-1 overflow-hidden rounded-[1.25rem] border bg-card">
             {view !== 'breadboard' ? (
               <PanZoomStage key={view} hint="拖动平移 · 滚轮缩放 · 双击复位">
-                {view === 'schematic' ? (
-                  <SchematicView graph={lesson.graph} fault={fault} solved={solved} onSelectNet={(id) => tryFix('net', id)} onSelectPart={(id) => tryFix('part', id)} />
-                ) : (
-                  <PcbView graph={lesson.graph} fault={fault} onSelectNet={(id) => tryFix('net', id)} onSelectPart={(id) => tryFix('part', id)} />
-                )}
+                {(viewBox) =>
+                  view === 'schematic' ? (
+                    <SchematicView
+                      graph={lesson.graph}
+                      fault={fault}
+                      solved={solved}
+                      viewBox={viewBox}
+                      onSelectNet={(id) => tryFix('net', id)}
+                      onSelectPart={(id) => tryFix('part', id)}
+                    />
+                  ) : (
+                    <PcbView
+                      graph={lesson.graph}
+                      fault={fault}
+                      viewBox={viewBox}
+                      onSelectNet={(id) => tryFix('net', id)}
+                      onSelectPart={(id) => tryFix('part', id)}
+                    />
+                  )
+                }
               </PanZoomStage>
             ) : (
               <>
