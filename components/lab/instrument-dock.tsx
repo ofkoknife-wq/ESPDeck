@@ -1,6 +1,6 @@
 'use client'
 
-import { Gauge, Radio, Waves } from 'lucide-react'
+import { Gauge, Radio, Server, Waves } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { AdvancedOutputs } from '@/lib/use-advanced-simulation'
 import type { LogLine, Phase } from '@/lib/use-simulation'
@@ -10,6 +10,7 @@ const TABS = [
   { id: 'scope', label: '示波器', icon: Waves },
   { id: 'serial', label: '串口监视器', icon: Radio },
   { id: 'power', label: '功耗计', icon: Gauge },
+  { id: 'network', label: '网络包', icon: Server },
 ] as const
 
 export function InstrumentDock({
@@ -74,14 +75,44 @@ export function InstrumentDock({
           <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
             <div>
               <p className="text-xs font-bold text-muted-foreground">平均电流</p>
-              <p className="text-3xl font-black">{outputs.currentMa.toFixed(0)} mA</p>
+              <p className="text-3xl font-black">
+                {outputs.currentMa < 1 ? `${(outputs.currentMa * 1000).toFixed(0)} μA` : `${outputs.currentMa.toFixed(1)} mA`}
+              </p>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
-                <div className="h-full bg-accent" style={{ width: `${Math.min(100, outputs.currentMa)}%` }} />
+                <div className="h-full bg-accent" style={{ width: `${Math.min(100, outputs.currentMa < 1 ? outputs.currentMa * 400 : outputs.currentMa)}%` }} />
               </div>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              空载约 40 mA。I2C 扫描、日志洪水和 5V 误接都会把电流抬高。深度睡眠课将把量程放到 μA。
+              空载约 40 mA。Wi-Fi 发射会到 150 mA+。深度睡眠应落到 μA，开发板 LDO 会让真机偏高。
             </p>
+          </div>
+        )}
+        {tab === 'network' && (
+          <div className="overflow-auto rounded-xl border text-xs">
+            {outputs.packets.length === 0 ? (
+              <p className="p-3 text-muted-foreground">运行并补全联网代码后，这里会出现请求/发布。</p>
+            ) : (
+              <table className="w-full text-left">
+                <thead className="bg-secondary">
+                  <tr>
+                    <th className="p-2">协议</th>
+                    <th className="p-2">方向</th>
+                    <th className="p-2">数据</th>
+                    <th className="p-2">状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {outputs.packets.map((row) => (
+                    <tr key={row.proto + row.data} className="border-t">
+                      <td className="p-2 font-mono">{row.proto}</td>
+                      <td className="p-2">{row.dir}</td>
+                      <td className="p-2">{row.data}</td>
+                      <td className="p-2">{row.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>

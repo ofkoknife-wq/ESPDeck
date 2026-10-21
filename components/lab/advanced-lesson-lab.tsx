@@ -13,8 +13,10 @@ import { CodeChallengePanel } from './code-challenge'
 import { HardwareKitPanel } from './hardware-kit'
 import { InstrumentDock } from './instrument-dock'
 import { QuizPanel } from './quiz-panel'
-import { SchematicView } from './schematic-view'
+import { PanZoomStage } from './pan-zoom-stage'
 import { PcbView } from './pcb-view'
+import { SchematicView } from './schematic-view'
+import { StageToolbar } from './stage-toolbar'
 import { LESSON_SCENES } from './three/circuits'
 import type { ViewApi } from './three/scene'
 
@@ -54,6 +56,7 @@ export function AdvancedLessonLab({
   const [injected, setInjected] = useState<string | null>(null)
   const [solved, setSolved] = useState<string[]>(record.faultsSolved)
   const [guess, setGuess] = useState('')
+  const [showLabels, setShowLabels] = useState(true)
   const viewRef = useRef<ViewApi | null>(null)
   const calloutsRef = useRef<(HTMLDivElement | null)[]>([])
   const sim = useAdvancedSimulation(lesson, code, injected, solved)
@@ -182,13 +185,15 @@ export function AdvancedLessonLab({
       <div className="grid min-h-0 flex-1 gap-3 overflow-auto px-4 pb-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
         <div className="flex min-h-96 flex-col gap-3">
           <section className="relative min-h-80 flex-1 overflow-hidden rounded-[1.25rem] border bg-card">
-            {view === 'schematic' && (
-              <SchematicView graph={lesson.graph} fault={fault} solved={solved} onSelectNet={(id) => tryFix('net', id)} onSelectPart={(id) => tryFix('part', id)} />
-            )}
-            {view === 'pcb' && (
-              <PcbView graph={lesson.graph} fault={fault} onSelectNet={(id) => tryFix('net', id)} onSelectPart={(id) => tryFix('part', id)} />
-            )}
-            {view === 'breadboard' && (
+            {view !== 'breadboard' ? (
+              <PanZoomStage key={view} hint="拖动平移 · 滚轮缩放 · 双击复位">
+                {view === 'schematic' ? (
+                  <SchematicView graph={lesson.graph} fault={fault} solved={solved} onSelectNet={(id) => tryFix('net', id)} onSelectPart={(id) => tryFix('part', id)} />
+                ) : (
+                  <PcbView graph={lesson.graph} fault={fault} onSelectNet={(id) => tryFix('net', id)} onSelectPart={(id) => tryFix('part', id)} />
+                )}
+              </PanZoomStage>
+            ) : (
               <>
                 <Scene
                   lessonId={lesson.sceneLessonId}
@@ -198,7 +203,10 @@ export function AdvancedLessonLab({
                   viewRef={viewRef}
                   calloutsRef={calloutsRef}
                 />
-                <CalloutLayer key={lesson.sceneLessonId} callouts={LESSON_SCENES[lesson.sceneLessonId].callouts} elementsRef={calloutsRef} />
+                {showLabels && (
+                  <CalloutLayer key={lesson.sceneLessonId} callouts={LESSON_SCENES[lesson.sceneLessonId].callouts} elementsRef={calloutsRef} />
+                )}
+                <StageToolbar viewRef={viewRef} showLabels={showLabels} onToggleLabels={() => setShowLabels((value) => !value)} />
               </>
             )}
           </section>

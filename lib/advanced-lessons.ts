@@ -1,4 +1,5 @@
 import { Activity, Cpu, Gauge, Radio, Wifi, Zap } from 'lucide-react'
+import { fillLesson } from './advanced-fill'
 import type { AdvancedLessonPackage, AdvancedStage, CircuitGraph, HardwareKit } from './advanced-types'
 
 const MCU = { id: 'mcu', kind: 'mcu' as const, label: 'ESP32', value: 'DevKitC', x: 90, y: 160 }
@@ -23,47 +24,6 @@ const BOARD_GRAPH: CircuitGraph = {
   nets: [{ id: 'usb', label: 'TX/RX', from: 'mcu', to: 'usb', color: '#3870b8' }],
 }
 
-function stub(
-  id: string,
-  stageId: string,
-  title: string,
-  type: string,
-  goal: string,
-  sceneLessonId: AdvancedLessonPackage['sceneLessonId'] = 'board',
-): AdvancedLessonPackage {
-  return {
-    id,
-    stageId,
-    title,
-    type,
-    goal,
-    summary: `${goal}。工位已按示范课模板预留。`,
-    description:
-      '完整的原理图 / 面包板 / PCB、故障注入和代码补全将按「I2C 总线扫描」同一套字段补齐。现在可以阅读目标、看真机注意事项，并完成占位测验以了解评分方式。',
-    complete: false,
-    sceneLessonId,
-    graph: BOARD_GRAPH,
-    faults: [],
-    challenge: {
-      skeleton: `// ${title}\nvoid setup() {\n  Serial.begin(115200);\n}\n\nvoid loop() {\n  Serial.println("${goal}");\n  delay(1000);\n}`,
-      holes: [{ id: 'setup', hint: '保留 setup 入口' }],
-      tests: [{ name: '保留 setup', includes: ['void setup'] }],
-    },
-    quiz: {
-      passScore: 1,
-      questions: [
-        {
-          prompt: '这节课要达成的阶段目标是？',
-          choices: [goal, '把 5V 接到所有传感器', '关闭串口以降低干扰', '跳过接地'],
-          answer: 0,
-          explain: '先记住目标，再进入完整实验。',
-        },
-      ],
-    },
-    kit: KIT_LOW_VOLTAGE,
-    tools: ['serial', 'power'],
-  }
-}
 
 const gpioIsr: AdvancedLessonPackage = {
   id: 'gpio-isr',
@@ -445,42 +405,42 @@ const i2cScan: AdvancedLessonPackage = {
   tools: ['scope', 'serial', 'power'],
 }
 
-const STUBS: AdvancedLessonPackage[] = [
-  stub('wifi-reconnect', 'protocols', 'Wi-Fi 配网与断线重连', '网络课', '断线后自动回到在线状态', 'wifi'),
-  stub('http-rest', 'protocols', 'HTTP REST API', '网络课', '用 HTTP 读写设备状态', 'wifi'),
-  stub('mqtt-pubsub', 'protocols', 'MQTT 发布与订阅', '协议课', '把传感器数据发到主题', 'wifi'),
-  stub('websocket-ctrl', 'protocols', 'WebSocket 实时控制', '协议课', '低延迟双向控制', 'wifi'),
-  stub('ble-service', 'protocols', '蓝牙 BLE 服务', '通信课', '无路由器时被手机发现', 'bluetooth'),
-  stub('packet-capture', 'protocols', '网络数据包抓取', '工具课', '看懂请求与响应', 'wifi'),
-  stub('smart-terminal', 'protocols', '阶段项目：智能终端', '项目课', '手机控制的智能终端', 'wifi'),
-  stub('freertos-tasks', 'realtime', 'FreeRTOS 任务与队列', '系统课', '用任务拆分采样与通信', 'board'),
-  stub('dual-core', 'realtime', '双核任务分工', '系统课', '双核分别跑控制与网络', 'board'),
-  stub('hw-timer', 'realtime', '硬件定时器', '实验课', '用定时器打出稳定节拍', 'board'),
-  stub('watchdog', 'realtime', '看门狗与异常恢复', '可靠性课', '死机后自动恢复', 'board'),
-  stub('ota', 'realtime', 'OTA 固件升级', '部署课', '远程安全升级', 'wifi'),
-  stub('nvs', 'realtime', 'NVS 配置存储', '存储课', '配网参数掉电不丢', 'board'),
-  stub('remote-device', 'realtime', '阶段项目：远程设备', '项目课', '支持 OTA 的物联网设备', 'wifi'),
-  stub('spi-sample', 'sensors', 'SPI 高速采样', '总线课', '用 SPI 拉高采样率', 'imu'),
-  stub('sensor-sync', 'sensors', '多传感器时间同步', '数据课', '给多路数据打同一时间戳', 'dht'),
-  stub('moving-avg', 'sensors', '滑动平均与中值滤波', '算法课', '选对滤波对付不同噪声', 'pot'),
-  stub('kalman', 'sensors', '卡尔曼滤波入门', '算法课', '融合预测与观测', 'imu'),
-  stub('outlier', 'sensors', '异常值检测', '数据课', '丢掉明显坏点', 'gas'),
-  stub('live-chart', 'sensors', '实时曲线设计', '工具课', '让曲线可读而不卡', 'pot'),
-  stub('env-station', 'sensors', '阶段项目：环境监测站', '项目课', '室内环境监测站', 'dht'),
-  stub('battery-pm', 'product', '电池与电源管理', '硬件课', '估算续航并保护电池', 'sleep'),
-  stub('deep-sleep-power', 'product', '深度睡眠功耗测试', '实验课', '用功耗计量出睡眠电流', 'sleep'),
-  stub('enclosure', 'product', '外壳与接口规划', '设计课', '接口不会被壳卡住', 'board'),
-  stub('state-machine', 'product', '状态机设计', '架构课', '用状态机代替意大利面', 'board'),
-  stub('config-ux', 'product', '配置页面与用户体验', '产品课', '让非极客也能配网', 'wifi'),
-  stub('factory-test', 'product', '生产测试点', '交付课', '产线 30 秒测完一块板', 'board'),
-  stub('portable-product', 'product', '阶段项目：便携产品', '项目课', '电池供电的便携产品', 'sleep'),
-  stub('arch-split', 'projects', '需求拆解与系统架构', '项目课', '把需求拆成可验证模块', 'camera'),
-  stub('cam-pipeline', 'projects', '摄像头采集管线', '视觉课', '稳定打出 JPEG 帧', 'camera'),
-  stub('edge-vision', 'projects', '边缘端图像处理', '视觉课', '在板端做轻量检测', 'camera'),
-  stub('cloud-alert', 'projects', '云端存储与告警', '云服务课', '事件能推到手机', 'wifi'),
-  stub('security-acl', 'projects', '安全与权限', '安全课', '固件与接口不裸奔', 'wifi'),
-  stub('release-rollback', 'projects', '发布监控与回滚', '部署课', '坏版本能一键回退', 'wifi'),
-  stub('capstone-cam', 'projects', '毕业项目：ESP32-CAM 安防相机', '毕业项目', '从需求到发布的安防相机', 'camera'),
+const MORE: AdvancedLessonPackage[] = [
+  fillLesson('wifi-reconnect', 'protocols', 'Wi-Fi 配网与断线重连', '网络课', '断线后自动回到在线状态', 'wifi', 'wifi', '2.4G 路由器'),
+  fillLesson('http-rest', 'protocols', 'HTTP REST API', '网络课', '用 HTTP 读写设备状态', 'wifi', 'wifi', 'WebServer'),
+  fillLesson('mqtt-pubsub', 'protocols', 'MQTT 发布与订阅', '协议课', '把传感器数据发到主题', 'wifi', 'wifi', 'MQTT broker'),
+  fillLesson('websocket-ctrl', 'protocols', 'WebSocket 实时控制', '协议课', '低延迟双向控制', 'wifi', 'wifi', 'WebSocket 客户端'),
+  fillLesson('ble-service', 'protocols', '蓝牙 BLE 服务', '通信课', '无路由器时被手机发现', 'bluetooth', 'ble', '手机 BLE'),
+  fillLesson('packet-capture', 'protocols', '网络数据包抓取', '工具课', '看懂请求与响应', 'wifi', 'wifi', '抓包列表'),
+  fillLesson('smart-terminal', 'protocols', '阶段项目：智能终端', '项目课', '手机控制的智能终端', 'wifi', 'wifi', '控制页'),
+  fillLesson('freertos-tasks', 'realtime', 'FreeRTOS 任务与队列', '系统课', '用任务拆分采样与通信', 'board', 'rtos', '双任务'),
+  fillLesson('dual-core', 'realtime', '双核任务分工', '系统课', '双核分别跑控制与网络', 'board', 'rtos', '双核'),
+  fillLesson('hw-timer', 'realtime', '硬件定时器', '实验课', '用定时器打出稳定节拍', 'board', 'rtos', 'HW timer'),
+  fillLesson('watchdog', 'realtime', '看门狗与异常恢复', '可靠性课', '死机后自动恢复', 'board', 'rtos', 'TWDT'),
+  fillLesson('ota', 'realtime', 'OTA 固件升级', '部署课', '远程安全升级', 'wifi', 'wifi', 'OTA 分区'),
+  fillLesson('nvs', 'realtime', 'NVS 配置存储', '存储课', '配网参数掉电不丢', 'board', 'product', 'NVS'),
+  fillLesson('remote-device', 'realtime', '阶段项目：远程设备', '项目课', '支持 OTA 的物联网设备', 'wifi', 'wifi', '远程设备'),
+  fillLesson('spi-sample', 'sensors', 'SPI 高速采样', '总线课', '用 SPI 拉高采样率', 'imu', 'bus', 'SPI 传感器'),
+  fillLesson('sensor-sync', 'sensors', '多传感器时间同步', '数据课', '给多路数据打同一时间戳', 'dht', 'filter', 'DHT+IMU'),
+  fillLesson('moving-avg', 'sensors', '滑动平均与中值滤波', '算法课', '选对滤波对付不同噪声', 'pot', 'filter', 'ADC 噪声'),
+  fillLesson('kalman', 'sensors', '卡尔曼滤波入门', '算法课', '融合预测与观测', 'imu', 'filter', '一维卡尔曼'),
+  fillLesson('outlier', 'sensors', '异常值检测', '数据课', '丢掉明显坏点', 'gas', 'filter', 'MQ 尖峰'),
+  fillLesson('live-chart', 'sensors', '实时曲线设计', '工具课', '让曲线可读而不卡', 'pot', 'filter', '示波器窗口'),
+  fillLesson('env-station', 'sensors', '阶段项目：环境监测站', '项目课', '室内环境监测站', 'dht', 'filter', '温湿度站'),
+  fillLesson('battery-pm', 'product', '电池与电源管理', '硬件课', '估算续航并保护电池', 'sleep', 'sleep', '锂电池'),
+  fillLesson('deep-sleep-power', 'product', '深度睡眠功耗测试', '实验课', '用功耗计量出睡眠电流', 'sleep', 'sleep', 'μA 表'),
+  fillLesson('enclosure', 'product', '外壳与接口规划', '设计课', '接口不会被壳卡住', 'board', 'product', '外壳开孔'),
+  fillLesson('state-machine', 'product', '状态机设计', '架构课', '用状态机代替意大利面', 'board', 'product', '状态图'),
+  fillLesson('config-ux', 'product', '配置页面与用户体验', '产品课', '让非极客也能配网', 'wifi', 'wifi', '配网页'),
+  fillLesson('factory-test', 'product', '生产测试点', '交付课', '产线 30 秒测完一块板', 'board', 'product', '测试夹具'),
+  fillLesson('portable-product', 'product', '阶段项目：便携产品', '项目课', '电池供电的便携产品', 'sleep', 'sleep', '便携样机'),
+  fillLesson('arch-split', 'projects', '需求拆解与系统架构', '项目课', '把需求拆成可验证模块', 'camera', 'cam', '架构图'),
+  fillLesson('cam-pipeline', 'projects', '摄像头采集管线', '视觉课', '稳定打出 JPEG 帧', 'camera', 'cam', 'OV2640'),
+  fillLesson('edge-vision', 'projects', '边缘端图像处理', '视觉课', '在板端做轻量检测', 'camera', 'cam', '检测阈值'),
+  fillLesson('cloud-alert', 'projects', '云端存储与告警', '云服务课', '事件能推到手机', 'wifi', 'wifi', '告警通道'),
+  fillLesson('security-acl', 'projects', '安全与权限', '安全课', '固件与接口不裸奔', 'wifi', 'wifi', 'ACL'),
+  fillLesson('release-rollback', 'projects', '发布监控与回滚', '部署课', '坏版本能一键回退', 'wifi', 'wifi', 'OTA 槽'),
+  fillLesson('capstone-cam', 'projects', '毕业项目：ESP32-CAM 安防相机', '毕业项目', '从需求到发布的安防相机', 'camera', 'cam', 'ESP32-CAM'),
 ]
 
 export const ADVANCED_PACKAGES: AdvancedLessonPackage[] = [
@@ -491,7 +451,7 @@ export const ADVANCED_PACKAGES: AdvancedLessonPackage[] = [
   crashLog,
   sensorNode,
   i2cScan,
-  ...STUBS,
+  ...MORE,
 ]
 
 const STAGE_LESSONS: Record<string, string[]> = {

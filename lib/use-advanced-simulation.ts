@@ -10,6 +10,7 @@ export type AdvancedOutputs = SimOutputs & {
   currentMa: number
   i2cFound: string[]
   busNote: string
+  packets: { time: string; proto: string; dir: string; data: string; status: string }[]
 }
 
 const IDLE: SimOutputs = {
@@ -47,6 +48,7 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
     currentMa: 38,
     i2cFound: [],
     busNote: '总线空闲',
+    packets: [],
   })
 
   const inputsRef = useRef(inputs)
@@ -72,7 +74,7 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
   const stop = useCallback(() => {
     clearTimers()
     setPhase('idle')
-    setOutputs({ ...IDLE, scope: Array(80).fill(1.65), currentMa: 38, i2cFound: [], busNote: '已停止' })
+    setOutputs({ ...IDLE, scope: Array(80).fill(1.65), currentMa: 38, i2cFound: [], busNote: '已停止', packets: [] })
   }, [])
 
   const reset = useCallback(() => {
@@ -114,6 +116,7 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
         currentMa: 42,
         i2cFound: [],
         busNote: '正常',
+        packets: [],
       }
 
       const wave = (fn: (i: number) => number) => Array.from({ length: 80 }, (_, i) => fn(i + t / 40))
@@ -244,11 +247,53 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
           break
         }
         default: {
-          out.onboard = Math.floor(t / 800) % 2 ? 1 : 0
-          out.currentMa = 40
-          out.scope = wave((i) => 1.65 + Math.sin(i / 5) * 0.2)
-          if (Math.floor(t / 1500) !== Math.floor((t - 50) / 1500)) {
-            pushLog(`占位运行 · ${lesson.title}`, 'info')
+          const scene = lesson.sceneLessonId
+          const open = Boolean(fault && (fault.kind === 'open' || fault.kind === 'floating'))
+          if (scene === 'wifi' || scene === 'bluetooth' || scene === 'camera') {
+            out.wifi = t > 1400 && !open && codeOk
+            out.led = out.wifi ? 1 : 0
+            out.onboard = out.led
+            out.currentMa = out.wifi ? 155 : 46
+            out.scope = wave((i) => (out.wifi ? (Math.sin(i / 2 + t / 90) > 0 ? 3.2 : 0.2) : 0.4))
+            out.oledText = scene === 'camera' ? (out.wifi ? 'CAM ONLINE' : 'CAM FAIL') : ''
+            out.packets = out.wifi
+              ? [
+                  { time: 'now', proto: lesson.id.includes('mqtt') ? 'MQTT' : 'HTTP', dir: '发送', data: lesson.id, status: '200' },
+                ]
+              : []
+            if (Math.floor(t / 1600) !== Math.floor((t - 50) / 1600)) {
+              if (open) pushLog('射频/数据通路开路，无法联网', 'warn')
+              else if (!codeOk) pushLog('缺少关键 API，连接未建立', 'warn')
+              else pushLog(`${lesson.title} · 在线`, 'ok')
+            }
+          } else if (scene === 'sleep') {
+            const asleep = codeOk && !open && Math.floor(t / 2600) % 2 === 1
+            out.onboard = asleep ? 0 : 1
+            out.currentMa = open ? 5 : asleep ? 0.14 : 48
+            out.scope = wave(() => (asleep ? 0.05 : 3.1))
+            out.busNote = asleep ? '深度睡眠' : '运行'
+            if (Math.floor(t / 1300) !== Math.floor((t - 50) / 1300)) {
+              pushLog(asleep ? 'deep sleep · 电流降至 μA 量级' : '唤醒采样', asleep ? 'ok' : 'info')
+            }
+          } else if (scene === 'pot' || scene === 'gas' || scene === 'dht' || scene === 'imu') {
+            const raw = open ? 200 + Math.random() * 3000 : input.pot
+            const filtered = codeOk ? raw * 0.2 + 1800 * 0.8 : raw
+            out.led = filtered / 4095
+            out.currentMa = 50
+            out.scope = wave((i) => {
+              const n = codeOk ? 0.05 : 0.45
+              return open ? Math.random() * 3.3 : (filtered / 4095) * 3.3 + Math.sin(i) * n
+            })
+            if (Math.floor(t / 700) !== Math.floor((t - 50) / 700)) {
+              pushLog(open ? '传感器开路' : `sample=${Math.round(filtered)}${codeOk ? ' 已滤波' : ' 噪声大'}`, open ? 'warn' : 'ok')
+            }
+          } else {
+            out.onboard = Math.floor(t / 700) % 2 ? 1 : 0
+            out.currentMa = open ? 38 : 44
+            out.scope = wave((i) => (codeOk ? 1.65 + Math.sin(i / 5) * 0.25 : 0.7 + Math.random()))
+            if (Math.floor(t / 1400) !== Math.floor((t - 50) / 1400)) {
+              pushLog(codeOk ? `${lesson.title} · 任务在跑` : '关键 API 未补全', codeOk ? 'ok' : 'warn')
+            }
           }
         }
       }
