@@ -17,10 +17,23 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'ESP32 实验室 · 一步一步学硬件',
+  metadataBase: new URL('https://espdeck.pixzens.com'),
+  title: {
+    default: 'ESPDeck · ESP32 实验室',
+    template: '%s',
+  },
   description:
-    '硬件看起来很吓人，直到你把它拆成小步骤。交互式 3D 中文课程，一次带你完成一个 ESP32 电路：点灯、按钮、电位器、触摸、温湿度、蜂鸣器、舵机和 Wi-Fi。',
-  generator: 'v0.app',
+    '硬件看起来很吓人，直到你把它拆成小步骤。给新手练手的 ESP32 实验室：3D 电路、原理图、PCB，一次只走一小步。',
+  applicationName: 'ESPDeck',
+  authors: [{ name: 'Pixzens', url: 'https://espdeck.pixzens.com' }],
+  openGraph: {
+    title: 'ESPDeck · ESP32 实验室',
+    description: '硬件看起来很吓人，直到你把它拆成小步骤。',
+    url: 'https://espdeck.pixzens.com',
+    siteName: 'ESPDeck',
+    locale: 'zh_CN',
+    type: 'website',
+  },
 }
 
 export const viewport: Viewport = {

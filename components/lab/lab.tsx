@@ -15,6 +15,8 @@ import { LessonRail } from './lesson-rail'
 import { SimControls } from './sim-controls'
 import { StageToolbar } from './stage-toolbar'
 import type { ViewApi } from './three/scene'
+import { SiteFooter } from '@/components/site/site-footer'
+import { ThanksHost } from '@/components/site/thanks-modal'
 
 const Scene = dynamic(() => import('./three/scene'), {
   ssr: false,
@@ -36,7 +38,7 @@ export function Lab() {
   const calloutsRef = useRef<(HTMLDivElement | null)[]>([])
 
   return (
-    <div className="lab-shell flex min-h-dvh flex-col">
+    <div className="lab-shell flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
       <Header
         done={completed.length}
         total={LESSONS.length}
@@ -121,6 +123,8 @@ export function Lab() {
         </aside>
         </main>
       </div>}
+      <SiteFooter />
+      <ThanksHost />
     </div>
   )
 }

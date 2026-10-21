@@ -151,7 +151,261 @@
   }
   .advanced-shell {
     min-height: 0;
-    height: calc(100dvh - 73px);
+    flex: 1;
+  }
+  .site-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #e1e5eb;
+    background: #fffffe;
+    padding: 0.7rem 1.25rem 0.85rem;
+    text-align: center;
+  }
+  .site-footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem 1rem;
+  }
+  .site-footer-nav a {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #020826;
+  }
+  .site-footer-nav a:hover {
+    color: #f25042;
+  }
+  .site-footer p {
+    margin-top: 0.35rem;
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: #716040;
+  }
+  .prose-lab {
+    color: #020826;
+  }
+  .prose-lab h1 {
+    margin-top: 0.35rem;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+  }
+  .prose-lab h2 {
+    margin: 1.75rem 0 0.6rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+  .prose-lab h3 {
+    margin: 0.4rem 0 0.5rem;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+  .prose-lab p,
+  .prose-lab li {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: #3d3428;
+  }
+  .prose-lab p + p {
+    margin-top: 0.9rem;
+  }
+  .prose-lab .lead {
+    margin: 0.75rem 0 1.25rem;
+    font-size: 1.05rem;
+    color: #716040;
+  }
+  .prose-lab .updated {
+    margin-top: 2rem;
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 11px;
+    color: #716040;
+  }
+  .prose-lab a {
+    font-weight: 700;
+    color: #8c7851;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose-lab ul {
+    margin: 0.6rem 0 0;
+    padding-left: 1.1rem;
+  }
+  .prose-lab li + li {
+    margin-top: 0.45rem;
+  }
+  .about-contact {
+    list-style: none;
+    padding: 0;
+  }
+  .about-contact li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .support-back {
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+  }
+  .support-ways {
+    display: grid;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  @media (min-width: 700px) {
+    .support-ways {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .support-card {
+    border: 1px solid #020826;
+    border-radius: 1.25rem;
+    background: #fffffe;
+    padding: 1.1rem;
+  }
+  .support-card-muted {
+    background: #f9f4ef;
+  }
+  .support-qr {
+    display: block;
+    width: min(100%, 240px);
+    height: auto;
+    margin: 0.5rem auto 0.75rem;
+    border-radius: 0.75rem;
+  }
+  .support-card .hint {
+    font-size: 0.8rem;
+    color: #716040;
+  }
+  .support-kofi {
+    display: inline-flex;
+    margin-top: 0.85rem;
+    border-radius: 0.9rem;
+    background: #8c7851;
+    color: #fffffe !important;
+    text-decoration: none !important;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 0.55rem 0.9rem;
+  }
+  .thanks-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgb(2 8 38 / 46%);
+  }
+  .thanks-card {
+    position: relative;
+    width: min(100%, 420px);
+    border: 1px solid #020826;
+    border-radius: 1.5rem;
+    background: #fffffe;
+    padding: 1.5rem 1.35rem 1.15rem;
+    box-shadow: 0 24px 60px rgb(10 5 18 / 28%);
+  }
+  .thanks-close {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.7rem;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.7rem;
+  }
+  .thanks-close:hover {
+    background: #eaddcf;
+  }
+  .thanks-hero {
+    text-align: center;
+  }
+  .thanks-logo-wrap {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    margin: 0 auto 0.75rem;
+    border-radius: 999px;
+    background: #eaddcf;
+    color: #020826;
+  }
+  .thanks-hero h2 {
+    font-size: 1.25rem;
+    font-weight: 900;
+  }
+  .thanks-hero p {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: #716040;
+  }
+  .thanks-actions {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 1.1rem;
+  }
+  .thanks-primary,
+  .thanks-share,
+  .thanks-continue {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.6rem;
+    border-radius: 0.9rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+  .thanks-primary {
+    background: #8c7851;
+    color: #fffffe;
+  }
+  .thanks-product {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 4.2rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid;
+    border-radius: 0.9rem;
+    color: #fffffe;
+    text-align: left;
+  }
+  .thanks-product-text {
+    display: grid;
+    gap: 0.15rem;
+  }
+  .thanks-product-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 800;
+  }
+  .thanks-badge {
+    border-radius: 999px;
+    background: rgb(255 255 255 / 22%);
+    padding: 0.05rem 0.4rem;
+    font-size: 10px;
+  }
+  .thanks-tagline {
+    font-size: 0.75rem;
+    line-height: 1.45;
+    opacity: 0.92;
+  }
+  .thanks-share {
+    border: 1px solid #020826;
+    background: #fffffe;
+  }
+  .thanks-continue {
+    width: 100%;
+    margin-top: 0.35rem;
+    color: #716040;
+    font-weight: 700;
+    font-size: 0.8rem;
   }
   .advanced-hero {
     background: linear-gradient(135deg, #eaddcf, #fffffe);
@@ -192,7 +446,7 @@
 
   @media (min-width: 1024px) {
     .lab-shell .lesson-rail {
-      height: calc(100dvh - 73px);
+      height: 100%;
       min-height: 0;
       overflow: hidden;
     }
@@ -222,7 +476,7 @@
 
     .lab-shell .lab-main {
       min-width: 0;
-      height: calc(100dvh - 73px);
+      height: 100%;
       overflow: hidden;
     }
 

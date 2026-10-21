@@ -1,8 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import type { LessonId } from './lessons'
 import type { LessonRecord } from './advanced-types'
+import type { LessonId } from './lessons'
+import { LESSONS } from './lessons'
+import { celebrateThanks } from './thanks'
 
 const BASIC_KEY = 'esp32-lab:completed'
 const ADVANCED_KEY = 'esp32-lab:advanced'
@@ -44,6 +46,9 @@ export function useProgress() {
       try {
         window.localStorage.setItem(BASIC_KEY, JSON.stringify(next))
       } catch {}
+      if (prev.length === 0) celebrateThanks('first-run')
+      else if (next.length === 5) celebrateThanks('five-lessons')
+      else if (next.length === LESSONS.length) celebrateThanks('all-basic')
       return next
     })
   }, [])

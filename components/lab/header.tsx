@@ -1,6 +1,7 @@
 'use client'
 
 import { BookOpen, Cpu } from 'lucide-react'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import type { LessonRecord } from '@/lib/advanced-types'
 import { TRACKS, trackProgress } from '@/lib/curriculum'
@@ -39,7 +40,7 @@ export function Header({
 }) {
   return (
     <header className="flex items-center justify-between gap-4 border-b border-[#e1e5eb] bg-white/95 px-4 py-3 shadow-[0_2px_14px_rgb(31_41_55/6%)] backdrop-blur lg:px-6">
-      <div className="flex items-center gap-3">
+      <Link href="/" className="flex min-w-0 items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-2xl bg-[#f43f78] text-white shadow-[0_8px_18px_rgb(244_63_120/22%)]">
           <Cpu className="size-6" aria-hidden="true" />
         </div>
@@ -51,7 +52,7 @@ export function Header({
             零基础 · 能做项目 · 工程化 · 产品级
           </p>
         </div>
-      </div>
+      </Link>
       <div className="flex min-w-0 items-center gap-2 sm:gap-4">
         <button
           onClick={onToggleAdvanced}
