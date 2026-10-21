@@ -149,6 +149,14 @@
   .lab-shell .ring-foreground {
     --tw-ring-color: #8c7851;
   }
+  .advanced-shell {
+    min-height: 0;
+    height: calc(100dvh - 73px);
+  }
+  .advanced-hero {
+    background: linear-gradient(135deg, #eaddcf, #fffffe);
+    border: 1px solid #020826;
+  }
   .lab-shell .eyebrow {
     color: #f25042;
     font-family: var(--font-jetbrains), monospace;
