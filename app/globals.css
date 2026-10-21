@@ -1,0 +1,274 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-noto-sc), 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: var(--font-jetbrains), var(--font-noto-sc), 'PingFang SC', 'Microsoft YaHei', monospace;
+
+  --color-terminal-ok: color-mix(in oklab, var(--accent) 45%, white);
+  --color-terminal-warn: color-mix(in oklab, var(--primary) 55%, white);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* 指定色板：奶油背景 · 深海军蓝文字 · 卡其按钮 · 番茄红强调 */
+:root {
+  color-scheme: light;
+  --background: #f9f4ef;
+  --foreground: #020826;
+  --card: #fffffe;
+  --card-foreground: #020826;
+  --popover: #fffffe;
+  --popover-foreground: #020826;
+  --primary: #8c7851;
+  --primary-foreground: #fffffe;
+  --secondary: #eaddcf;
+  --secondary-foreground: #020826;
+  --muted: #eaddcf;
+  --muted-foreground: #716040;
+  --accent: #f25042;
+  --accent-foreground: #fffffe;
+  --destructive: #f25042;
+  --border: #020826;
+  --input: #d8cdbc;
+  --ring: #8c7851;
+  --radius: 1.15rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .bench-grid {
+    background-color: var(--background);
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--foreground) 9%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 9%, transparent) 1px, transparent 1px),
+      linear-gradient(to right, color-mix(in oklab, var(--foreground) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 4%, transparent) 1px, transparent 1px);
+    background-size:
+      120px 120px,
+      120px 120px,
+      24px 24px,
+      24px 24px;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .lab-shell {
+    background: #f9f4ef;
+    color: #020826;
+  }
+  .lab-shell .border-border {
+    border-color: #020826;
+  }
+  .lab-shell .bg-card {
+    background: #fffffe;
+  }
+  .lab-shell .bg-background {
+    background: #f9f4ef;
+  }
+  .lab-shell .text-foreground {
+    color: #020826;
+  }
+  .lab-shell .text-muted-foreground {
+    color: #716040;
+  }
+  .lab-shell .text-accent {
+    color: #f25042;
+  }
+  .lab-shell .bg-primary {
+    background: #8c7851;
+    color: #fffffe;
+  }
+  .lab-shell .bg-muted {
+    background: #eaddcf !important;
+  }
+  .lab-shell .bg-card {
+    background: #fffffe !important;
+  }
+  .lab-shell .text-muted-foreground {
+    color: #716040 !important;
+  }
+  .lab-shell header {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  @media (max-width: 639px) {
+    .lab-shell .callout-layer {
+      display: none;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .lab-shell header > div:last-child {
+      flex-shrink: 0;
+    }
+    .lab-shell header > div:last-child > div:first-child {
+      max-width: 132px;
+    }
+    .lab-shell header > div:last-child .w-20 {
+      width: 3.5rem;
+    }
+  }
+  .lab-shell .ring-foreground {
+    --tw-ring-color: #8c7851;
+  }
+  .lab-shell .eyebrow {
+    color: #f25042;
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    line-height: 1.5;
+  }
+  .lab-shell .workbench-heading {
+    border-bottom: 1px solid #020826;
+    padding: 0.35rem 0 0.7rem;
+  }
+  .lab-shell .lesson-rail {
+    background: #fffffe;
+  }
+  .lab-shell .lab-main > section {
+    border: 1px solid #020826;
+    background: #fffffe;
+    box-shadow: 0 20px 55px rgb(10 5 18 / 24%), 0 2px 8px rgb(10 5 18 / 18%);
+  }
+  .lab-shell .lesson-rail button:hover {
+    background: #eaddcf;
+  }
+  .lab-shell .lab-main > section {
+    min-height: 0;
+    height: 100%;
+    border-radius: 0.65rem;
+    overflow: hidden;
+  }
+
+  .lab-shell aside > div {
+    min-height: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .lab-shell .lesson-rail {
+      height: calc(100dvh - 73px);
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .lab-shell .lesson-rail > div,
+    .lab-shell .lesson-rail > ol {
+      width: 100%;
+      max-width: 268px;
+      margin-inline: auto;
+    }
+
+    .lab-shell .lesson-rail > div:first-child {
+      max-width: 268px;
+    }
+
+    .lab-shell .lesson-rail ol > li > button {
+      border-color: #020826;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgb(10 5 18 / 18%);
+    }
+
+    .lab-shell .lesson-rail ol > li > button[aria-current='step'] {
+      border-color: #8c7851;
+      background: linear-gradient(135deg, #eaddcf, #fffffe);
+      box-shadow: 0 8px 20px rgb(140 120 81 / 18%);
+    }
+
+    .lab-shell .lab-main {
+      min-width: 0;
+      height: calc(100dvh - 73px);
+      overflow: hidden;
+    }
+
+    .lab-shell .lab-main > section {
+      min-height: 0;
+      height: 100%;
+    }
+
+    .lab-shell aside {
+      min-width: 0;
+      min-height: 0;
+      max-height: 100%;
+      overflow: hidden;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .lab-shell .lesson-rail {
+      order: 0;
+    }
+
+    .lab-shell .lab-main {
+      order: 1;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .lab-shell {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    .lab-shell .lesson-rail {
+      padding-inline: 0.75rem;
+    }
+
+    .lab-shell .lesson-rail ol {
+      margin-inline: -0.75rem;
+      padding-inline: 0.75rem;
+    }
+
+    .lab-shell .lab-main {
+      padding-inline: 0.9rem;
+    }
+
+    .lab-shell .lab-main > section {
+      min-height: 360px;
+      height: min(360px, 52svh);
+    }
+
+    .lab-shell .workbench-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+  }
+}
