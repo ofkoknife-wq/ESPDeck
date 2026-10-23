@@ -218,7 +218,7 @@ void loop() {
     id: 'pot',
     title: '旋钮调光',
     icon: Gauge,
-    summary: '电位器是一个带滑片的电阻，旋转���改变电压。',
+    summary: '电位器是一个带滑片的电阻，旋转时改变电压。',
     description:
       '电位器两端接 3V3 和 GND，中间的滑片输出 0–3.3V 之间的电压。ESP32 的 12 位 ADC 把它转换成 0–4095 的数字，再用 PWM 控制 LED 亮度。',
     points: [
@@ -227,7 +227,7 @@ void loop() {
       { icon: Hand, text: '拖动下方滑块旋转电位器' },
     ],
     wiring: [
-      { from: '电位器左脚', to: 'ESP32 3V3', note: '���色线' },
+      { from: '电位器左脚', to: 'ESP32 3V3', note: '红色线' },
       { from: '电位器中脚（滑片）', to: 'ESP32 GPIO34', note: '绿色线' },
       { from: '电位器右脚', to: 'ESP32 GND', note: '黑色线' },
       { from: 'GPIO2', to: '电阻 → LED → GND' },
@@ -243,7 +243,7 @@ void loop() {
       { label: '电位器', value: '10kΩ 线性 (B10K)' },
       { label: 'ADC 分辨率', value: '12 位 · 0–4095' },
       { label: '注意', value: 'ADC2 引脚在 Wi-Fi 开启时不可用' },
-      { label: 'PWM', value: '5 kHz · 12 位占���比' },
+      { label: 'PWM', value: '5 kHz · 12 位占空比' },
     ],
     code: `const int POT_PIN = 34;  // 仅输入引脚，适合 ADC
 const int LED_PIN = 2;
@@ -429,13 +429,13 @@ void loop() {
       { icon: Zap, text: '运行时浏览器会真的播放声音' }
     ],
     wiring: [
-      { from: 'ESP32 GPIO18', to: '���鸣器 + 脚', note: '紫色线' },
+      { from: 'ESP32 GPIO18', to: '蜂鸣器 + 脚', note: '紫色线' },
       { from: '蜂鸣器 - 脚', to: 'GND 轨' },
       { from: 'GND 轨', to: 'ESP32 GND' },
     ],
     steps: [
       '确认你手上的是「无源」蜂鸣器（底部能看到电路板）。',
-      '把蜂鸣器插��面包板上，注意 + 极的标记。',
+      '把蜂鸣器插在面包板上，注意 + 极的标记。',
       '+ 脚连到 GPIO18，- 脚连到 GND 轨。',
       'GND 轨连到 ESP32 GND。',
       '上传程序，听听《小星星》。',
@@ -669,7 +669,7 @@ void loop() {
     description: 'ESP32 自带蓝牙，可以把开发板变成一个无线串口。手机发送文字后，ESP32 读取 SerialBT 并回传确认信息，这是制作无线控制器的起点。',
     points: [{ icon: Radio, text: '经典蓝牙串口', code: 'BluetoothSerial' }, { icon: Usb, text: '手机无需网关即可连接' }, { icon: Hand, text: '点击手机面板发送指令' }],
     wiring: [{ from: 'ESP32 蓝牙天线', to: '手机蓝牙', note: '无线连接' }, { from: 'GPIO2', to: 'LED 指示灯' }, { from: 'GND', to: '公共地' }],
-    steps: ['安装 ESP32 开发板支持包。', '创建 BluetoothSerial 对象并设置设备名称。', '用手机蓝��搜索并连接 ESP32-LAB。', '发送 ON 或 OFF 指令。', '观察串口回传和 LED 状态。'],
+    steps: ['安装 ESP32 开发板支持包。', '创建 BluetoothSerial 对象并设置设备名称。', '用手机蓝牙搜索并连接 ESP32-LAB。', '发送 ON 或 OFF 指令。', '观察串口回传和 LED 状态。'],
     specs: [{ label: '协议', value: 'Bluetooth Classic SPP' }, { label: '设备名', value: 'ESP32-LAB' }, { label: '范围', value: '约 10 米' }],
     code: `#include "BluetoothSerial.h"\nBluetoothSerial SerialBT;\nconst int LED = 2;\n\nvoid setup() {\n  pinMode(LED, OUTPUT);\n  SerialBT.begin("ESP32-LAB");\n}\n\nvoid loop() {\n  if (SerialBT.available()) {\n    char c = SerialBT.read();\n    digitalWrite(LED, c == '1');\n    SerialBT.println(c == '1' ? "LED ON" : "LED OFF");\n  }\n}`,
     hint: '运行后点击手机发送 ON / OFF',

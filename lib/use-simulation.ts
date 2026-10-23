@@ -256,7 +256,7 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
         }
         case 'wifi': {
           if (t < 2200) {
-            if (every('dot', t, 500)) pushLog(t < 100 ? '正在连����������� Wi-Fi「MyHome-2.4G」' : '.')
+            if (every('dot', t, 500)) pushLog(t < 100 ? '正在连接 Wi-Fi「MyHome-2.4G」' : '.')
           } else {
             out.wifi = true
             if (changed('connected', true)) {

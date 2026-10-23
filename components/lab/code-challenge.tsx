@@ -43,7 +43,7 @@ export function CodeChallengePanel({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex flex-col gap-3 pb-4">
       <div className="flex flex-wrap gap-2">
         {challenge.holes.map((hole) => (
           <span key={hole.id} className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium">
@@ -55,7 +55,7 @@ export function CodeChallengePanel({
         value={code}
         onChange={(event) => onChange(event.target.value)}
         spellCheck={false}
-        className="min-h-40 flex-1 resize-none rounded-xl bg-[#020826] p-3 font-mono text-[12px] leading-5 text-[#fffffe] outline-none ring-primary/30 focus:ring-2"
+        className="h-44 min-h-40 w-full resize-y rounded-xl bg-[#020826] p-3 font-mono text-[12px] leading-5 text-[#fffffe] outline-none ring-primary/30 focus:ring-2"
         aria-label="代码挑战编辑器"
       />
       <div className="flex flex-wrap items-center justify-between gap-2">

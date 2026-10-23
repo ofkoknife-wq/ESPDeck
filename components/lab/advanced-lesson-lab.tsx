@@ -280,7 +280,7 @@ export function AdvancedLessonLab({
           )}
 
           {step === 'code' && (
-            <div className="mt-3 flex min-h-0 flex-1 flex-col">
+            <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
               <CodeChallengePanel
                 challenge={lesson.challenge}
                 code={code}
