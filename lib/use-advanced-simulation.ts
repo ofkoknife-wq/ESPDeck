@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useI18n } from './i18n/provider'
+import { translateLocale } from './i18n/messages'
 import { testsPassed } from './code-tests'
 import type { AdvancedLessonPackage, Fault } from './advanced-types'
 import type { LogLine, Phase, SimInputs, SimOutputs } from './use-simulation'
@@ -39,6 +41,10 @@ function activeFault(lesson: AdvancedLessonPackage, injected: string | null, sol
 }
 
 export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: string, injected: string | null, solved: string[]) {
+  const { locale } = useI18n()
+  const localeRef = useRef(locale)
+  localeRef.current = locale
+  const tLog = (path: string, vars?: Record<string, string | number>) => translateLocale(localeRef.current, path, vars)
   const [phase, setPhase] = useState<Phase>('idle')
   const [inputs, setInputs] = useState<SimInputs>(DEFAULT_INPUTS)
   const [logs, setLogs] = useState<LogLine[]>([])
@@ -47,7 +53,7 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
     scope: Array(80).fill(1.65),
     currentMa: 38,
     i2cFound: [],
-    busNote: '总线空闲',
+    busNote: translateLocale(locale, 'advancedSim.busIdle'),
     packets: [],
   })
 
@@ -74,7 +80,7 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
   const stop = useCallback(() => {
     clearTimers()
     setPhase('idle')
-    setOutputs({ ...IDLE, scope: Array(80).fill(1.65), currentMa: 38, i2cFound: [], busNote: '已停止', packets: [] })
+    setOutputs({ ...IDLE, scope: Array(80).fill(1.65), currentMa: 38, i2cFound: [], busNote: tLog('advancedSim.stopped'), packets: [] })
   }, [])
 
   const reset = useCallback(() => {
@@ -86,13 +92,13 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
     clearTimers()
     setLogs([])
     setPhase('uploading')
-    pushLog('正在编译进阶实验…')
-    timers.current.push(setTimeout(() => pushLog('写入 Flash… 100%', 'info'), 600))
+    pushLog(tLog('advancedSim.compiling'))
+    timers.current.push(setTimeout(() => pushLog(tLog('advancedSim.writingFlash'), 'info'), 600))
     timers.current.push(
       setTimeout(() => {
         t0.current = performance.now()
         setPhase('running')
-        pushLog('运行中 · 仪器已连接到仿真网表', 'ok')
+        pushLog(tLog('advancedSim.running'), 'ok')
       }, 1400),
     )
   }, [pushLog])
@@ -115,7 +121,7 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
         scope: [],
         currentMa: 42,
         i2cFound: [],
-        busNote: '正常',
+        busNote: tLog('advancedSim.ok'),
         packets: [],
       }
 
@@ -137,10 +143,10 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
             return fire ? 0.12 : 3.25
           })
           if (Math.floor(t / 280) !== Math.floor((t - 50) / 280)) {
-            if (floating && glitch) pushLog('ISR 误触发 · GPIO4 浮空', 'warn')
-            else if (wrongPin && input.button) pushLog('按下了，但中断脚不是 GPIO4', 'warn')
-            else if (fire && bounce) pushLog('GPIO4 FALLING × 多次（未消抖）', 'warn')
-            else if (fire) pushLog('GPIO4 FALLING · 已消抖，处理 1 次', 'ok')
+            if (floating && glitch) pushLog(tLog('advancedSim.isrFloat'), 'warn')
+            else if (wrongPin && input.button) pushLog(tLog('advancedSim.wrongPin'), 'warn')
+            else if (fire && bounce) pushLog(tLog('advancedSim.bounce'), 'warn')
+            else if (fire) pushLog(tLog('advancedSim.debounced'), 'ok')
           }
           break
         }
@@ -184,10 +190,10 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
           out.currentMa = openGpio || openGnd ? 39 : bigR ? 41 : on ? 52 : 39
           out.scope = wave(() => (on ? 3.25 : 0.08))
           if (Math.floor(t / 500) !== Math.floor((t - 50) / 500)) {
-            if (openGpio) pushLog('GPIO2 有方波，电阻端仍为 0V · 怀疑开路', 'warn')
-            else if (openGnd) pushLog('回路电流 0 mA · 检查 GND', 'warn')
-            else if (bigR) pushLog('电流过小，LED 几乎不亮 · 检查阻值', 'warn')
-            else pushLog(on ? 'LED 亮 · 回路约 6 mA' : 'LED 灭', on ? 'ok' : undefined)
+            if (openGpio) pushLog(tLog('advancedSim.openGpio'), 'warn')
+            else if (openGnd) pushLog(tLog('advancedSim.openGnd'), 'warn')
+            else if (bigR) pushLog(tLog('advancedSim.bigR'), 'warn')
+            else pushLog(on ? tLog('advancedSim.ledOnMa') : tLog('advancedSim.ledOff'), on ? 'ok' : undefined)
           }
           break
         }
@@ -199,7 +205,7 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
             pushLog('Stack overflow? Recursive safeWork() never returns', 'warn')
             pushLog('Backtrace: 0x400d1234 0x400d1234 0x400d1234', 'info')
           } else if (codeOk && Math.floor(t / 1200) !== Math.floor((t - 50) / 1200)) {
-            pushLog('sum=15 · 递归终止条件有效', 'ok')
+            pushLog(tLog('advancedSim.recursionOk'), 'ok')
           }
           break
         }
@@ -214,8 +220,8 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
           out.currentMa = 55 + (alarm ? 6 : 0)
           out.scope = wave((i) => (alarm ? 3.2 : 0.2 + Math.sin(i / 6) * 0.05))
           if (Math.floor(t / 2000) !== Math.floor((t - 50) / 2000)) {
-            if (dhtOpen) pushLog('DHT read failed · DATA 开路?', 'warn')
-            else if (sdaOpen) pushLog('OLED NACK · 检查 SDA', 'warn')
+            if (dhtOpen) pushLog(tLog('advancedSim.dhtOpen'), 'warn')
+            else if (sdaOpen) pushLog(tLog('advancedSim.oledNack'), 'warn')
             else pushLog(`[${Math.round(t)}ms] temp=${temp.toFixed(1)} avg=${temp.toFixed(1)}`, alarm ? 'warn' : 'ok')
           }
           break
@@ -229,7 +235,7 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
           out.i2cFound = busOk ? (conflict ? ['0x3C', '0x3C?'] : ['0x3C']) : []
           out.oledText = busOk && !wrongAddr && !conflict ? 'ESP32 LAB' : ''
           out.currentMa = noPu ? 61 : busOk ? 58 : 44
-          out.busNote = sdaOpen ? 'SDA 开路' : noPu ? '无上拉' : conflict ? '地址冲突' : wrongAddr ? '地址不是 0x3C' : 'ACK 0x3C'
+          out.busNote = sdaOpen ? tLog('advancedSim.sdaOpen') : noPu ? tLog('advancedSim.noPullup') : conflict ? tLog('advancedSim.addrConflict') : wrongAddr ? tLog('advancedSim.wrongAddr') : 'ACK 0x3C'
           out.scope = wave((i) => {
             if (sdaOpen) return 0.05
             if (noPu) return 0.4 + Math.random() * 0.4
@@ -237,11 +243,11 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
             return clk ? 3.25 : 0.12
           })
           if (Math.floor(t / 1800) !== Math.floor((t - 50) / 1800)) {
-            if (!code.includes('Wire.begin')) pushLog('未初始化 Wire · 扫描未开始', 'warn')
-            else if (sdaOpen) pushLog('I2C scan: 无设备（全部 NACK）', 'warn')
-            else if (noPu) pushLog('I2C scan: 总线无法回到高电平', 'warn')
-            else if (conflict) pushLog('Found 0x3C · 总线竞争，显示不稳定', 'warn')
-            else if (wrongAddr) pushLog('Found 0x3C · 但代码使用了错误地址', 'warn')
+            if (!code.includes('Wire.begin')) pushLog(tLog('advancedSim.wireMissing'), 'warn')
+            else if (sdaOpen) pushLog(tLog('advancedSim.scanEmpty'), 'warn')
+            else if (noPu) pushLog(tLog('advancedSim.scanStuck'), 'warn')
+            else if (conflict) pushLog(tLog('advancedSim.busFight'), 'warn')
+            else if (wrongAddr) pushLog(tLog('advancedSim.codeWrongAddr'), 'warn')
             else pushLog('Found 0x3C · SSD1306 ACK', 'ok')
           }
           break
@@ -258,22 +264,22 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
             out.oledText = scene === 'camera' ? (out.wifi ? 'CAM ONLINE' : 'CAM FAIL') : ''
             out.packets = out.wifi
               ? [
-                  { time: 'now', proto: lesson.id.includes('mqtt') ? 'MQTT' : 'HTTP', dir: '发送', data: lesson.id, status: '200' },
+                  { time: 'now', proto: lesson.id.includes('mqtt') ? 'MQTT' : 'HTTP', dir: tLog('advancedSim.tx'), data: lesson.id, status: '200' },
                 ]
               : []
             if (Math.floor(t / 1600) !== Math.floor((t - 50) / 1600)) {
-              if (open) pushLog('射频/数据通路开路，无法联网', 'warn')
-              else if (!codeOk) pushLog('缺少关键 API，连接未建立', 'warn')
-              else pushLog(`${lesson.title} · 在线`, 'ok')
+              if (open) pushLog(tLog('advancedSim.rfOpen'), 'warn')
+              else if (!codeOk) pushLog(tLog('advancedSim.missingApi'), 'warn')
+              else pushLog(tLog('advancedSim.online', { title: lesson.title }), 'ok')
             }
           } else if (scene === 'sleep') {
             const asleep = codeOk && !open && Math.floor(t / 2600) % 2 === 1
             out.onboard = asleep ? 0 : 1
             out.currentMa = open ? 5 : asleep ? 0.14 : 48
             out.scope = wave(() => (asleep ? 0.05 : 3.1))
-            out.busNote = asleep ? '深度睡眠' : '运行'
+            out.busNote = asleep ? tLog('advancedSim.deepSleep') : tLog('advancedSim.runningState')
             if (Math.floor(t / 1300) !== Math.floor((t - 50) / 1300)) {
-              pushLog(asleep ? 'deep sleep · 电流降至 μA 量级' : '唤醒采样', asleep ? 'ok' : 'info')
+              pushLog(asleep ? tLog('advancedSim.sleepUa') : tLog('advancedSim.wakeSample'), asleep ? 'ok' : 'info')
             }
           } else if (scene === 'pot' || scene === 'gas' || scene === 'dht' || scene === 'imu') {
             const raw = open ? 200 + Math.random() * 3000 : input.pot
@@ -285,14 +291,14 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
               return open ? Math.random() * 3.3 : (filtered / 4095) * 3.3 + Math.sin(i) * n
             })
             if (Math.floor(t / 700) !== Math.floor((t - 50) / 700)) {
-              pushLog(open ? '传感器开路' : `sample=${Math.round(filtered)}${codeOk ? ' 已滤波' : ' 噪声大'}`, open ? 'warn' : 'ok')
+              pushLog(open ? tLog('advancedSim.sensorOpen') : tLog(codeOk ? 'advancedSim.sampleFiltered' : 'advancedSim.sampleNoisy', { n: Math.round(filtered) }), open ? 'warn' : 'ok')
             }
           } else {
             out.onboard = Math.floor(t / 700) % 2 ? 1 : 0
             out.currentMa = open ? 38 : 44
             out.scope = wave((i) => (codeOk ? 1.65 + Math.sin(i / 5) * 0.25 : 0.7 + Math.random()))
             if (Math.floor(t / 1400) !== Math.floor((t - 50) / 1400)) {
-              pushLog(codeOk ? `${lesson.title} · 任务在跑` : '关键 API 未补全', codeOk ? 'ok' : 'warn')
+              pushLog(codeOk ? tLog('advancedSim.taskRunning', { title: lesson.title }) : tLog('advancedSim.apiIncomplete'), codeOk ? 'ok' : 'warn')
             }
           }
         }

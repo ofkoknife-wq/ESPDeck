@@ -17,6 +17,15 @@ const TRACK_KEYS: Record<string, { title: string; goal: string }> = {
   product: { title: 'tracks.productTitle', goal: 'tracks.productGoal' },
 }
 
+const STAGE_KEYS: Record<string, { title: string; goal: string; project: string }> = {
+  core: { title: 'stages.coreTitle', goal: 'stages.coreGoal', project: 'stages.coreProject' },
+  protocols: { title: 'stages.protocolsTitle', goal: 'stages.protocolsGoal', project: 'stages.protocolsProject' },
+  realtime: { title: 'stages.realtimeTitle', goal: 'stages.realtimeGoal', project: 'stages.realtimeProject' },
+  sensors: { title: 'stages.sensorsTitle', goal: 'stages.sensorsGoal', project: 'stages.sensorsProject' },
+  product: { title: 'stages.productTitle', goal: 'stages.productGoal', project: 'stages.productProject' },
+  projects: { title: 'stages.projectsTitle', goal: 'stages.projectsGoal', project: 'stages.projectsProject' },
+}
+
 export function AdvancedWorkbench({
   onBack,
   basicDone,
@@ -120,6 +129,7 @@ export function AdvancedWorkbench({
           {ADVANCED_STAGES.map((stage) => {
             const Icon = stage.icon
             const trackKeys = TRACK_KEYS[stage.trackId]
+            const stageKeys = STAGE_KEYS[stage.id]
             return (
               <section key={stage.id} className="rounded-[1.5rem] border bg-card p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
@@ -130,10 +140,10 @@ export function AdvancedWorkbench({
                     {trackKeys ? t(trackKeys.title) : TRACKS.find((track) => track.id === stage.trackId)?.title} · {stage.index}
                   </span>
                 </div>
-                <h3 className="mt-3 text-lg font-black">{stage.title}</h3>
-                <p className="text-xs text-muted-foreground">{stage.goal}</p>
+                <h3 className="mt-3 text-lg font-black">{stageKeys ? t(stageKeys.title) : stage.title}</h3>
+                <p className="text-xs text-muted-foreground">{stageKeys ? t(stageKeys.goal) : stage.goal}</p>
                 <p className="mt-2 rounded-xl bg-secondary px-3 py-2 text-sm">
-                  {t('advanced.project', { name: stage.project })}
+                  {t('advanced.project', { name: stageKeys ? t(stageKeys.project) : stage.project })}
                 </p>
                 <ul className="mt-3 space-y-2">
                   {stage.lessonIds.map((id) => {

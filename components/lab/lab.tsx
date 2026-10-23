@@ -98,7 +98,7 @@ export function Lab() {
                 calloutsRef={calloutsRef}
               />
               {showLabels && (
-                <CalloutLayer key={lesson.id} callouts={LESSON_SCENES[lesson.id].callouts} elementsRef={calloutsRef} />
+                <CalloutLayer key={lesson.id} lessonId={lesson.id} callouts={LESSON_SCENES[lesson.id].callouts} elementsRef={calloutsRef} />
               )}
               <div className="pointer-events-none absolute bottom-3 left-0 z-10 hidden md:block">
                 <SimControls lesson={lesson} phase={sim.phase} inputs={sim.inputs} outputs={sim.outputs} setInput={sim.setInput} />

@@ -36,7 +36,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
   }
 
   return (
-    <div ref={rootRef} className={cn('relative', className)}>
+    <div ref={rootRef} className={cn('relative z-[110]', className)}>
       <button
         type="button"
         className="flex items-center gap-1.5 rounded-xl border border-[#e1e5eb] bg-white px-2 py-2 text-[11px] font-bold text-[#020826] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#eaddcf] sm:px-3 sm:text-xs"
@@ -57,7 +57,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
           id={listId}
           role="listbox"
           aria-label={t('header.language')}
-          className="absolute right-0 z-50 mt-1.5 max-h-56 w-44 overflow-y-auto overscroll-contain rounded-xl border border-[#e1e5eb] bg-white p-1 shadow-[0_16px_40px_rgb(31_41_55/18%)]"
+          className="absolute right-0 z-[120] mt-1.5 max-h-56 w-44 overflow-y-auto overscroll-contain rounded-xl border border-[#e1e5eb] bg-white p-1 shadow-[0_16px_40px_rgb(31_41_55/18%)]"
         >
           {LOCALE_META.map((item) => {
             const selected = item.code === locale

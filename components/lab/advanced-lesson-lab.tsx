@@ -236,7 +236,12 @@ export function AdvancedLessonLab({
                   calloutsRef={calloutsRef}
                 />
                 {showLabels && (
-                  <CalloutLayer key={lesson.sceneLessonId} callouts={LESSON_SCENES[lesson.sceneLessonId].callouts} elementsRef={calloutsRef} />
+                  <CalloutLayer
+                    key={lesson.sceneLessonId}
+                    lessonId={lesson.sceneLessonId}
+                    callouts={LESSON_SCENES[lesson.sceneLessonId].callouts}
+                    elementsRef={calloutsRef}
+                  />
                 )}
                 <StageToolbar viewRef={viewRef} showLabels={showLabels} onToggleLabels={() => setShowLabels((value) => !value)} />
               </>

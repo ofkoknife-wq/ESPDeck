@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useI18n } from './i18n/provider'
+import { translateLocale } from './i18n/messages'
 import type { LessonId } from './lessons'
 
 export type Phase = 'idle' | 'uploading' | 'running'
@@ -79,6 +81,10 @@ function wheel(pos: number): [number, number, number] {
 const TICK_MS = 50
 
 export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => void) {
+  const { locale } = useI18n()
+  const localeRef = useRef(locale)
+  localeRef.current = locale
+  const tLog = (path: string, vars?: Record<string, string | number>) => translateLocale(localeRef.current, path, vars)
   const [phase, setPhase] = useState<Phase>('idle')
   const [outputs, setOutputs] = useState<SimOutputs>(IDLE_OUTPUTS)
   const [inputs, setInputs] = useState<SimInputs>(DEFAULT_INPUTS)
@@ -124,12 +130,12 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
     setPhase('uploading')
     memoRef.current = {}
     const seq: [number, string, LogLine['tone']?][] = [
-      [0, '正在编译项目…'],
-      [450, '项目使用了 284,513 字节 (21%) 程序存储空间', 'info'],
-      [800, 'esptool.py v4.8 · 串口 /dev/ttyUSB0'],
-      [1100, 'Connecting.... 已连接 ESP32-D0WD-V3'],
-      [1450, '正在写入 Flash… 100%', 'info'],
-      [1750, 'Hard resetting via RTS pin… 上传完成', 'ok'],
+      [0, tLog('sim.log.compiling')],
+      [450, tLog('sim.log.sketchSize'), 'info'],
+      [800, tLog('sim.log.esptool')],
+      [1100, tLog('sim.log.connecting')],
+      [1450, tLog('sim.log.writingFlash'), 'info'],
+      [1750, tLog('sim.log.uploadDone'), 'ok'],
     ]
     seq.forEach(([at, text, tone]) => {
       timersRef.current.push(setTimeout(() => pushLog(text, tone), at))
@@ -180,7 +186,7 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
           out.onboard = Math.floor(t / 500) % 2 === 0 ? 1 : 0
           if (changed('hello', true)) {
             pushLog('Hello, ESP32!', 'ok')
-            pushLog('芯片型号: ESP32-D0WD-V3')
+            pushLog(tLog('sim.log.chip'))
           }
           break
         }
@@ -188,21 +194,21 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
           const on = Math.floor(t / 1000) % 2 === 0
           out.led = on ? 1 : 0
           out.onboard = out.led
-          if (changed('led', on)) pushLog(on ? 'LED 亮' : 'LED 灭')
+          if (changed('led', on)) pushLog(on ? tLog('sim.log.ledOn') : tLog('sim.log.ledOff'))
           break
         }
         case 'button': {
           out.led = input.button ? 1 : 0
           out.onboard = out.led
           if (changed('btn', input.button))
-            pushLog(input.button ? '按下 (GPIO4 = LOW)' : '松开 (GPIO4 = HIGH)', input.button ? 'ok' : undefined)
+            pushLog(input.button ? tLog('sim.log.btnDown') : tLog('sim.log.btnUp'), input.button ? 'ok' : undefined)
           break
         }
         case 'pot': {
           const raw = Math.round(input.pot)
           out.led = raw / 4095
           out.onboard = out.led
-          if (every('log', t, 400)) pushLog(`ADC: ${raw}  电压: ${((raw * 3.3) / 4095).toFixed(2)} V`)
+          if (every('log', t, 400)) pushLog(tLog('sim.log.adc', { raw, volts: ((raw * 3.3) / 4095).toFixed(2) }))
           break
         }
         case 'rgb': {
@@ -217,7 +223,7 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
           out.led = out.touchValue < 30 ? 1 : 0
           out.onboard = out.led
           if (every('log', t, 300))
-            pushLog(`touchRead = ${out.touchValue}${input.touch ? '   <- 检测到触摸' : ''}`, input.touch ? 'ok' : undefined)
+            pushLog(`touchRead = ${out.touchValue}${input.touch ? tLog('sim.log.touchHint') : ''}`, input.touch ? 'ok' : undefined)
           break
         }
         case 'dht': {
@@ -226,7 +232,11 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
             const hum = Math.round(62 - input.temp * 0.6 + Math.random() * 2)
             memo.temp = temp
             pushLog(
-              `温度: ${temp.toFixed(1)} °C  湿度: ${hum} %${temp > 30 ? '   [报警] 温度过高' : ''}`,
+              tLog('sim.log.dht', {
+                temp: temp.toFixed(1),
+                hum,
+                alarm: temp > 30 ? tLog('sim.log.dhtAlarm') : '',
+              }),
               temp > 30 ? 'warn' : undefined,
             )
           }
@@ -256,70 +266,70 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
         }
         case 'wifi': {
           if (t < 2200) {
-            if (every('dot', t, 500)) pushLog(t < 100 ? '正在连接 Wi-Fi「MyHome-2.4G」' : '.')
+            if (every('dot', t, 500)) pushLog(t < 100 ? tLog('sim.log.wifiConnecting') : '.')
           } else {
             out.wifi = true
             if (changed('connected', true)) {
               memo.web = input.webLed
-              pushLog('已连接！IP 地址: 192.168.1.42', 'ok')
-              pushLog('HTTP 服务器已启动，端口 80')
+              pushLog(tLog('sim.log.wifiConnectedIp'), 'ok')
+              pushLog(tLog('sim.log.httpStarted'))
             }
             out.led = input.webLed ? 1 : 0
             out.onboard = out.led
             if (changed('web', input.webLed))
-              pushLog(`收到请求: GET /${input.webLed ? 'on' : 'off'}  -> 200 ${input.webLed ? 'ON' : 'OFF'}`, 'info')
+              pushLog(tLog('sim.log.httpReq', { path: input.webLed ? 'on' : 'off', state: input.webLed ? 'ON' : 'OFF' }), 'info')
           }
           break
         }
         case 'oled': {
-          out.oledText = `温度 ${((input.temp + Math.sin(t / 1200)) as number).toFixed(1)}°C`
-          if (every('oled', t, 1200)) pushLog(`OLED 显示: ${out.oledText}`, 'ok')
+          out.oledText = tLog('sim.log.oledTemp', { temp: ((input.temp + Math.sin(t / 1200)) as number).toFixed(1) })
+          if (every('oled', t, 1200)) pushLog(tLog('sim.log.oledShow', { text: out.oledText }), 'ok')
           break
         }
         case 'ldr': {
           const light = Math.round(input.pot)
           out.led = 1 - light / 4095
           out.onboard = out.led
-          if (every('ldr', t, 500)) pushLog(`光照 ADC: ${light}  ${light < 1500 ? '环境较暗，LED 开启' : '光线充足'}`)
+          if (every('ldr', t, 500)) pushLog(tLog(light < 1500 ? 'sim.log.lightDim' : 'sim.log.lightBright', { light }))
           break
         }
         case 'ultrasonic': {
           const distance = Math.round((input.pot / 4095) * 398 + 2)
           out.oledText = `${distance} cm`
-          if (every('distance', t, 700)) pushLog(`距离: ${distance.toFixed(1)} cm`, 'info')
+          if (every('distance', t, 700)) pushLog(tLog('sim.log.distance', { cm: distance.toFixed(1) }), 'info')
           break
         }
         case 'relay': {
           const on = Math.floor(t / 2000) % 2 === 0
           out.led = on ? 1 : 0
           out.onboard = out.led
-          if (changed('relay', on)) pushLog(on ? '继电器吸合 · NO 导通' : '继电器释放 · NO 断开', on ? 'ok' : undefined)
+          if (changed('relay', on)) pushLog(on ? tLog('sim.log.relayOn') : tLog('sim.log.relayOff'), on ? 'ok' : undefined)
           break
         }
         case 'motor': {
           const angle = Math.round((Math.sin(t / 700) * 0.5 + 0.5) * 180)
           out.servo = angle
-          if (changed('motor', Math.round(angle / 15))) pushLog(`电机 PWM: ${angle}% · 方向 ${angle > 90 ? '正转' : '反转'}`)
+          if (changed('motor', Math.round(angle / 15))) pushLog(tLog('sim.log.motor', { pct: angle, dir: tLog(angle > 90 ? 'sim.log.motorFwd' : 'sim.log.motorRev') }))
           break
         }
         case 'keypad': {
           out.led = input.button ? 1 : 0
           out.onboard = out.led
-          if (changed('key', input.button)) pushLog(input.button ? '按键输入: 1 · GPIO4 = LOW' : '等待按键输入…', input.button ? 'ok' : undefined)
+          if (changed('key', input.button)) pushLog(input.button ? tLog('sim.log.keyDown') : tLog('sim.log.keyWait'), input.button ? 'ok' : undefined)
           break
         }
         case 'sleep': {
           const awake = Math.floor(t / 3500) % 2 === 0
           out.onboard = awake ? 1 : 0
-          if (changed('sleep', awake)) pushLog(awake ? '唤醒 · 运行用户程序' : '进入深度睡眠 · 功耗降低', awake ? 'ok' : 'info')
+          if (changed('sleep', awake)) pushLog(awake ? tLog('sim.log.sleepWake') : tLog('sim.log.sleepEnter'), awake ? 'ok' : 'info')
           break
         }
         case 'bluetooth': {
           out.wifi = t > 1800
           out.led = input.webLed ? 1 : 0
           out.onboard = out.led
-          if (changed('bt', out.wifi)) pushLog(out.wifi ? '蓝牙已连接: ESP32-LAB' : '正在等待手机连接…', out.wifi ? 'ok' : undefined)
-          if (out.wifi && changed('btCommand', input.webLed)) pushLog(input.webLed ? '收到蓝牙指令: ON' : '收到蓝牙指令: OFF', 'info')
+          if (changed('bt', out.wifi)) pushLog(out.wifi ? tLog('sim.log.btConnected') : tLog('sim.log.btWait'), out.wifi ? 'ok' : undefined)
+          if (out.wifi && changed('btCommand', input.webLed)) pushLog(input.webLed ? tLog('sim.log.btOn') : tLog('sim.log.btOff'), 'info')
           break
         }
         case 'neopixel': {
@@ -333,27 +343,27 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
           const pressed = Math.floor(t / 2200) % 2 === 1
           out.led = pressed ? 1 : 0
           out.onboard = out.led
-          if (changed('ir', pressed)) pushLog(pressed ? '收到红外编码 0xFFA25D · LED 开' : '等待红外遥控指令…', pressed ? 'ok' : undefined)
+          if (changed('ir', pressed)) pushLog(pressed ? tLog('sim.log.irCode') : tLog('sim.log.irWait'), pressed ? 'ok' : undefined)
           break
         }
         case 'fan': {
           const speed = Math.round((Math.sin(t / 1200) * 0.5 + 0.5) * 255)
           out.servo = speed / 255 * 180
           out.onboard = speed > 30 ? 1 : 0
-          if (changed('fan', Math.round(speed / 20))) pushLog(`风扇 PWM: ${speed}/255 · 转速 ${Math.round(speed / 255 * 100)}%`, 'info')
+          if (changed('fan', Math.round(speed / 20))) pushLog(tLog('sim.log.fan', { speed, pct: Math.round((speed / 255) * 100) }), 'info')
           break
         }
         case 'rtc': {
           out.wifi = t > 1600
-          out.oledText = new Date(Date.now() + t).toLocaleTimeString('zh-CN', { hour12: false })
-          if (changed('rtc', Math.floor(t / 1000))) pushLog(`当前时间: ${out.oledText}`, 'ok')
+          out.oledText = new Date(Date.now() + t).toLocaleTimeString(localeRef.current === 'zh-CN' ? 'zh-CN' : 'en-GB', { hour12: false })
+          if (changed('rtc', Math.floor(t / 1000))) pushLog(tLog('sim.log.timeNow', { text: out.oledText }), 'ok')
           break
         }
         case 'pir': {
           const motion = Math.floor(t / 2600) % 2 === 1
           out.led = motion ? 1 : 0
           out.onboard = out.led
-          if (changed('pir', motion)) pushLog(motion ? '检测到移动 · LED 开启' : '环境安静 · LED 熄灭', motion ? 'ok' : undefined)
+          if (changed('pir', motion)) pushLog(motion ? tLog('sim.log.pirOn') : tLog('sim.log.pirOff'), motion ? 'ok' : undefined)
           break
         }
         case 'joystick': {
@@ -361,44 +371,44 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
           const y = Math.round((Math.cos(t / 1100) * 0.5 + 0.5) * 4095)
           out.servo = x / 4095 * 180
           out.oledText = `X${x} Y${y}`
-          if (every('joy', t, 600)) pushLog(`摇杆 X=${x}  Y=${y}  按键=${input.button ? '按下' : '松开'}`, 'info')
+          if (every('joy', t, 600)) pushLog(tLog('sim.log.joy', { x, y, btn: tLog(input.button ? 'sim.log.joyDown' : 'sim.log.joyUp') }), 'info')
           break
         }
         case 'soil': {
           const moisture = Math.round(35 + (input.pot / 4095) * 55)
           out.led = moisture < 50 ? 1 : 0
           out.onboard = out.led
-          if (every('soil', t, 700)) pushLog(`土壤湿度: ${moisture}%${moisture < 50 ? ' · 需要浇水' : ' · 状态良好'}`, moisture < 50 ? 'warn' : 'ok')
+          if (every('soil', t, 700)) pushLog(tLog(moisture < 50 ? 'sim.log.soilDry' : 'sim.log.soilOk', { pct: moisture }), moisture < 50 ? 'warn' : 'ok')
           break
         }
         case 'gas': {
           const ppm = Math.round(180 + (input.pot / 4095) * 620)
           out.led = ppm > 600 ? 1 : 0
           out.onboard = out.led
-          if (every('gas', t, 700)) pushLog(`气体浓度: ${ppm} ppm${ppm > 600 ? ' · 超过阈值' : ''}`, ppm > 600 ? 'warn' : 'info')
+          if (every('gas', t, 700)) pushLog(tLog(ppm > 600 ? 'sim.log.gasOver' : 'sim.log.gasOk', { ppm }), ppm > 600 ? 'warn' : 'info')
           break
         }
         case 'imu': {
           const angle = Math.round(Math.sin(t / 700) * 45)
           out.servo = angle + 90
-          if (every('imu', t, 500)) pushLog(`加速度 X=${angle}°  Y=${Math.round(Math.cos(t / 900) * 20)}°`, 'info')
+          if (every('imu', t, 500)) pushLog(tLog('sim.log.imu', { x: angle, y: Math.round(Math.cos(t / 900) * 20) }), 'info')
           break
         }
         case 'gps': {
           out.wifi = true
           out.oledText = '31.2304,121.4737'
-          if (every('gps', t, 1200)) pushLog('GPS 定位成功 · 卫星数: 8', 'ok')
+          if (every('gps', t, 1200)) pushLog(tLog('sim.log.gpsFix'), 'ok')
           break
         }
         case 'camera': {
           out.wifi = t > 1500
-          if (every('camera', t, 1000)) pushLog(out.wifi ? '摄像头在线 · 发送一帧 JPEG' : '正在初始化摄像头…', out.wifi ? 'ok' : undefined)
+          if (every('camera', t, 1000)) pushLog(out.wifi ? tLog('sim.log.camOnline') : tLog('sim.log.camInit'), out.wifi ? 'ok' : undefined)
           break
         }
         case 'lightstrip': {
           const pos = Math.floor(t / 18) % 255
           out.rgb = wheel(pos)
-          if (every('strip', t, 500)) pushLog(`灯带动画 · 当前颜色 RGB(${out.rgb.join(', ')})`, 'ok')
+          if (every('strip', t, 500)) pushLog(tLog('sim.log.strip', { rgb: out.rgb.join(', ') }), 'ok')
           break
         }
       }
