@@ -16,6 +16,7 @@ import { InstrumentDock } from './instrument-dock'
 import { QuizPanel } from './quiz-panel'
 import { PanZoomStage } from './pan-zoom-stage'
 import { PcbView } from './pcb-view'
+import { ScenePartsPanel } from './scene-parts-panel'
 import { SchematicView } from './schematic-view'
 import { StageToolbar } from './stage-toolbar'
 import { LESSON_SCENES } from './three/circuits'
@@ -50,6 +51,7 @@ export function AdvancedLessonLab({
   const [solved, setSolved] = useState<string[]>(record.faultsSolved)
   const [guess, setGuess] = useState('')
   const [showLabels, setShowLabels] = useState(true)
+  const [showParts, setShowParts] = useState(true)
   const viewRef = useRef<ViewApi | null>(null)
   const calloutsRef = useRef<(HTMLDivElement | null)[]>([])
   const sim = useAdvancedSimulation(lesson, code, injected, solved)
@@ -243,7 +245,14 @@ export function AdvancedLessonLab({
                     elementsRef={calloutsRef}
                   />
                 )}
-                <StageToolbar viewRef={viewRef} showLabels={showLabels} onToggleLabels={() => setShowLabels((value) => !value)} />
+                <ScenePartsPanel lessonId={lesson.sceneLessonId} viewRef={viewRef} open={showParts} />
+                <StageToolbar
+                  viewRef={viewRef}
+                  showLabels={showLabels}
+                  onToggleLabels={() => setShowLabels((value) => !value)}
+                  showParts={showParts}
+                  onToggleParts={() => setShowParts((value) => !value)}
+                />
               </>
             )}
           </section>

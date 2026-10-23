@@ -13,10 +13,17 @@ export type ViewApi = {
   reset: () => void
   zoom: (dir: 1 | -1) => void
   rotate: (dir: 1 | -1) => void
+  /** Animate camera to look at a world-space point (already includes scene offsetX). */
+  focusAt: (at: [number, number, number]) => void
 }
 
 const CAMERA_POS: [number, number, number] = [6, 9, 11]
 const TARGET: [number, number, number] = [0, 0.4, 0.2]
+const CAM_OFFSET: [number, number, number] = [
+  CAMERA_POS[0] - TARGET[0],
+  CAMERA_POS[1] - TARGET[1],
+  CAMERA_POS[2] - TARGET[2],
+]
 
 type SceneProps = {
   lessonId: LessonId
@@ -56,8 +63,19 @@ function Controls({ extent, viewRef }: { extent: number; viewRef: RefObject<View
       rotate: (dir) => {
         void controls.current?.rotate((dir * Math.PI) / 8, 0, true)
       },
+      focusAt: (at) => {
+        const c = controls.current
+        if (!c) return
+        const pull = 0.62
+        const [tx, ty, tz] = at
+        const ex = tx + CAM_OFFSET[0] * pull
+        const ey = ty + CAM_OFFSET[1] * pull
+        const ez = tz + CAM_OFFSET[2] * pull
+        void c.setLookAt(ex, ey, ez, tx, ty + 0.15, tz, true)
+        void c.zoomTo(Math.min(fit * 1.55, 220), true)
+      },
     }
-  }, [reset, viewRef])
+  }, [fit, reset, viewRef])
 
   return (
     <CameraControls

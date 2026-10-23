@@ -14,6 +14,7 @@ import { CodePanel } from './code-panel'
 import { Header } from './header'
 import { LessonPanel } from './lesson-panel'
 import { LessonRail } from './lesson-rail'
+import { ScenePartsPanel } from './scene-parts-panel'
 import { SimControls } from './sim-controls'
 import { StageToolbar } from './stage-toolbar'
 import { LESSON_SCENES } from './three/circuits'
@@ -34,6 +35,7 @@ export function Lab() {
   const lessons = useMemo(() => getLessons(locale), [locale])
   const [index, setIndex] = useState(0)
   const [showLabels, setShowLabels] = useState(true)
+  const [showParts, setShowParts] = useState(true)
   const [advanced, setAdvanced] = useState(false)
   const safeIndex = Math.min(index, lessons.length - 1)
   const lesson = lessons[safeIndex]
@@ -100,10 +102,17 @@ export function Lab() {
               {showLabels && (
                 <CalloutLayer key={lesson.id} lessonId={lesson.id} callouts={LESSON_SCENES[lesson.id].callouts} elementsRef={calloutsRef} />
               )}
+              <ScenePartsPanel lessonId={lesson.id} viewRef={viewRef} open={showParts} />
               <div className="pointer-events-none absolute bottom-3 left-0 z-10 hidden md:block">
                 <SimControls lesson={lesson} phase={sim.phase} inputs={sim.inputs} outputs={sim.outputs} setInput={sim.setInput} />
               </div>
-              <StageToolbar viewRef={viewRef} showLabels={showLabels} onToggleLabels={() => setShowLabels((v) => !v)} />
+              <StageToolbar
+                viewRef={viewRef}
+                showLabels={showLabels}
+                onToggleLabels={() => setShowLabels((v) => !v)}
+                showParts={showParts}
+                onToggleParts={() => setShowParts((v) => !v)}
+              />
             </section>
 
             <div className="md:hidden">

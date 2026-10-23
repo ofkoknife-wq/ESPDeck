@@ -1,6 +1,6 @@
 'use client'
 
-import { Locate, RotateCcw, RotateCw, Tag, ZoomIn, ZoomOut } from 'lucide-react'
+import { Cuboid, Locate, RotateCcw, RotateCw, Tag, ZoomIn, ZoomOut } from 'lucide-react'
 import type { RefObject } from 'react'
 import { useI18n } from '@/lib/i18n/provider'
 import { cn } from '@/lib/utils'
@@ -10,9 +10,11 @@ type Props = {
   viewRef: RefObject<ViewApi | null>
   showLabels: boolean
   onToggleLabels: () => void
+  showParts: boolean
+  onToggleParts: () => void
 }
 
-export function StageToolbar({ viewRef, showLabels, onToggleLabels }: Props) {
+export function StageToolbar({ viewRef, showLabels, onToggleLabels, showParts, onToggleParts }: Props) {
   const { t } = useI18n()
   const btn =
     'flex size-8 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted aria-pressed:bg-foreground aria-pressed:text-background'
@@ -39,6 +41,9 @@ export function StageToolbar({ viewRef, showLabels, onToggleLabels }: Props) {
         <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
         <button className={cn(btn)} onClick={onToggleLabels} aria-pressed={showLabels} aria-label={t('stage.labels')}>
           <Tag className="size-4" />
+        </button>
+        <button className={cn(btn)} onClick={onToggleParts} aria-pressed={showParts} aria-label={t('stage.parts')}>
+          <Cuboid className="size-4" />
         </button>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
 import { useI18n } from '@/lib/i18n/provider'
 import type { Lesson, LessonId } from '@/lib/lessons'
 import { cn } from '@/lib/utils'
+import { LessonThumb } from './lesson-thumb'
 
 type Props = {
   lessons: Lesson[]
@@ -69,14 +70,14 @@ export function LessonRail({ lessons, activeIndex, completed, onSelect, onOpenAd
                   active && 'border-foreground ring-1 ring-foreground',
                 )}
               >
-                <span
+                <LessonThumb
+                  id={lesson.id}
                   className={cn(
-                    'flex size-10 shrink-0 items-center justify-center rounded-md bg-background transition-colors',
-                    active && 'bg-primary text-primary-foreground',
+                    'ring-1 ring-transparent transition',
+                    active && 'ring-foreground shadow-sm',
+                    done && !active && 'opacity-90',
                   )}
-                >
-                  <lesson.icon className="size-5" aria-hidden="true" />
-                </span>
+                />
                 <span className="flex min-w-0 flex-col">
                   <span className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
                     {t('lab.lessonN', { n: i + 1 })}
