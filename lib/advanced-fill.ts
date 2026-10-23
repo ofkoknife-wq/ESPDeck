@@ -91,7 +91,15 @@ function faultsFor(kind: Kind): Fault[] {
   ]
 }
 
-const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: string[]; regex?: string }[]; holes: { id: string; hint: string }[] }> = {
+type ApiPack = {
+  skeleton: string
+  tests: { name: string; includes?: string[]; regex?: string }[]
+  holes: { id: string; hint: string }[]
+  solution: string
+  guide: { title: string; body: string }[]
+}
+
+const API: Record<Kind, ApiPack> = {
   wifi: {
     skeleton: `void setup() {\n  Serial.begin(115200);\n  // TODO: WiFi.begin 并在断开时重连\n}\nvoid loop() {\n  delay(500);\n}`,
     tests: [
@@ -99,6 +107,11 @@ const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: st
       { name: '处理断线', regex: 'WL_CONNECTED|reconnect' },
     ],
     holes: [{ id: 'wifi', hint: 'WiFi.begin(ssid, pass); 判断 WL_CONNECTED' }],
+    solution: `#include <WiFi.h>\nconst char* ssid = "demo";\nconst char* pass = "password";\n\nvoid ensureWifi() {\n  if (WiFi.status() == WL_CONNECTED) return;\n  WiFi.begin(ssid, pass);\n  for (int i = 0; i < 20 && WiFi.status() != WL_CONNECTED; i++) delay(250);\n}\n\nvoid setup() {\n  Serial.begin(115200);\n  ensureWifi();\n}\nvoid loop() {\n  ensureWifi();\n  delay(500);\n}`,
+    guide: [
+      { title: '放哪里', body: '在 setup 里首次连接；在 loop 里定期检查 WiFi.status()。' },
+      { title: '写什么', body: '调用 WiFi.begin(ssid, pass)，用 WL_CONNECTED 判断是否成功，失败则限频重连。' },
+    ],
   },
   ble: {
     skeleton: `void setup() {\n  Serial.begin(115200);\n  // TODO: 启动 BLE 并设置设备名\n}\nvoid loop() { delay(200); }`,
@@ -107,6 +120,11 @@ const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: st
       { name: '设备名', regex: 'begin\\(|setName|ESP32' },
     ],
     holes: [{ id: 'ble', hint: 'SerialBT.begin("ESP32-LAB") 或 BLEDevice::init' }],
+    solution: `#include "BluetoothSerial.h"\nBluetoothSerial SerialBT;\n\nvoid setup() {\n  Serial.begin(115200);\n  SerialBT.begin("ESP32-LAB");\n}\nvoid loop() { delay(200); }`,
+    guide: [
+      { title: '放哪里', body: '在 setup 里启动一次即可，loop 保持空闲或处理收发。' },
+      { title: '写什么', body: 'SerialBT.begin("设备名")，手机端就能搜到 ESP32-LAB。' },
+    ],
   },
   sleep: {
     skeleton: `void setup() {\n  Serial.begin(115200);\n  // TODO: 定时唤醒并 deep sleep\n}\nvoid loop() {}`,
@@ -115,6 +133,11 @@ const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: st
       { name: '进入睡眠', regex: 'esp_deep_sleep_start|deepSleep' },
     ],
     holes: [{ id: 'sleep', hint: 'esp_sleep_enable_timer_wakeup(...); esp_deep_sleep_start();' }],
+    solution: `void setup() {\n  Serial.begin(115200);\n  delay(100);\n  esp_sleep_enable_timer_wakeup(10ULL * 1000000ULL);\n  Serial.println("sleep");\n  esp_deep_sleep_start();\n}\nvoid loop() {}`,
+    guide: [
+      { title: '放哪里', body: '全部写在 setup：配好唤醒源后立刻 deep sleep，loop 通常到不了。' },
+      { title: '写什么', body: 'esp_sleep_enable_timer_wakeup(微秒) 后调用 esp_deep_sleep_start()。' },
+    ],
   },
   bus: {
     skeleton: `void setup() {\n  Serial.begin(115200);\n  // TODO: 初始化总线\n}\nvoid loop() {\n  // TODO: 读取传感器\n  delay(200);\n}`,
@@ -123,6 +146,11 @@ const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: st
       { name: '读取数据', regex: 'transfer|read|analogRead' },
     ],
     holes: [{ id: 'bus', hint: 'SPI.begin() 或 Wire.begin(21,22) 后读取' }],
+    solution: `#include <Wire.h>\n\nvoid setup() {\n  Serial.begin(115200);\n  Wire.begin(21, 22);\n}\nvoid loop() {\n  Wire.requestFrom(0x3C, 1);\n  if (Wire.available()) Serial.println(Wire.read());\n  delay(200);\n}`,
+    guide: [
+      { title: '放哪里', body: '总线 begin 写在 setup；周期性 read / transfer 写在 loop。' },
+      { title: '写什么', body: 'Wire.begin(SDA, SCL) 或 SPI.begin()，再按器件手册读寄存器。' },
+    ],
   },
   filter: {
     skeleton: `int avg = 0;\nvoid setup() { Serial.begin(115200); }\nvoid loop() {\n  int raw = analogRead(34);\n  // TODO: 平均或中值滤波\n  delay(50);\n}`,
@@ -131,6 +159,11 @@ const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: st
       { name: '滤波', regex: 'avg|median|filter|kalman' },
     ],
     holes: [{ id: 'avg', hint: 'avg = (avg * 7 + raw) / 8;' }],
+    solution: `int avg = 0;\nvoid setup() { Serial.begin(115200); }\nvoid loop() {\n  int raw = analogRead(34);\n  avg = (avg * 7 + raw) / 8;\n  Serial.println(avg);\n  delay(50);\n}`,
+    guide: [
+      { title: '放哪里', body: '在 loop 里、analogRead 之后立刻做滤波。' },
+      { title: '写什么', body: '用滑动平均 avg = (avg * 7 + raw) / 8，或中值滤波去掉尖峰。' },
+    ],
   },
   rtos: {
     skeleton: `void taskA(void*) {\n  for (;;) { vTaskDelay(10); }\n}\nvoid setup() {\n  Serial.begin(115200);\n  // TODO: 创建任务\n}\nvoid loop() {}`,
@@ -139,6 +172,11 @@ const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: st
       { name: '让出 CPU', regex: 'vTaskDelay|delay' },
     ],
     holes: [{ id: 'task', hint: 'xTaskCreate(taskA, "a", 2048, NULL, 1, NULL);' }],
+    solution: `void taskA(void*) {\n  for (;;) { vTaskDelay(10); }\n}\nvoid setup() {\n  Serial.begin(115200);\n  xTaskCreate(taskA, "a", 2048, NULL, 1, NULL);\n}\nvoid loop() {}`,
+    guide: [
+      { title: '放哪里', body: '任务函数写在文件上方；xTaskCreate 放在 setup。' },
+      { title: '写什么', body: 'xTaskCreate(函数, 名字, 栈大小, 参数, 优先级, handle)；循环里用 vTaskDelay 让出 CPU。' },
+    ],
   },
   cam: {
     skeleton: `void setup() {\n  Serial.begin(115200);\n  // TODO: 初始化摄像头并出流\n}\nvoid loop() { delay(100); }`,
@@ -147,6 +185,11 @@ const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: st
       { name: '取帧或出流', regex: 'esp_camera_fb_get|jpg|stream' },
     ],
     holes: [{ id: 'cam', hint: 'esp_camera_init(&config); 然后 fb_get' }],
+    solution: `#include "esp_camera.h"\n\nvoid setup() {\n  Serial.begin(115200);\n  camera_config_t config = {};\n  // 按板型填引脚后：\n  esp_camera_init(&config);\n}\nvoid loop() {\n  camera_fb_t* fb = esp_camera_fb_get();\n  if (fb) esp_camera_fb_return(fb);\n  delay(100);\n}`,
+    guide: [
+      { title: '放哪里', body: 'esp_camera_init 在 setup；取帧在 loop 或独立任务。' },
+      { title: '写什么', body: '配好 camera_config_t 后 init，用 esp_camera_fb_get 取 JPEG，用完 fb_return。' },
+    ],
   },
   product: {
     skeleton: `enum State { IDLE, RUN, FAULT };\nState st = IDLE;\nvoid setup() { Serial.begin(115200); }\nvoid loop() {\n  // TODO: 用状态机推进\n  delay(100);\n}`,
@@ -155,6 +198,11 @@ const API: Record<Kind, { skeleton: string; tests: { name: string; includes?: st
       { name: '状态切换', regex: 'st\\s*=' },
     ],
     holes: [{ id: 'fsm', hint: '根据事件切换 IDLE / RUN / FAULT' }],
+    solution: `enum State { IDLE, RUN, FAULT };\nState st = IDLE;\nvoid setup() { Serial.begin(115200); }\nvoid loop() {\n  switch (st) {\n    case IDLE: st = RUN; break;\n    case RUN: if (/* fault */) st = FAULT; break;\n    case FAULT: st = IDLE; break;\n  }\n  delay(100);\n}`,
+    guide: [
+      { title: '放哪里', body: '状态枚举和变量放文件顶部；switch 写在 loop。' },
+      { title: '写什么', body: '按事件把 st 在 IDLE / RUN / FAULT 之间切换，每个状态只做该做的事。' },
+    ],
   },
 }
 
@@ -364,7 +412,13 @@ export function fillLesson(
     sceneLessonId,
     graph: graphFor(kind, extra),
     faults: faultsFor(kind),
-    challenge: { skeleton: `// ${title}\n${api.skeleton}`, holes: api.holes, tests: api.tests },
+    challenge: {
+      skeleton: `// ${title}\n${api.skeleton}`,
+      holes: api.holes,
+      tests: api.tests,
+      solution: api.solution,
+      guide: api.guide,
+    },
     quiz: { questions: quiz, passScore: 2 },
     kit: {
       ...KIT,

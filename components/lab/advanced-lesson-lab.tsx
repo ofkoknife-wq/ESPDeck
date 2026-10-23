@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AdvancedLessonPackage, TaskStep, ViewMode } from '@/lib/advanced-types'
 import { runCodeTests } from '@/lib/code-tests'
 import type { LessonRecord } from '@/lib/advanced-types'
-import { celebrateThanks } from '@/lib/thanks'
 import { useAdvancedSimulation } from '@/lib/use-advanced-simulation'
 import { cn } from '@/lib/utils'
 import { CalloutLayer } from './callout-layer'
@@ -295,14 +294,7 @@ export function AdvancedLessonLab({
 
           {step === 'quiz' && (
             <div className="mt-3 min-h-0 flex-1 overflow-auto">
-              <QuizPanel
-                quiz={lesson.quiz}
-                savedScore={record.quizScore}
-                onScored={(quizScore) => {
-                  onPatch({ quizScore })
-                  if (quizScore >= lesson.quiz.passScore) celebrateThanks('first-quiz')
-                }}
-              />
+              <QuizPanel quiz={lesson.quiz} savedScore={record.quizScore} onScored={(quizScore) => onPatch({ quizScore })} />
             </div>
           )}
 

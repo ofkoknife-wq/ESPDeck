@@ -3,7 +3,7 @@
 import { Check, Coffee, Share2, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { SITE_NAME, SITE_URL } from '@/lib/site'
+import { SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/lib/site'
 import { THANKS_EVENT } from '@/lib/thanks'
 
 type Product = {
@@ -56,25 +56,33 @@ const PRODUCTS: Product[] = [
 ]
 
 const COPY: Record<string, { title: string; body: string }> = {
-  'first-run': {
-    title: '程序已经跑起来了',
-    body: '第一课能看见灯在闪，硬件就不那么吓人了。如果 ESPDeck 帮到你，欢迎请开发者喝杯咖啡，让实验室继续免费、继续拆课。',
+  'milestone-5': {
+    title: '五节课练下来了',
+    body: '点灯、按钮这些台阶已经踩过了。如果 ESPDeck 对你有用，欢迎请开发者喝杯咖啡。',
   },
-  'five-lessons': {
-    title: '五节课，已经入门了',
-    body: '按钮、灯、传感器——你已经把好几步踩实了。愿意的话，赞赏会变成下一课更清楚的台阶。',
+  'milestone-10': {
+    title: '十节课了',
+    body: '传感器和显示也上手了。愿意的话，赞赏会变成下一课更清楚的台阶。',
+  },
+  'milestone-15': {
+    title: '十五节课',
+    body: '你已经走完半程基础路线。继续跳着学也行，进阶工位随时能进。',
+  },
+  'milestone-20': {
+    title: '二十节课',
+    body: '越练越熟。若实验室帮到你，欢迎打赏支持个人开发者。',
+  },
+  'milestone-25': {
+    title: '二十五节课',
+    body: '再几课就走完零基础了。感谢陪练到这里。',
   },
   'all-basic': {
     title: '零基础路线走完了',
-    body: '三十课练下来不容易。若这间实验室陪你走过，欢迎打赏支持，或进进阶工位继续做项目。',
-  },
-  'first-quiz': {
-    title: '测验过关了',
-    body: '概念对上了，工位才算真的走完一圈。如果 ESPDeck 有用，欢迎赞赏支持个人开发者。',
+    body: '三十课练下来不容易。欢迎打赏支持，或从课程列表末尾进入进阶工作台。',
   },
   default: {
-    title: '这节课跑起来了',
-    body: '如果 ESPDeck 让硬件不那么吓人，欢迎请开发者喝杯咖啡，让它继续免费、继续改。',
+    title: '又往前走了一步',
+    body: '如果 ESPDeck 帮你练起了 ESP32，欢迎请开发者喝杯咖啡，让它继续免费、继续改。',
   },
 }
 
@@ -117,7 +125,7 @@ function ThanksModal({ reason, onClose }: { reason: string | null; onClose: () =
   if (!reason) return null
 
   const share = async () => {
-    const text = '推荐 ESPDeck —— 硬件看起来很吓人，直到你把它拆成小步骤。给新手练手的 ESP32 实验室。'
+    const text = `推荐 ESPDeck —— ${SITE_TAGLINE}。给新手练手的 ESP32 实验室。`
     try {
       if (navigator.share) {
         await navigator.share({ title: SITE_NAME, text, url: SITE_URL })

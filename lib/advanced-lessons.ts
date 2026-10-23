@@ -67,6 +67,11 @@ const gpioIsr: AdvancedLessonPackage = {
       { name: '注册中断', includes: ['attachInterrupt'] },
       { name: '消抖或 millis', regex: 'millis|debounce' },
     ],
+    solution: `const int BTN = 4;\nconst int LED = 2;\nvolatile bool pending = false;\nunsigned long lastMs = 0;\n\nvoid IRAM_ATTR onBtn() {\n  pending = true;\n}\n\nvoid setup() {\n  pinMode(LED, OUTPUT);\n  pinMode(BTN, INPUT_PULLUP);\n  attachInterrupt(BTN, onBtn, FALLING);\n}\n\nvoid loop() {\n  if (pending) {\n    unsigned long now = millis();\n    if (now - lastMs > 20) {\n      digitalWrite(LED, !digitalRead(LED));\n      lastMs = now;\n    }\n    pending = false;\n  }\n}`,
+    guide: [
+      { title: 'setup 里写什么', body: 'pinMode(BTN, INPUT_PULLUP) 避免浮空，再用 attachInterrupt(BTN, onBtn, FALLING) 注册下降沿。' },
+      { title: 'loop 里写什么', body: 'ISR 只置 pending；在 loop 里用 millis 做 ≥20ms 消抖后再 digitalWrite 翻转 LED。' },
+    ],
   },
   quiz: {
     passScore: 3,
@@ -125,6 +130,11 @@ const adcFilter: AdvancedLessonPackage = {
       { name: '读取 ADC', includes: ['analogRead'] },
       { name: '滑动平均', regex: 'avg|average|filter' },
     ],
+    solution: `const int POT = 34;\nint avg = 0;\n\nvoid setup() {\n  Serial.begin(115200);\n  analogReadResolution(12);\n}\n\nvoid loop() {\n  int raw = analogRead(POT);\n  avg = (avg * 7 + raw) / 8;\n  Serial.printf("raw=%d avg=%d V=%.2f\\n", raw, avg, avg * 3.3 / 4095.0);\n  delay(50);\n}`,
+    guide: [
+      { title: '放哪里', body: '在 loop 里、analogRead 之后立刻写滤波公式。' },
+      { title: '写什么', body: 'avg = (avg * 7 + raw) / 8; 再用 avg 换算电压或驱动 PWM。' },
+    ],
   },
   quiz: {
     passScore: 3,
@@ -165,6 +175,11 @@ const serialLog: AdvancedLessonPackage = {
     tests: [
       { name: '115200 波特率', includes: ['115200'] },
       { name: 'millis 时间戳', includes: ['millis'] },
+    ],
+    solution: `enum { LOG_INFO = 1, LOG_WARN = 2 };\n\nvoid logMsg(int level, const char* msg) {\n  Serial.printf("[%lu][%d] %s\\n", millis(), level, msg);\n}\n\nvoid setup() {\n  Serial.begin(115200);\n}\n\nvoid loop() {\n  logMsg(LOG_INFO, "heartbeat");\n  delay(500);\n}`,
+    guide: [
+      { title: '放哪里', body: '封装在 logMsg 函数里；setup 只负责 Serial.begin(115200)。' },
+      { title: '写什么', body: '用 millis() 做时间戳，再打印级别和消息，避免无延迟刷屏。' },
     ],
   },
   quiz: {
@@ -214,6 +229,11 @@ const openWire: AdvancedLessonPackage = {
       { name: '配置输出', includes: ['pinMode'] },
       { name: '翻转 GPIO', includes: ['digitalWrite'] },
     ],
+    solution: `const int LED = 2;\n\nvoid setup() {\n  pinMode(LED, OUTPUT);\n  Serial.begin(115200);\n}\n\nvoid loop() {\n  digitalWrite(LED, HIGH);\n  Serial.println("probe HIGH");\n  delay(500);\n  digitalWrite(LED, LOW);\n  delay(500);\n}`,
+    guide: [
+      { title: '本课重点', body: '代码本身可以保持输出方波；真正要练的是对照原理图点选开路网表。' },
+      { title: '怎么查', body: 'GPIO 有波、灯不亮 → 查限流到 LED 或 GND 是否开路；电流≈0 几乎一定是回路断了。' },
+    ],
   },
   quiz: {
     passScore: 2,
@@ -251,6 +271,11 @@ const crashLog: AdvancedLessonPackage = {
     tests: [
       { name: '有终止条件', regex: 'n\\s*<=\\s*0|n\\s*==\\s*0' },
       { name: '递归递减', includes: ['n - 1'] },
+    ],
+    solution: `int safeWork(int n) {\n  if (n <= 0) return 0;\n  return n + safeWork(n - 1);\n}\n\nvoid setup() {\n  Serial.begin(115200);\n  Serial.printf("sum=%d\\n", safeWork(5));\n}\n\nvoid loop() {\n  delay(1000);\n}`,
+    guide: [
+      { title: '放哪里', body: '改 safeWork 函数体：先写 if 终止，再递归调用 n-1。' },
+      { title: '写什么', body: 'if (n <= 0) return 0; return n + safeWork(n - 1); 避免无限递归撑爆栈。' },
     ],
   },
   quiz: {
@@ -304,6 +329,11 @@ const sensorNode: AdvancedLessonPackage = {
       { name: '初始化 I2C', includes: ['Wire.begin'] },
       { name: '读取温度', includes: ['readTemperature'] },
       { name: '过热或 GPIO2', regex: 'digitalWrite|avg' },
+    ],
+    solution: `#include <Wire.h>\n#include <DHT.h>\nDHT dht(4, DHT11);\nfloat avg = 25;\n\nvoid setup() {\n  Serial.begin(115200);\n  dht.begin();\n  Wire.begin(21, 22);\n  pinMode(2, OUTPUT);\n}\n\nvoid loop() {\n  float t = dht.readTemperature();\n  if (!isnan(t)) avg = avg * 0.8 + t * 0.2;\n  digitalWrite(2, avg > 30);\n  Serial.printf("t=%.1f avg=%.1f\\n", t, avg);\n  delay(2000);\n}`,
+    guide: [
+      { title: 'setup', body: 'dht.begin() 后写 Wire.begin(21, 22)，再 pinMode(2, OUTPUT)。' },
+      { title: 'loop', body: 'readTemperature → 滑动平均 → avg>30 时拉高 GPIO2，串口打印便于对照。' },
     ],
   },
   quiz: {
@@ -377,6 +407,12 @@ const i2cScan: AdvancedLessonPackage = {
       { name: '指定 21/22', regex: 'Wire\\.begin\\(\\s*21\\s*,\\s*22\\s*\\)' },
       { name: '扫描传输', includes: ['beginTransmission'] },
       { name: '使用 0x3C', includes: ['0x3C'] },
+    ],
+    solution: `#include <Wire.h>\n\nvoid setup() {\n  Serial.begin(115200);\n  Wire.begin(21, 22);\n}\n\nvoid loop() {\n  Serial.println("I2C scan");\n  for (byte addr = 1; addr < 127; addr++) {\n    Wire.beginTransmission(addr);\n    if (Wire.endTransmission() == 0) {\n      Serial.printf("found 0x%02X\\n", addr);\n    }\n  }\n  // 显示库请用 0x3C，不要写成 0x3D\n  Wire.beginTransmission(0x3C);\n  Wire.endTransmission();\n  delay(2000);\n}`,
+    guide: [
+      { title: 'setup', body: 'Wire.begin(21, 22) —— SDA=21、SCL=22。' },
+      { title: 'loop 扫描', body: '对每个地址 beginTransmission + endTransmission，返回 0 表示 ACK。' },
+      { title: '地址', body: 'SSD1306 常见是 0x3C；写成 0x3D 会导致显示库失败。' },
     ],
   },
   quiz: {

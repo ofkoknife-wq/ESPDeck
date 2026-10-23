@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail } from 'lucide-react'
 import { DocShell } from '@/components/site/doc-shell'
 import { ABOUT_CONTACT, INFO_PAGES } from '@/lib/info-pages'
 import { SITE_URL, SUPPORT_EMAIL } from '@/lib/site'
@@ -39,16 +38,7 @@ export default function AboutPage() {
             </li>
             <li>
               {ABOUT_CONTACT.mailLabel}
-              <a href={`mailto:${SUPPORT_EMAIL}`}>
-                <Mail className="size-3.5" aria-hidden />
-                {SUPPORT_EMAIL}
-              </a>
-            </li>
-            <li>
-              {ABOUT_CONTACT.inspirationLabel}
-              <a href={ABOUT_CONTACT.inspirationHref} target="_blank" rel="noopener noreferrer">
-                {ABOUT_CONTACT.inspirationName}
-              </a>
+              <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
             </li>
           </ul>
           <p>

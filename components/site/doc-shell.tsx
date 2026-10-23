@@ -1,4 +1,4 @@
-import { Cpu } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { SiteFooter } from './site-footer'
@@ -8,9 +8,7 @@ export function DocShell({ children }: { children: ReactNode }) {
     <div className="lab-shell flex min-h-dvh flex-col">
       <header className="flex items-center justify-between gap-4 border-b border-[#e1e5eb] bg-white/95 px-4 py-3 shadow-[0_2px_14px_rgb(31_41_55/6%)] backdrop-blur lg:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-2xl bg-[#f43f78] text-white shadow-[0_8px_18px_rgb(244_63_120/22%)]">
-            <Cpu className="size-6" aria-hidden="true" />
-          </div>
+          <Image src="/logo.svg" alt="" width={40} height={40} className="size-10 rounded-2xl" priority />
           <div className="min-w-0">
             <p className="truncate text-lg font-black tracking-tight text-[#1d1d1f] md:text-2xl">
               ESP32 实验室 <span className="font-mono text-xs font-normal tracking-normal text-[#2a2a2a]">/ 实验系统</span>

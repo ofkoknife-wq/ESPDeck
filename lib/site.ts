@@ -2,7 +2,8 @@ export const SITE_NAME = 'ESPDeck'
 export const SITE_URL = 'https://espdeck.pixzens.com'
 export const SUPPORT_EMAIL = 'support@pixzens.com'
 export const KO_FI_URL = 'https://ko-fi.com/naxol'
-export const ARDUINO_INSPIRATION_URL = 'https://learn-arduino-red.vercel.app'
+/** 站点一句话介绍（页脚、分享、SEO 共用） */
+export const SITE_TAGLINE = '打开网页，把 ESP32 练到手'
 
 export const FOOTER_LINKS = [
   { href: '/about', label: '关于我们' },

@@ -1,29 +1,11 @@
 'use client'
 
-import { BookOpen, Cpu } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import type { LessonRecord } from '@/lib/advanced-types'
 import { TRACKS, trackProgress } from '@/lib/curriculum'
 import { LESSONS } from '@/lib/lessons'
-
-function Clock() {
-  const [now, setNow] = useState<Date | null>(null)
-  useEffect(() => {
-    setNow(new Date())
-    const id = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(id)
-  }, [])
-  if (!now) return <div className="h-10 w-36" aria-hidden="true" />
-  const date = now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
-  const time = now.toLocaleTimeString('zh-CN', { hour12: false })
-  return (
-    <div className="hidden flex-col items-end font-mono text-xs leading-relaxed text-muted-foreground tabular-nums sm:flex">
-      <span>{date}</span>
-      <span className="text-foreground">{time}</span>
-    </div>
-  )
-}
 
 export function Header({
   done,
@@ -41,9 +23,7 @@ export function Header({
   return (
     <header className="flex items-center justify-between gap-4 border-b border-[#e1e5eb] bg-white/95 px-4 py-3 shadow-[0_2px_14px_rgb(31_41_55/6%)] backdrop-blur lg:px-6">
       <Link href="/" className="flex min-w-0 items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-[#f43f78] text-white shadow-[0_8px_18px_rgb(244_63_120/22%)]">
-          <Cpu className="size-6" aria-hidden="true" />
-        </div>
+        <Image src="/logo.svg" alt="" width={40} height={40} className="size-10 rounded-2xl shadow-[0_8px_18px_rgb(244_63_120/18%)]" priority />
         <div className="min-w-0">
           <h1 className="truncate text-lg font-black tracking-tight text-[#1d1d1f] md:text-2xl">
             ESP32 实验室 <span className="font-mono text-xs font-normal tracking-normal text-[#2a2a2a]">/ 实验系统</span>
@@ -99,7 +79,6 @@ export function Header({
             )}
           </div>
         </div>
-        <Clock />
       </div>
     </header>
   )

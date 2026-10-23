@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FOOTER_LINKS, SITE_NAME } from '@/lib/site'
+import { FOOTER_LINKS, SITE_NAME, SITE_TAGLINE } from '@/lib/site'
 
 export function SiteFooter() {
   return (
@@ -12,7 +12,7 @@ export function SiteFooter() {
         ))}
       </nav>
       <p>
-        © {new Date().getFullYear()} {SITE_NAME} · 硬件看起来很吓人，直到你把它拆成小步骤
+        © {new Date().getFullYear()} {SITE_NAME} · {SITE_TAGLINE}
       </p>
     </footer>
   )

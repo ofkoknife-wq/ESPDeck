@@ -425,8 +425,8 @@ void loop() {
       '引脚每秒翻转 262 次，蜂鸣器就发出 262 Hz 的「Do」。tone() 函数帮我们产生指定频率的方波，把一串频率排起来，就是一首《小星星》。',
     points: [
       { icon: Music, text: '产生方波', code: 'tone()' },
-      { icon: Radio, text: '频率越高，音��越高' },
-      { icon: Zap, text: '运���时浏览器会真的播放声音' },
+      { icon: Radio, text: '频率越高，音调越高' },
+      { icon: Zap, text: '运行时浏览器会真的播放声音' }
     ],
     wiring: [
       { from: 'ESP32 GPIO18', to: '���鸣器 + 脚', note: '紫色线' },

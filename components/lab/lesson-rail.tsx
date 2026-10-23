@@ -1,6 +1,6 @@
 'use client'
 
-import { CircleCheck, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CircleCheck, ChevronLeft, ChevronRight, Layers } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { LESSONS, type LessonId } from '@/lib/lessons'
 import { cn } from '@/lib/utils'
@@ -9,9 +9,10 @@ type Props = {
   activeIndex: number
   completed: LessonId[]
   onSelect: (index: number) => void
+  onOpenAdvanced?: () => void
 }
 
-export function LessonRail({ activeIndex, completed, onSelect }: Props) {
+export function LessonRail({ activeIndex, completed, onSelect, onOpenAdvanced }: Props) {
   const listRef = useRef<HTMLOListElement>(null)
 
   useEffect(() => {
@@ -78,6 +79,22 @@ export function LessonRail({ activeIndex, completed, onSelect }: Props) {
             </li>
           )
         })}
+        {onOpenAdvanced && (
+          <li className="snap-start lg:mt-1 lg:w-full lg:max-w-[268px]">
+            <button
+              onClick={onOpenAdvanced}
+              className="group flex h-16 w-[min(11rem,78vw)] items-center gap-3 rounded-lg border border-dashed border-foreground/40 bg-secondary/60 px-3 text-left transition-all hover:-translate-y-0.5 hover:border-foreground hover:bg-secondary lg:w-full"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-foreground text-background">
+                <Layers className="size-5" aria-hidden="true" />
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="font-mono text-xs text-muted-foreground">接下来</span>
+                <span className="truncate text-sm font-bold text-foreground">进阶工作台</span>
+              </span>
+            </button>
+          </li>
+        )}
       </ol>
     </nav>
   )

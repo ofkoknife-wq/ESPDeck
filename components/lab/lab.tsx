@@ -55,7 +55,7 @@ export function Lab() {
           onPatch={patchAdvanced}
         />
       ) : <div className="lab-body flex min-h-0 flex-1 flex-col lg:flex-row">
-        <LessonRail activeIndex={index} completed={completed} onSelect={setIndex} />
+        <LessonRail activeIndex={index} completed={completed} onSelect={setIndex} onOpenAdvanced={() => setAdvanced(true)} />
 
         <main className="lab-main grid min-h-0 flex-1 grid-cols-1 gap-3 px-4 pb-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:grid-rows-[42px_minmax(0,1fr)] lg:gap-4 lg:px-8 lg:pb-5">
           <div className="workbench-heading col-span-1 flex items-end justify-between gap-4 lg:col-span-2">

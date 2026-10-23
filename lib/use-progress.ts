@@ -46,9 +46,10 @@ export function useProgress() {
       try {
         window.localStorage.setItem(BASIC_KEY, JSON.stringify(next))
       } catch {}
-      if (prev.length === 0) celebrateThanks('first-run')
-      else if (next.length === 5) celebrateThanks('five-lessons')
-      else if (next.length === LESSONS.length) celebrateThanks('all-basic')
+      // 首课不弹；每完成 5 课弹一次（5 / 10 / 15 / 20 / 25 / 30）
+      if (next.length > 0 && next.length % 5 === 0) {
+        celebrateThanks(next.length === LESSONS.length ? 'all-basic' : `milestone-${next.length}`)
+      }
       return next
     })
   }, [])

@@ -45,10 +45,19 @@ export type CodeTest = {
   regex?: string
 }
 
+export type CodeGuideStep = {
+  title: string
+  body: string
+}
+
 export type CodeChallenge = {
   skeleton: string
   holes: { id: string; hint: string }[]
   tests: CodeTest[]
+  /** 完整参考答案，可一键复制 */
+  solution: string
+  /** 代码放哪、怎么改的分步提示 */
+  guide: CodeGuideStep[]
 }
 
 export type QuizQuestion = {
