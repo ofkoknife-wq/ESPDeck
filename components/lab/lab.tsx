@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { SiteFooter } from '@/components/site/site-footer'
 import { ThanksHost } from '@/components/site/thanks-modal'
 import { useI18n } from '@/lib/i18n/provider'
@@ -14,7 +14,9 @@ import { CodePanel } from './code-panel'
 import { Header } from './header'
 import { LessonPanel } from './lesson-panel'
 import { LessonRail } from './lesson-rail'
+import { PartInspectCard } from './part-inspect-card'
 import { ScenePartsPanel } from './scene-parts-panel'
+import type { ScenePart } from './scene-parts'
 import { SimControls } from './sim-controls'
 import { StageToolbar } from './stage-toolbar'
 import { LESSON_SCENES } from './three/circuits'
@@ -37,12 +39,32 @@ export function Lab() {
   const [showLabels, setShowLabels] = useState(true)
   const [showParts, setShowParts] = useState(true)
   const [advanced, setAdvanced] = useState(false)
+  const [focusedPart, setFocusedPart] = useState<ScenePart | null>(null)
   const safeIndex = Math.min(index, lessons.length - 1)
   const lesson = lessons[safeIndex]
   const { completed, markComplete, advanced: advancedRecords, patchAdvanced } = useProgress()
   const sim = useSimulation(lesson.id, markComplete)
   const viewRef = useRef<ViewApi | null>(null)
   const calloutsRef = useRef<(HTMLDivElement | null)[]>([])
+  const focusTargetRef = useRef<[number, number, number] | null>(null)
+  const focusElRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    setFocusedPart(null)
+    focusTargetRef.current = null
+  }, [lesson.id])
+
+  const focusPart = (part: ScenePart) => {
+    setFocusedPart(part)
+    focusTargetRef.current = part.at
+    setShowLabels(true)
+    viewRef.current?.focusAt(part.at)
+  }
+
+  const clearFocus = () => {
+    setFocusedPart(null)
+    focusTargetRef.current = null
+  }
 
   return (
     <div className="lab-shell flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
@@ -98,11 +120,25 @@ export function Lab() {
                 setInput={sim.setInput}
                 viewRef={viewRef}
                 calloutsRef={calloutsRef}
+                focusTargetRef={focusTargetRef}
+                focusElRef={focusElRef}
               />
               {showLabels && (
-                <CalloutLayer key={lesson.id} lessonId={lesson.id} callouts={LESSON_SCENES[lesson.id].callouts} elementsRef={calloutsRef} />
+                <CalloutLayer
+                  key={lesson.id}
+                  lessonId={lesson.id}
+                  callouts={LESSON_SCENES[lesson.id].callouts}
+                  elementsRef={calloutsRef}
+                  highlightIndex={focusedPart?.calloutIndex ?? null}
+                />
               )}
-              <ScenePartsPanel lessonId={lesson.id} viewRef={viewRef} open={showParts} />
+              <PartInspectCard part={focusedPart} viewRef={viewRef} elRef={focusElRef} onClose={clearFocus} />
+              <ScenePartsPanel
+                lessonId={lesson.id}
+                open={showParts}
+                focusedKey={focusedPart?.key ?? null}
+                onFocus={focusPart}
+              />
               <div className="pointer-events-none absolute bottom-3 left-0 z-10 hidden md:block">
                 <SimControls lesson={lesson} phase={sim.phase} inputs={sim.inputs} outputs={sim.outputs} setInput={sim.setInput} />
               </div>

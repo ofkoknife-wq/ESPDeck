@@ -1,0 +1,56 @@
+'use client'
+
+import { Search, X } from 'lucide-react'
+import type { RefObject } from 'react'
+import { useI18n } from '@/lib/i18n/provider'
+import type { ScenePart } from './scene-parts'
+import type { ViewApi } from './three/scene'
+
+type Props = {
+  part: ScenePart | null
+  viewRef: RefObject<ViewApi | null>
+  elRef: RefObject<HTMLDivElement | null>
+  onClose: () => void
+}
+
+/** Screen-space card projected onto the focused component (position written each frame). */
+export function PartInspectCard({ part, viewRef, elRef, onClose }: Props) {
+  const { t } = useI18n()
+
+  return (
+    <div
+      ref={elRef}
+      className="pointer-events-none absolute left-0 top-0 z-30 opacity-0 transition-opacity duration-200"
+      aria-hidden={!part}
+    >
+      <span className="absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_0_6px_rgb(14_124_123/28%)]" />
+      <span className="absolute size-3.5 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full bg-accent/50" />
+      {part && (
+        <div className="pointer-events-auto absolute left-3 top-0 w-[min(16.5rem,calc(100vw-6rem))] -translate-y-1/2 rounded-2xl border border-[#e1e5eb] bg-[#fffffe] p-3 shadow-[0_16px_40px_rgb(31_41_55/18%)]">
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-black leading-tight text-[#020826]">{part.title}</h3>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{part.body}</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-[#e1e5eb] text-muted-foreground transition hover:bg-[#f4eee6] hover:text-foreground"
+              aria-label={t('stage.closeInspect')}
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => viewRef.current?.focusAt(part.at, { inspect: true })}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#020826] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#1a2744]"
+          >
+            <Search className="size-3.5" aria-hidden />
+            {t('stage.inspect')}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}

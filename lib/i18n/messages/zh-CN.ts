@@ -89,6 +89,8 @@ export const zhCN: MessageTree = {
     partsTitle: '元件',
     partsInView: '视图中有 {n} 个',
     focusPart: '对准 {name}',
+    inspect: '放大查看',
+    closeInspect: '关闭元件详情',
     partBoard: 'ESP32 开发板',
     partBoardBody: '为本课电路供电和运算的微控制器板。',
     partBreadboard: '面包板',

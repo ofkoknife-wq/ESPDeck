@@ -9,12 +9,17 @@ import type { LessonId } from '@/lib/lessons'
 import type { SimInputs, SimOutputs } from '@/lib/use-simulation'
 import { LESSON_SCENES, LessonCircuit } from './circuits'
 
+export type FocusOpts = {
+  /** Stronger pull-in + zoom for the “inspect” action. */
+  inspect?: boolean
+}
+
 export type ViewApi = {
   reset: () => void
   zoom: (dir: 1 | -1) => void
   rotate: (dir: 1 | -1) => void
   /** Animate camera to look at a world-space point (already includes scene offsetX). */
-  focusAt: (at: [number, number, number]) => void
+  focusAt: (at: [number, number, number], opts?: FocusOpts) => void
 }
 
 const CAMERA_POS: [number, number, number] = [6, 9, 11]
@@ -32,6 +37,8 @@ type SceneProps = {
   setInput: <K extends keyof SimInputs>(key: K, value: SimInputs[K]) => void
   viewRef: RefObject<ViewApi | null>
   calloutsRef: RefObject<(HTMLDivElement | null)[]>
+  focusTargetRef?: RefObject<[number, number, number] | null>
+  focusElRef?: RefObject<HTMLDivElement | null>
 }
 
 function Controls({ extent, viewRef }: { extent: number; viewRef: RefObject<ViewApi | null> }) {
@@ -63,16 +70,18 @@ function Controls({ extent, viewRef }: { extent: number; viewRef: RefObject<View
       rotate: (dir) => {
         void controls.current?.rotate((dir * Math.PI) / 8, 0, true)
       },
-      focusAt: (at) => {
+      focusAt: (at, opts) => {
         const c = controls.current
         if (!c) return
-        const pull = 0.62
+        const inspect = Boolean(opts?.inspect)
+        const pull = inspect ? 0.32 : 0.55
+        const zoomMul = inspect ? 2.35 : 1.65
         const [tx, ty, tz] = at
         const ex = tx + CAM_OFFSET[0] * pull
         const ey = ty + CAM_OFFSET[1] * pull
         const ez = tz + CAM_OFFSET[2] * pull
-        void c.setLookAt(ex, ey, ez, tx, ty + 0.15, tz, true)
-        void c.zoomTo(Math.min(fit * 1.55, 220), true)
+        void c.setLookAt(ex, ey, ez, tx, ty + 0.12, tz, true)
+        void c.zoomTo(Math.min(fit * zoomMul, inspect ? 320 : 240), true)
       },
     }
   }, [fit, reset, viewRef])
@@ -116,6 +125,33 @@ function CalloutProjector({
   return null
 }
 
+function FocusProjector({
+  targetRef,
+  elRef,
+}: {
+  targetRef: RefObject<[number, number, number] | null>
+  elRef: RefObject<HTMLDivElement | null>
+}) {
+  useFrame(({ camera, size }) => {
+    const el = elRef.current
+    const at = targetRef.current
+    if (!el) return
+    if (!at) {
+      el.style.opacity = '0'
+      el.style.pointerEvents = 'none'
+      return
+    }
+    projected.set(at[0], at[1], at[2]).project(camera)
+    const sx = ((projected.x + 1) / 2) * size.width
+    const sy = ((1 - projected.y) / 2) * size.height
+    const behind = projected.z > 1
+    el.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0)`
+    el.style.opacity = behind ? '0' : '1'
+    el.style.pointerEvents = behind ? 'none' : 'auto'
+  })
+  return null
+}
+
 function ShadowCasters({ children }: { children: React.ReactNode }) {
   const ref = useRef<THREE.Group>(null)
   useLayoutEffect(() => {
@@ -130,7 +166,16 @@ function ShadowCasters({ children }: { children: React.ReactNode }) {
   return <group ref={ref}>{children}</group>
 }
 
-export default function Scene({ lessonId, outputs, inputs, setInput, viewRef, calloutsRef }: SceneProps) {
+export default function Scene({
+  lessonId,
+  outputs,
+  inputs,
+  setInput,
+  viewRef,
+  calloutsRef,
+  focusTargetRef,
+  focusElRef,
+}: SceneProps) {
   const { extent } = LESSON_SCENES[lessonId]
   return (
     <Canvas
@@ -162,6 +207,7 @@ export default function Scene({ lessonId, outputs, inputs, setInput, viewRef, ca
         <LessonCircuit lessonId={lessonId} outputs={outputs} inputs={inputs} setInput={setInput} />
       </ShadowCasters>
       <CalloutProjector lessonId={lessonId} elementsRef={calloutsRef} />
+      {focusTargetRef && focusElRef && <FocusProjector targetRef={focusTargetRef} elRef={focusElRef} />}
       <Controls extent={extent} viewRef={viewRef} />
     </Canvas>
   )

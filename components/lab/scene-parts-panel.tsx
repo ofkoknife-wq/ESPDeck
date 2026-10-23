@@ -1,74 +1,31 @@
 'use client'
 
 import { Crosshair } from 'lucide-react'
-import type { RefObject } from 'react'
-import { useEffect, useMemo, useState } from 'react'
-import { BOARD_X, BB_TOP, PCB_TOP } from '@/lib/geometry'
-import { getCalloutTexts } from '@/lib/i18n/content/callouts'
+import { useMemo } from 'react'
 import { useI18n } from '@/lib/i18n/provider'
 import type { LessonId } from '@/lib/lessons'
 import { cn } from '@/lib/utils'
-import { LESSON_SCENES } from './three/circuits'
-import type { ViewApi } from './three/scene'
+import { getSceneParts, type ScenePart } from './scene-parts'
 
 type Props = {
   lessonId: LessonId
-  viewRef: RefObject<ViewApi | null>
   open: boolean
+  focusedKey: string | null
+  onFocus: (part: ScenePart) => void
 }
 
-type PartRow = {
-  key: string
-  title: string
-  body: string
-  at: [number, number, number]
-  interactive?: boolean
-}
-
-export function ScenePartsPanel({ lessonId, viewRef, open }: Props) {
+export function ScenePartsPanel({ lessonId, open, focusedKey, onFocus }: Props) {
   const { t, locale } = useI18n()
-  const scene = LESSON_SCENES[lessonId]
-  const texts = useMemo(() => getCalloutTexts(lessonId, locale), [lessonId, locale])
-  const [active, setActive] = useState<string | null>(null)
-
-  useEffect(() => {
-    setActive(null)
-  }, [lessonId])
-
-  const parts = useMemo(() => {
-    const rows: PartRow[] = []
-    const ox = scene.offsetX
-
-    if (lessonId !== 'board') {
-      rows.push({
-        key: 'board',
-        title: t('stage.partBoard'),
-        body: t('stage.partBoardBody'),
-        at: [BOARD_X + ox, PCB_TOP + 0.2, 0],
-      })
-    }
-    if (scene.breadboard) {
-      rows.push({
-        key: 'breadboard',
-        title: t('stage.partBreadboard'),
-        body: t('stage.partBreadboardBody'),
-        at: [ox, BB_TOP + 0.15, 0],
-      })
-    }
-
-    scene.callouts.forEach((callout, index) => {
-      const text = texts[index] ?? { title: callout.title, body: callout.body }
-      rows.push({
-        key: `callout-${index}`,
-        title: text.title,
-        body: text.body,
-        at: [callout.at[0] + ox, callout.at[1], callout.at[2]],
-        interactive: Boolean(callout.interactive),
-      })
-    })
-
-    return rows
-  }, [lessonId, scene, t, texts])
+  const parts = useMemo(
+    () =>
+      getSceneParts(lessonId, locale, {
+        partBoard: t('stage.partBoard'),
+        partBoardBody: t('stage.partBoardBody'),
+        partBreadboard: t('stage.partBreadboard'),
+        partBreadboardBody: t('stage.partBreadboardBody'),
+      }),
+    [lessonId, locale, t],
+  )
 
   if (!open || parts.length === 0) return null
 
@@ -88,21 +45,19 @@ export function ScenePartsPanel({ lessonId, viewRef, open }: Props) {
           <li key={`${lessonId}-${part.key}`}>
             <button
               type="button"
-              onClick={() => {
-                setActive(part.key)
-                viewRef.current?.focusAt(part.at)
-              }}
+              onClick={() => onFocus(part)}
               aria-label={t('stage.focusPart', { name: part.title })}
+              aria-pressed={focusedKey === part.key}
               className={cn(
                 'flex w-full items-start gap-2.5 rounded-xl px-2 py-2 text-left transition',
-                active === part.key ? 'bg-[#eaddcf]' : 'hover:bg-[#f4eee6]',
+                focusedKey === part.key ? 'bg-[#eaddcf]' : 'hover:bg-[#f4eee6]',
                 part.interactive && 'ring-1 ring-inset ring-accent/35',
               )}
             >
               <span
                 className={cn(
                   'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border border-[#e1e5eb] bg-white text-[#8c7851]',
-                  active === part.key && 'border-[#020826] bg-[#020826] text-white',
+                  focusedKey === part.key && 'border-[#020826] bg-[#020826] text-white',
                 )}
                 aria-hidden
               >

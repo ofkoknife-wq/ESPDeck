@@ -87,6 +87,8 @@ export const en = {
     partsTitle: 'Components',
     partsInView: '{n} in view',
     focusPart: 'Focus on {name}',
+    inspect: 'Zoom to inspect',
+    closeInspect: 'Close component detail',
     partBoard: 'ESP32 DevKit',
     partBoardBody: 'The microcontroller board powering this circuit.',
     partBreadboard: 'Breadboard',
