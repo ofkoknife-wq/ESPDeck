@@ -80,17 +80,22 @@ export function Lab() {
     // Select only — camera stays put. “放大查看” on the inspect card zooms in.
   }
 
-  const focusByCallout = (index: number) => {
-    const part = sceneParts.find((p) => p.calloutIndex === index)
+  const focusBoardHotspot = (id: string) => {
+    const part = getBoardHotspotPart(id, locale, LESSON_SCENES[lesson.id].offsetX)
     if (part) focusPart(part)
   }
 
-  const focusBoardHotspot = (id: string) => {
-    // Board chips stay pickable in 3D but are not listed in the parts panel.
-    const part =
-      sceneParts.find((p) => p.key === `board-${id}`) ??
-      getBoardHotspotPart(id, locale, LESSON_SCENES[lesson.id].offsetX)
-    if (part) focusPart(part)
+  const focusByCallout = (index: number) => {
+    const part = sceneParts.find((p) => p.calloutIndex === index)
+    if (part) {
+      focusPart(part)
+      return
+    }
+    // Board lesson: labels map to hotspots, which are not in the parts panel.
+    if (lesson.id === 'board') {
+      const hotspot = LESSON_SCENES.board.callouts[index]?.hotspotId
+      if (hotspot) focusBoardHotspot(hotspot)
+    }
   }
 
   const clearFocus = () => {

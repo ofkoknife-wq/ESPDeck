@@ -17,16 +17,16 @@ type Props = {
 
 export function ScenePartsPanel({ lessonId, open, focusedKey, onFocus }: Props) {
   const { t, locale } = useI18n()
-  const parts = useMemo(
-    () =>
-      getSceneParts(lessonId, locale, {
-        partBoard: t('stage.partBoard'),
-        partBoardBody: t('stage.partBoardBody'),
-        partBreadboard: t('stage.partBreadboard'),
-        partBreadboardBody: t('stage.partBreadboardBody'),
-      }),
-    [lessonId, locale, t],
-  )
+  const parts = useMemo(() => {
+    const rows = getSceneParts(lessonId, locale, {
+      partBoard: t('stage.partBoard'),
+      partBoardBody: t('stage.partBoardBody'),
+      partBreadboard: t('stage.partBreadboard'),
+      partBreadboardBody: t('stage.partBreadboardBody'),
+    })
+    // Hard guard: never list DevKit sub-parts (board-usb, board-module, …).
+    return rows.filter((p) => !p.key.startsWith('board-'))
+  }, [lessonId, locale, t])
 
   if (!open || parts.length === 0) return null
 

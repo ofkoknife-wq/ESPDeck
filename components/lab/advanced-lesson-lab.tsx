@@ -84,16 +84,21 @@ export function AdvancedLessonLab({
     // Select only — “放大查看” zooms; avoids the scene looking like the part spins.
   }
 
-  const focusByCallout = (index: number) => {
-    const part = sceneParts.find((p) => p.calloutIndex === index)
+  const focusBoardHotspot = (id: string) => {
+    const part = getBoardHotspotPart(id, locale, LESSON_SCENES[lesson.sceneLessonId].offsetX)
     if (part) focusPart(part)
   }
 
-  const focusBoardHotspot = (id: string) => {
-    const part =
-      sceneParts.find((p) => p.key === `board-${id}`) ??
-      getBoardHotspotPart(id, locale, LESSON_SCENES[lesson.sceneLessonId].offsetX)
-    if (part) focusPart(part)
+  const focusByCallout = (index: number) => {
+    const part = sceneParts.find((p) => p.calloutIndex === index)
+    if (part) {
+      focusPart(part)
+      return
+    }
+    if (lesson.sceneLessonId === 'board') {
+      const hotspot = LESSON_SCENES.board.callouts[index]?.hotspotId
+      if (hotspot) focusBoardHotspot(hotspot)
+    }
   }
 
   const clearFocus = () => {

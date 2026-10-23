@@ -35,12 +35,13 @@ function HitBox({ args }: { args: [number, number, number] }) {
   return (
     <mesh>
       <boxGeometry args={args} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      {/* depthTest off so the planted collider always wins over silkscreen / neighbors */}
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
     </mesh>
   )
 }
 
-/** Meshes under this group are display-only — picking goes through the planted HitBox. */
+/** Display meshes never receive pointers — only the planted HitBox does. */
 function VisualOnly({ children }: { children: ReactNode }) {
   const ref = useRef<THREE.Group>(null)
   useLayoutEffect(() => {
@@ -49,14 +50,16 @@ function VisualOnly({ children }: { children: ReactNode }) {
     root.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) obj.raycast = () => undefined
     })
-  }, [children])
+  })
   return <group ref={ref}>{children}</group>
 }
 
+/** One active board hover id — stops module↔antenna pointer thrash. */
+let boardHoverId: string | null = null
+
 /**
- * Hover lift + click select.
- * Hit volume stays planted; visuals lift but do not raycast — otherwise
- * pointerOut↔pointerOver thrash (module flicker).
+ * Click / hover select. No lift, no scale — transforms caused flicker when
+ * hit volumes overlapped. Buttons may still depress slightly.
  */
 function BoardPart({
   spot,
@@ -70,22 +73,14 @@ function BoardPart({
   children: ReactNode
 }) {
   const visual = useRef<THREE.Group>(null)
-  const hover = useRef(0)
-  const hoverTarget = useRef(0)
   const press = useRef(0)
   const pressTarget = useRef(0)
-  const lift = spot.lift ?? 0.12
 
   useFrame((_, dt) => {
-    const k = Math.min(1, dt * 14)
-    hover.current += (hoverTarget.current - hover.current) * k
+    if (!spot.pressable) return
     press.current += (pressTarget.current - press.current) * Math.min(1, dt * 22)
     const g = visual.current
-    if (!g) return
-    g.position.y = hover.current * lift - press.current * 0.05
-    // Scale only on hover — selected uses the ring, not a jump in size.
-    const s = 1 + hover.current * 0.015
-    g.scale.setScalar(s)
+    if (g) g.position.y = -press.current * 0.04
   })
 
   return (
@@ -93,16 +88,20 @@ function BoardPart({
       position={spot.local}
       onPointerOver={(e) => {
         e.stopPropagation()
-        hoverTarget.current = 1
+        boardHoverId = spot.id
         setInteractiveHover(true)
       }}
-      onPointerOut={() => {
-        hoverTarget.current = 0
+      onPointerOut={(e) => {
+        e.stopPropagation()
+        if (boardHoverId === spot.id) {
+          boardHoverId = null
+          setInteractiveHover(false)
+        }
         pressTarget.current = 0
-        setInteractiveHover(false)
       }}
       onPointerDown={(e) => {
         e.stopPropagation()
+        boardHoverId = spot.id
         setInteractiveHover(true)
         if (spot.pressable) pressTarget.current = 1
         onPick?.(spot.id)
@@ -113,18 +112,16 @@ function BoardPart({
     >
       <HitBox args={spot.hit} />
       <group ref={visual}>
-        <VisualOnly>
-          {children}
-          {selected && (
-            <mesh position={[0, -spot.hit[1] * 0.4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-              <ringGeometry
-                args={[Math.max(spot.hit[0], spot.hit[2]) * 0.38, Math.max(spot.hit[0], spot.hit[2]) * 0.48, 48]}
-              />
-              <meshBasicMaterial color="#1aa3a1" transparent opacity={0.8} depthWrite={false} side={THREE.DoubleSide} />
-            </mesh>
-          )}
-        </VisualOnly>
+        <VisualOnly>{children}</VisualOnly>
       </group>
+      {selected && (
+        <mesh position={[0, -spot.hit[1] * 0.45, 0]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => undefined}>
+          <ringGeometry
+            args={[Math.max(spot.hit[0], spot.hit[2]) * 0.36, Math.max(spot.hit[0], spot.hit[2]) * 0.46, 48]}
+          />
+          <meshBasicMaterial color="#1aa3a1" transparent opacity={0.85} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+      )}
     </group>
   )
 }
@@ -162,7 +159,7 @@ function Silkscreen() {
     ctx.fillText('PWR', toCanvasX(-1.3), toCanvasY(-0.62))
   })
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, PCB_TOP + 0.002, 0]}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, PCB_TOP + 0.002, 0]} raycast={() => undefined}>
       <planeGeometry args={[PCB_W, PCB_D]} />
       <meshStandardMaterial map={texture} transparent roughness={0.8} />
     </mesh>
@@ -312,33 +309,34 @@ export function Esp32Board({
       </BoardPart>
 
       <BoardPart spot={spot('module')} selected={isSel('module')} onPick={pick}>
-        <mesh position={[1.525 - 1.175, -0.16, 0]}>
+        <mesh position={[0.425, -0.16, 0]}>
           <boxGeometry args={[2.55, 0.08, 1.8]} />
           <meshStandardMaterial color="#2a2d33" roughness={0.6} />
         </mesh>
-        <mesh castShadow>
+        <mesh position={[0.075, 0, 0]} castShadow>
           <boxGeometry args={[1.75, 0.25, 1.6]} />
           <meshStandardMaterial color="#c2c6cb" metalness={0.75} roughness={0.32} />
         </mesh>
-        {/* Shield vents */}
         {[-0.45, -0.15, 0.15, 0.45].map((z) => (
-          <mesh key={z} position={[0.55, 0.14, z]} rotation={[0, 0, Math.PI / 2]}>
+          <mesh key={z} position={[0.625, 0.14, z]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.03, 0.03, 0.35, 8]} />
             <meshStandardMaterial color="#8a9098" metalness={0.7} roughness={0.35} />
           </mesh>
         ))}
-        <ShieldTop />
+        <group position={[0.075, 0, 0]}>
+          <ShieldTop />
+        </group>
       </BoardPart>
 
       <BoardPart spot={spot('antenna')} selected={isSel('antenna')} onPick={pick}>
         {[2.2, 2.34, 2.48, 2.62].map((x) => (
-          <mesh key={x} position={[x - 2.45, -0.035, 0]}>
+          <mesh key={x} position={[x - 2.5, -0.02, 0]}>
             <boxGeometry args={[0.035, 0.008, 1.3]} />
             <meshStandardMaterial color="#c8a24a" metalness={0.9} roughness={0.3} />
           </mesh>
         ))}
         {[2.2, 2.34, 2.48].map((x, i) => (
-          <mesh key={`c${x}`} position={[x + 0.07 - 2.45, -0.035, i % 2 === 0 ? 0.65 : -0.65]}>
+          <mesh key={`c${x}`} position={[x + 0.07 - 2.5, -0.02, i % 2 === 0 ? 0.65 : -0.65]}>
             <boxGeometry args={[0.175, 0.008, 0.035]} />
             <meshStandardMaterial color="#c8a24a" metalness={0.9} roughness={0.3} />
           </mesh>

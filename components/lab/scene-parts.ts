@@ -27,7 +27,7 @@ type Copy = {
   partBreadboardBody: string
 }
 
-/** Resolve a board-tour hotspot for 3D pick (not listed in the parts panel on other lessons). */
+/** Resolve a board-tour hotspot for 3D pick / callout click — never listed in the parts panel. */
 export function getBoardHotspotPart(id: string, locale: Locale, offsetX = 0): ScenePart | null {
   const index = BOARD_HOTSPOTS.findIndex((h) => h.id === id)
   if (index < 0) return null
@@ -38,40 +38,28 @@ export function getBoardHotspotPart(id: string, locale: Locale, offsetX = 0): Sc
     title: text.title,
     body: text.body,
     at: boardHotspotWorldAt(h, offsetX),
-    calloutIndex: null,
+    calloutIndex: lessonIdBoardCalloutIndex(id),
     pickable: true,
     interactive: Boolean(h.pressable),
   }
 }
 
+function lessonIdBoardCalloutIndex(id: string): number | null {
+  const index = BOARD_HOTSPOTS.findIndex((h) => h.id === id)
+  return index >= 0 ? index : null
+}
+
+/**
+ * Rows for the parts panel.
+ * DevKit sub-parts (USB / module / antenna / …) are never listed — only the whole board,
+ * breadboard, and this lesson’s circuit parts.
+ */
 export function getSceneParts(lessonId: LessonId, locale: Locale, copy: Copy): ScenePart[] {
   const scene = LESSON_SCENES[lessonId]
   const texts = getCalloutTexts(lessonId, locale)
   const ox = scene.offsetX
   const rows: ScenePart[] = []
 
-  if (lessonId === 'board') {
-    // Board tour: each hotspot is a list row.
-    scene.callouts.forEach((callout, index) => {
-      const text = texts[index] ?? { title: '—', body: '' }
-      const id = callout.hotspotId ?? BOARD_HOTSPOTS[index]?.id
-      rows.push({
-        key: id ? `board-${id}` : `callout-${index}`,
-        title: text.title,
-        body: text.body,
-        at: [callout.at[0] + ox, callout.at[1], callout.at[2]],
-        calloutIndex: index,
-        interactive: Boolean(callout.interactive),
-        pickable: true,
-        icon: callout.icon,
-        control: callout.control,
-        controls: callout.controls,
-      })
-    })
-    return rows
-  }
-
-  // Other lessons: one board row + breadboard + lesson parts — not every chip on the DevKit.
   rows.push({
     key: 'board',
     title: copy.partBoard,
@@ -89,6 +77,9 @@ export function getSceneParts(lessonId: LessonId, locale: Locale, copy: Copy): S
       calloutIndex: null,
     })
   }
+
+  // Board lesson: tour labels live in CalloutLayer / 3D pick, not this list.
+  if (lessonId === 'board') return rows
 
   scene.callouts.forEach((callout, index) => {
     const text = texts[index] ?? { title: '—', body: '' }
