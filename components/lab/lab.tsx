@@ -77,7 +77,7 @@ export function Lab() {
     setFocusedPart(part)
     focusTargetRef.current = part.at
     setShowLabels(true)
-    viewRef.current?.focusAt(part.at)
+    // Select only — camera stays put. “放大查看” on the inspect card zooms in.
   }
 
   const focusByCallout = (index: number) => {

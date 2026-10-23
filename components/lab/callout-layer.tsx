@@ -34,7 +34,8 @@ export function CalloutLayer({
         const left = c.dx < 0
         const text = texts[i] ?? { title: c.title, body: c.body }
         const active = highlightIndex === i
-        const clickable = Boolean(onSelect && (c.pickable || c.interactive || c.controls || c.control || c.icon))
+        // Any callout can focus its part when the stage provides onSelect.
+        const clickable = Boolean(onSelect)
         return (
           <div
             key={`${lessonId}-${i}`}

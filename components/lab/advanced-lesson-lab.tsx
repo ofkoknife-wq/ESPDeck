@@ -81,7 +81,7 @@ export function AdvancedLessonLab({
     setFocusedPart(part)
     focusTargetRef.current = part.at
     setShowLabels(true)
-    viewRef.current?.focusAt(part.at)
+    // Select only — “放大查看” zooms; avoids the scene looking like the part spins.
   }
 
   const focusByCallout = (index: number) => {

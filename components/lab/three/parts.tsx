@@ -6,7 +6,7 @@ import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { BB_TOP, PIN_TOP, type Vec3, mid } from '@/lib/geometry'
 import { useI18n } from '@/lib/i18n/provider'
-import { Rod, setInteractiveHover, setPointer } from './primitives'
+import { Rod, setInteractiveHover } from './primitives'
 
 /** Transparent hit volume (must stay raycastable — visible:false skips picking in three.js). */
 function HitBox({
@@ -38,12 +38,10 @@ function usePickHandlers(onPick?: () => void, onHold?: (down: boolean) => void) 
       e.stopPropagation()
       setInteractiveHover(true)
       onPick?.()
-      onHold?.(true)
+      if (onHold) onHold(true)
     },
-    onPointerUp: () => onHold?.(false),
-    onClick: (e: { stopPropagation: () => void }) => {
-      e.stopPropagation()
-      onPick?.()
+    onPointerUp: () => {
+      if (onHold) onHold(false)
     },
   }
 }
@@ -147,17 +145,21 @@ export function Led({
   cathode,
   color = '#ff3b2f',
   brightness = 0,
+  onPick,
 }: {
   anode: Vec3
   cathode: Vec3
   color?: string
   brightness?: number
+  onPick?: () => void
 }) {
   const c = mid(anode, cathode)
   const baseY = BB_TOP + LEG_H
   const on = brightness > 0.01
+  const pick = usePickHandlers(onPick)
   return (
-    <group>
+    <group {...pick}>
+      <HitBox args={[0.55, 0.9, 0.55]} position={[c[0], baseY + 0.25, c[2]]} />
       <Rod from={anode} to={[c[0] - 0.05, baseY, c[2]]} />
       <Rod from={cathode} to={[c[0] + 0.05, baseY, c[2]]} />
       <group position={[c[0], baseY, c[2]]}>
@@ -197,15 +199,27 @@ function LensMaterial({ color, brightness }: { color: string; brightness: number
 
 const BANDS_220 = ['#c8312a', '#c8312a', '#6b3f1f', '#c9a227']
 
-export function Resistor({ a, b, bands = BANDS_220 }: { a: Vec3; b: Vec3; bands?: string[] }) {
+export function Resistor({
+  a,
+  b,
+  bands = BANDS_220,
+  onPick,
+}: {
+  a: Vec3
+  b: Vec3
+  bands?: string[]
+  onPick?: () => void
+}) {
   const c = mid(a, b)
   const dx = b[0] - a[0]
   const dz = b[2] - a[2]
   const len = Math.hypot(dx, dz)
   const angle = -Math.atan2(dz, dx)
   const h = 0.2
+  const pick = usePickHandlers(onPick)
   return (
-    <group position={[c[0], BB_TOP, c[2]]} rotation={[0, angle, 0]}>
+    <group position={[c[0], BB_TOP, c[2]]} rotation={[0, angle, 0]} {...pick}>
+      <HitBox args={[Math.max(0.8, len + 0.2), 0.6, 0.4]} position={[0, h, 0]} />
       <Rod from={[-len / 2, 0, 0]} to={[-len / 2, h, 0]} />
       <Rod from={[len / 2, 0, 0]} to={[len / 2, h, 0]} />
       <Rod from={[-len / 2, h, 0]} to={[len / 2, h, 0]} />
@@ -237,8 +251,10 @@ export function PushButton({
   onPick?: () => void
 }) {
   const bodyY = BB_TOP + 0.06
+  const pick = usePickHandlers(onPick, onPress)
   return (
-    <group position={[center[0], 0, center[2]]}>
+    <group position={[center[0], 0, center[2]]} {...pick}>
+      <HitBox args={[0.9, 0.9, 0.9]} position={[0, bodyY + 0.35, 0]} />
       {[
         [-0.254, -0.25],
         [0.254, -0.25],
@@ -255,21 +271,7 @@ export function PushButton({
         <boxGeometry args={[0.64, 0.02, 0.64]} />
         <meshStandardMaterial color="#c4c8cc" metalness={0.85} roughness={0.3} />
       </mesh>
-      <mesh
-        position={[0, bodyY + (pressed ? 0.27 : 0.33), 0]}
-        onPointerDown={(e) => {
-          e.stopPropagation()
-          setInteractiveHover(true)
-          onPick?.()
-          onPress(true)
-        }}
-        onPointerUp={() => onPress(false)}
-        onPointerOut={() => {
-          setInteractiveHover(false)
-          onPress(false)
-        }}
-        onPointerOver={() => setInteractiveHover(true)}
-      >
+      <mesh position={[0, bodyY + (pressed ? 0.27 : 0.33), 0]}>
         <cylinderGeometry args={[0.17, 0.18, 0.16, 24]} />
         <meshStandardMaterial color="#d63a2c" roughness={0.45} />
       </mesh>
@@ -319,6 +321,7 @@ export function Potentiometer({
         }
       }}
     >
+      <HitBox args={[1.2, 1.2, 1.1]} position={[c[0], bodyY + 0.45, c[2] - 0.12]} />
       {legs.map((p, i) => (
         <Rod key={i} from={p} to={[p[0], bodyY, p[2]]} radius={0.03} />
       ))}
@@ -346,15 +349,25 @@ export function Potentiometer({
   )
 }
 
-export function RgbLed({ legs, rgb }: { legs: [Vec3, Vec3, Vec3, Vec3]; rgb: [number, number, number] }) {
+export function RgbLed({
+  legs,
+  rgb,
+  onPick,
+}: {
+  legs: [Vec3, Vec3, Vec3, Vec3]
+  rgb: [number, number, number]
+  onPick?: () => void
+}) {
   const c = mid(legs[1], legs[2])
   const baseY = BB_TOP + LEG_H + 0.05
   const max = Math.max(...rgb)
   const color = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
   const on = max > 4
   const level = max / 255
+  const pick = usePickHandlers(onPick)
   return (
-    <group>
+    <group {...pick}>
+      <HitBox args={[0.7, 1.0, 0.7]} position={[c[0], baseY + 0.25, c[2]]} />
       {legs.map((p, i) => {
         const tx = c[0] + (i - 1.5) * 0.06
         return (
@@ -399,16 +412,28 @@ export function RgbLed({ legs, rgb }: { legs: [Vec3, Vec3, Vec3, Vec3]; rgb: [nu
   )
 }
 
-export function Buzzer({ a, b, active }: { a: Vec3; b: Vec3; active: boolean }) {
+export function Buzzer({
+  a,
+  b,
+  active,
+  onPick,
+}: {
+  a: Vec3
+  b: Vec3
+  active: boolean
+  onPick?: () => void
+}) {
   const c = mid(a, b)
   const ref = useRef<THREE.Group>(null)
+  const pick = usePickHandlers(onPick)
   useFrame(({ clock }) => {
     if (!ref.current) return
     const s = active ? 1 + Math.sin(clock.elapsedTime * 90) * 0.012 : 1
     ref.current.scale.set(s, 1, s)
   })
   return (
-    <group>
+    <group {...pick}>
+      <HitBox args={[1.1, 0.9, 1.1]} position={[c[0], BB_TOP + 0.35, c[2]]} />
       <Rod from={a} to={[a[0], BB_TOP + 0.1, a[2]]} radius={0.025} />
       <Rod from={b} to={[b[0], BB_TOP + 0.1, b[2]]} radius={0.025} />
       <group ref={ref} position={[c[0], BB_TOP + 0.1, c[2]]}>
@@ -426,11 +451,13 @@ export function Buzzer({ a, b, active }: { a: Vec3; b: Vec3; active: boolean }) 
   )
 }
 
-export function Dht11({ legs }: { legs: [Vec3, Vec3, Vec3] }) {
+export function Dht11({ legs, onPick }: { legs: [Vec3, Vec3, Vec3]; onPick?: () => void }) {
   const c = legs[1]
   const bodyY = BB_TOP + 0.2
+  const pick = usePickHandlers(onPick)
   return (
-    <group>
+    <group {...pick}>
+      <HitBox args={[1.0, 1.3, 0.6]} position={[c[0], bodyY + 0.45, c[2]]} />
       {legs.map((p, i) => (
         <Rod key={i} from={p} to={[p[0], bodyY, p[2]]} radius={0.025} />
       ))}
@@ -452,14 +479,24 @@ export function Dht11({ legs }: { legs: [Vec3, Vec3, Vec3] }) {
   )
 }
 
-export function Servo({ position, angle }: { position: Vec3; angle: number }) {
+export function Servo({
+  position,
+  angle,
+  onPick,
+}: {
+  position: Vec3
+  angle: number
+  onPick?: () => void
+}) {
   const hornRot = ((angle - 90) * Math.PI) / 180
   const smooth = useRef<THREE.Group>(null)
+  const pick = usePickHandlers(onPick)
   useFrame(() => {
     if (smooth.current) smooth.current.rotation.y += (hornRot - smooth.current.rotation.y) * 0.35
   })
   return (
-    <group position={position}>
+    <group position={position} {...pick}>
+      <HitBox args={[3.4, 3.2, 1.6]} position={[0, 1.4, 0]} />
       <mesh position={[0, 1.1, 0]}>
         <boxGeometry args={[2.3, 2.2, 1.22]} />
         <meshPhysicalMaterial color="#2d5fc4" roughness={0.35} transparent opacity={0.94} clearcoat={0.6} />
@@ -506,10 +543,12 @@ export function TouchPad({
   position,
   touched,
   onTouch,
+  onPick,
 }: {
   position: Vec3
   touched: boolean
   onTouch: (down: boolean) => void
+  onPick?: () => void
 }) {
   return (
     <group position={position}>
@@ -521,14 +560,16 @@ export function TouchPad({
         position={[0, 0.06, 0]}
         onPointerDown={(e) => {
           e.stopPropagation()
+          setInteractiveHover(true)
+          onPick?.()
           onTouch(true)
         }}
         onPointerUp={() => onTouch(false)}
         onPointerOut={() => {
-          setPointer(false)
+          setInteractiveHover(false)
           onTouch(false)
         }}
-        onPointerOver={() => setPointer(true)}
+        onPointerOver={() => setInteractiveHover(true)}
       >
         <boxGeometry args={[1.1, 0.04, 1.1]} />
         <meshStandardMaterial
@@ -643,23 +684,38 @@ export type CalloutSpec = {
 
 /** Accent ring — reference uses #1aa3a1 double ring under the selection. */
 export function SelectionRing({ at }: { at: [number, number, number] | null }) {
-  const ref = useRef<THREE.Group>(null)
+  const matA = useRef<THREE.MeshBasicMaterial>(null)
+  const matB = useRef<THREE.MeshBasicMaterial>(null)
   useFrame(({ clock }) => {
-    const g = ref.current
-    if (!g || !at) return
-    const pulse = 1 + Math.sin(clock.elapsedTime * 3.2) * 0.04
-    g.scale.set(pulse, 1, pulse)
+    if (!at) return
+    const pulse = 0.55 + Math.sin(clock.elapsedTime * 3.2) * 0.2
+    if (matA.current) matA.current.opacity = 0.3 + pulse * 0.25
+    if (matB.current) matB.current.opacity = 0.55 + pulse * 0.35
   })
   if (!at) return null
   return (
-    <group ref={ref} position={[at[0], 0.03, at[2]]}>
+    <group position={[at[0], 0.03, at[2]]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.55, 0.62, 64]} />
-        <meshBasicMaterial color="#1aa3a1" transparent opacity={0.45} depthWrite={false} side={THREE.DoubleSide} />
+        <meshBasicMaterial
+          ref={matA}
+          color="#1aa3a1"
+          transparent
+          opacity={0.45}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.68, 0.78, 64]} />
-        <meshBasicMaterial color="#1aa3a1" transparent opacity={0.85} depthWrite={false} side={THREE.DoubleSide} />
+        <meshBasicMaterial
+          ref={matB}
+          color="#1aa3a1"
+          transparent
+          opacity={0.85}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
       </mesh>
     </group>
   )
@@ -710,13 +766,14 @@ export function PlantPot({
           <meshStandardMaterial color="#f7f2e4" roughness={0.5} />
         </mesh>
       </group>
+      {/* Pitch only when wilted — no Y spin (that looked like a fan on select). */}
       {[
         [0.22, 1.15, 0.08, 0.35 + droop],
-        [-0.2, 1.1, -0.06, -0.45 - droop],
-        [0.06, 1.28, -0.14, 0.15 + droop * 0.6],
-        [-0.08, 1.05, 0.18, 0.55 + droop],
+        [-0.2, 1.1, -0.06, -0.4 - droop],
+        [0.06, 1.28, -0.14, 0.2 + droop * 0.5],
+        [-0.08, 1.05, 0.18, 0.45 + droop],
       ].map(([x, y, z, lean], i) => (
-        <group key={i} position={[x, y, z]} rotation={[lean, i * 0.7, lean * 0.3]}>
+        <group key={i} position={[x, y, z]} rotation={[lean, 0, lean * 0.2]}>
           <mesh>
             <sphereGeometry args={[0.26, 12, 10]} />
             <meshStandardMaterial color={leafColor} roughness={0.55} />
