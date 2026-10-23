@@ -22,6 +22,7 @@ import { SchematicView } from './schematic-view'
 import { ScenePartsPanel } from './scene-parts-panel'
 import type { ScenePart } from './scene-parts'
 import { SimControls } from './sim-controls'
+import { StageTitleBar } from './stage-title-bar'
 import { StageToolbar, type StageViewMode } from './stage-toolbar'
 import { LESSON_SCENES } from './three/circuits'
 import type { ViewApi } from './three/scene'
@@ -73,6 +74,13 @@ export function Lab() {
     focusTargetRef.current = null
   }
 
+  const openDiagram = (mode: Extract<StageViewMode, 'schematic' | 'pinout'>) => {
+    setStageMode(mode)
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+      document.getElementById('lab-stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   return (
     <div className="lab-shell flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
       <Header
@@ -100,25 +108,11 @@ export function Lab() {
             onOpenAdvanced={() => setAdvanced(true)}
           />
 
-          <main className="lab-main grid min-h-0 flex-1 grid-cols-1 gap-3 px-4 pb-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:grid-rows-[42px_minmax(0,1fr)] lg:gap-4 lg:px-8 lg:pb-5">
-            <div className="workbench-heading col-span-1 flex items-end justify-between gap-4 lg:col-span-2">
-              <div>
-                <p className="eyebrow">{t('lab.workbenchEyebrow')}</p>
-                <h2 className="text-xl font-black tracking-tight md:text-2xl">{lesson.title}</h2>
-              </div>
-              <div className="hidden text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:block">
-                <div>
-                  {t('lab.lessonOf', {
-                    current: String(safeIndex + 1).padStart(2, '0'),
-                    total: String(lessons.length).padStart(2, '0'),
-                  })}
-                </div>
-                <div className="mt-1 text-accent">{t('lab.systemReady')}</div>
-              </div>
-            </div>
+          <main className="lab-main grid min-h-0 flex-1 grid-cols-1 gap-4 px-4 pb-4 pt-3 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] lg:grid-rows-[minmax(0,1fr)] lg:gap-5 lg:px-8 lg:pb-5 lg:pt-4">
             <section
+              id="lab-stage"
               aria-label={`${t('lab.lessonN', { n: safeIndex + 1 })} · ${lesson.title}`}
-              className="relative min-h-96 flex-1 overflow-hidden rounded-[1.25rem] border border-border bg-card shadow-[var(--elevated-shadow)] lg:min-h-0"
+              className="relative min-h-96 flex-1 overflow-hidden rounded-[1.35rem] border border-border bg-card shadow-[var(--elevated-shadow)] lg:min-h-0"
             >
               {stageMode === 'scene' ? (
                 <>
@@ -163,6 +157,7 @@ export function Lab() {
                   }
                 </PanZoomStage>
               )}
+              <StageTitleBar index={safeIndex} total={lessons.length} title={lesson.title} />
               <StageToolbar
                 viewRef={viewRef}
                 showLabels={showLabels}
@@ -181,7 +176,13 @@ export function Lab() {
 
             <aside className="flex min-h-0 w-full min-w-0 flex-col gap-3 overflow-hidden">
               <div className="flex min-h-0 flex-col lg:flex-[1_1_0%]">
-                <LessonPanel lesson={lesson} index={safeIndex} />
+                <LessonPanel
+                  lesson={lesson}
+                  index={safeIndex}
+                  total={lessons.length}
+                  stageMode={stageMode}
+                  onOpenDiagram={openDiagram}
+                />
               </div>
               <div className="flex h-[420px] min-h-0 flex-col lg:h-auto lg:flex-[1.1_1_0%]">
                 <CodePanel

@@ -52,6 +52,11 @@ export const en = {
     steps: 'Steps',
     specs: 'Specs',
     tryIt: 'Try it',
+    diagrams: 'Circuit views',
+    openSchematic: 'Schematic',
+    openSchematicHint: 'See how parts connect in this lesson.',
+    openPinout: 'Pinout',
+    openPinoutHint: 'Highlight the ESP32 pins used here.',
   },
   code: {
     copy: 'Copy code',

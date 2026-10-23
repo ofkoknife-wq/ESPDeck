@@ -574,8 +574,7 @@
     text-transform: uppercase;
   }
   .lab-shell .workbench-heading {
-    border-bottom: 1px solid var(--border);
-    padding: 0.35rem 0 0.7rem;
+    display: none;
   }
   .lab-shell .lesson-rail {
     background: var(--glass);
@@ -684,10 +683,5 @@
       height: min(360px, 52svh);
     }
 
-    .lab-shell .workbench-heading {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
   }
 }

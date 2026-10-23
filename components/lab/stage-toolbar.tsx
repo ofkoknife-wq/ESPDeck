@@ -31,9 +31,17 @@ export function StageToolbar({
   showCameraControls = true,
 }: Props) {
   const { t } = useI18n()
-  const btn =
-    'flex size-8 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted aria-pressed:bg-foreground aria-pressed:text-background'
   const onScene = mode === 'scene'
+
+  const toolBtn =
+    'flex size-8 items-center justify-center rounded-xl text-[color:var(--ink-soft)] transition hover:bg-muted hover:text-foreground'
+  const toggleBtn = (pressed: boolean) =>
+    cn(
+      'flex size-8 items-center justify-center rounded-xl transition',
+      pressed
+        ? 'bg-primary text-primary-foreground'
+        : 'text-[color:var(--ink-soft)] hover:bg-muted hover:text-foreground',
+    )
 
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-3 flex flex-col items-center gap-2">
@@ -49,13 +57,31 @@ export function StageToolbar({
       >
         {onModeChange && (
           <>
-            <button className={cn(btn)} onClick={() => onModeChange('scene')} aria-pressed={mode === 'scene'} aria-label={t('stage.breadboard')}>
-              <Box className="size-4" />
+            <button
+              type="button"
+              className={toggleBtn(mode === 'scene')}
+              onClick={() => onModeChange('scene')}
+              aria-pressed={mode === 'scene'}
+              aria-label={t('stage.breadboard')}
+            >
+              <Box className="size-4" strokeWidth={1.75} />
             </button>
-            <button className={cn(btn)} onClick={() => onModeChange('schematic')} aria-pressed={mode === 'schematic'} aria-label={t('stage.schematic')}>
-              <CircuitBoard className="size-4" />
+            <button
+              type="button"
+              className={toggleBtn(mode === 'schematic')}
+              onClick={() => onModeChange('schematic')}
+              aria-pressed={mode === 'schematic'}
+              aria-label={t('stage.schematic')}
+            >
+              <CircuitBoard className="size-4" strokeWidth={1.75} />
             </button>
-            <button className={cn(btn)} onClick={() => onModeChange('pinout')} aria-pressed={mode === 'pinout'} aria-label={t('stage.pinout')}>
+            <button
+              type="button"
+              className={toggleBtn(mode === 'pinout')}
+              onClick={() => onModeChange('pinout')}
+              aria-pressed={mode === 'pinout'}
+              aria-label={t('stage.pinout')}
+            >
               <span className="font-mono text-[10px] font-black leading-none">IO</span>
             </button>
             <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
@@ -64,27 +90,27 @@ export function StageToolbar({
 
         {showCameraControls && onScene && (
           <>
-            <button className={btn} onClick={() => viewRef.current?.pan(-0.7, 0)} aria-label={t('stage.panLeft')}>
-              <Move className="size-4 -scale-x-100" />
+            <button type="button" className={toolBtn} onClick={() => viewRef.current?.pan(-0.7, 0)} aria-label={t('stage.panLeft')}>
+              <Move className="size-4 -scale-x-100" strokeWidth={1.75} />
             </button>
-            <button className={btn} onClick={() => viewRef.current?.pan(0.7, 0)} aria-label={t('stage.panRight')}>
-              <Move className="size-4" />
+            <button type="button" className={toolBtn} onClick={() => viewRef.current?.pan(0.7, 0)} aria-label={t('stage.panRight')}>
+              <Move className="size-4" strokeWidth={1.75} />
             </button>
-            <button className={btn} onClick={() => viewRef.current?.rotate(1)} aria-label={t('stage.rotateLeft')}>
-              <RotateCcw className="size-4" />
+            <button type="button" className={toolBtn} onClick={() => viewRef.current?.rotate(1)} aria-label={t('stage.rotateLeft')}>
+              <RotateCcw className="size-4" strokeWidth={1.75} />
             </button>
-            <button className={btn} onClick={() => viewRef.current?.rotate(-1)} aria-label={t('stage.rotateRight')}>
-              <RotateCw className="size-4" />
+            <button type="button" className={toolBtn} onClick={() => viewRef.current?.rotate(-1)} aria-label={t('stage.rotateRight')}>
+              <RotateCw className="size-4" strokeWidth={1.75} />
             </button>
             <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
-            <button className={btn} onClick={() => viewRef.current?.zoom(-1)} aria-label={t('stage.zoomOut')}>
-              <ZoomOut className="size-4" />
+            <button type="button" className={toolBtn} onClick={() => viewRef.current?.zoom(-1)} aria-label={t('stage.zoomOut')}>
+              <ZoomOut className="size-4" strokeWidth={1.75} />
             </button>
-            <button className={btn} onClick={() => viewRef.current?.zoom(1)} aria-label={t('stage.zoomIn')}>
-              <ZoomIn className="size-4" />
+            <button type="button" className={toolBtn} onClick={() => viewRef.current?.zoom(1)} aria-label={t('stage.zoomIn')}>
+              <ZoomIn className="size-4" strokeWidth={1.75} />
             </button>
-            <button className={btn} onClick={() => viewRef.current?.reset()} aria-label={t('stage.reset')}>
-              <Locate className="size-4" />
+            <button type="button" className={toolBtn} onClick={() => viewRef.current?.reset()} aria-label={t('stage.reset')}>
+              <Locate className="size-4" strokeWidth={1.75} />
             </button>
             <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
           </>
@@ -92,11 +118,23 @@ export function StageToolbar({
 
         {onScene && (
           <>
-            <button className={cn(btn)} onClick={onToggleLabels} aria-pressed={showLabels} aria-label={t('stage.labels')}>
-              <Tag className="size-4" />
+            <button
+              type="button"
+              className={toggleBtn(showLabels)}
+              onClick={onToggleLabels}
+              aria-pressed={showLabels}
+              aria-label={t('stage.labels')}
+            >
+              <Tag className="size-4" strokeWidth={1.75} />
             </button>
-            <button className={cn(btn)} onClick={onToggleParts} aria-pressed={showParts} aria-label={t('stage.parts')}>
-              <Package className="size-4" />
+            <button
+              type="button"
+              className={toggleBtn(showParts)}
+              onClick={onToggleParts}
+              aria-pressed={showParts}
+              aria-label={t('stage.parts')}
+            >
+              <Package className="size-4" strokeWidth={1.75} />
             </button>
           </>
         )}

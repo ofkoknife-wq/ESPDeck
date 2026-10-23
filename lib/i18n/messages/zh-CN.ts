@@ -54,6 +54,11 @@ export const zhCN: MessageTree = {
     steps: '步骤',
     specs: '规格',
     tryIt: '动手试试',
+    diagrams: '电路视图',
+    openSchematic: '原理图',
+    openSchematicHint: '查看本课元件如何连接。',
+    openPinout: '引脚图',
+    openPinoutHint: '高亮本课用到的 ESP32 引脚。',
   },
   code: {
     copy: '复制代码',
