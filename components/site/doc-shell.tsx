@@ -6,28 +6,27 @@ import type { ReactNode } from 'react'
 import { useI18n } from '@/lib/i18n/provider'
 import { LocaleSwitcher } from './locale-switcher'
 import { SiteFooter } from './site-footer'
+import { ThemeSwitcher } from './theme-switcher'
 
 export function DocShell({ children }: { children: ReactNode }) {
   const { t } = useI18n()
   return (
     <div className="lab-shell flex min-h-dvh flex-col">
-      <header className="relative z-40 flex items-center justify-between gap-4 border-b border-[#e1e5eb] bg-white/95 px-4 py-3 shadow-[0_2px_14px_rgb(31_41_55/6%)] backdrop-blur lg:px-6">
+      <header className="relative z-40 flex items-center justify-between gap-4 border-b border-border bg-[color:var(--glass)] px-4 py-3 shadow-[var(--soft-shadow)] backdrop-blur-xl lg:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-3">
-          <Image src="/logo.svg" alt="" width={40} height={40} className="size-10 rounded-2xl" priority />
+          <Image src="/logo.svg" alt="" width={40} height={40} className="size-10 rounded-[0.9rem] ring-1 ring-border" priority />
           <div className="min-w-0">
-            <p className="truncate text-lg font-black tracking-tight text-[#1d1d1f] md:text-2xl">
+            <p className="truncate text-lg font-extrabold tracking-[-0.03em] text-foreground md:text-[1.65rem]">
               {t('brand.title')}{' '}
-              <span className="font-mono text-xs font-normal tracking-normal text-[#2a2a2a]">/ {t('brand.subtitle')}</span>
+              <span className="font-mono text-xs font-medium tracking-normal text-muted-foreground">/ {t('brand.subtitle')}</span>
             </p>
-            <p className="hidden font-mono text-xs tracking-[0.3em] text-muted-foreground sm:block">{t('brand.path')}</p>
+            <p className="hidden font-mono text-[10px] tracking-[0.22em] text-muted-foreground sm:block">{t('brand.path')}</p>
           </div>
         </Link>
         <div className="flex items-center gap-2">
+          <ThemeSwitcher />
           <LocaleSwitcher />
-          <Link
-            href="/"
-            className="rounded-xl border border-[#e1e5eb] bg-white px-3 py-2 text-xs font-bold text-[#020826] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#eaddcf]"
-          >
+          <Link href="/" className="ui-chip">
             {t('info.backLab')}
           </Link>
         </div>

@@ -12,6 +12,14 @@ export const en = {
     progress: 'Course progress',
     language: 'Language',
   },
+  theme: {
+    title: 'Color theme',
+    matcha: 'Matcha',
+    umi: 'Umi',
+    sakura: 'Sakura',
+    sumi: 'Sumi',
+    yuzu: 'Yuzu',
+  },
   footer: {
     nav: 'Footer',
     about: 'About',

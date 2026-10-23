@@ -38,9 +38,15 @@ export function StageToolbar({
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-3 flex flex-col items-center gap-2">
       {onScene && (
-        <p className="hidden rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background md:block">{t('stage.rotateHint')}</p>
+        <p className="hidden rounded-full border border-border bg-[color:var(--glass)] px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-[var(--soft-shadow)] backdrop-blur-md md:block">
+          {t('stage.rotateHint')}
+        </p>
       )}
-      <div role="toolbar" aria-label={t('stage.viewControls')} className="pointer-events-auto flex flex-wrap items-center justify-center gap-0.5 rounded-lg border bg-card p-1 shadow-sm">
+      <div
+        role="toolbar"
+        aria-label={t('stage.viewControls')}
+        className="pointer-events-auto flex flex-wrap items-center justify-center gap-0.5 rounded-2xl border border-border bg-[color:var(--glass)] p-1 shadow-[var(--soft-shadow)] backdrop-blur-xl"
+      >
         {onModeChange && (
           <>
             <button className={cn(btn)} onClick={() => onModeChange('scene')} aria-pressed={mode === 'scene'} aria-label={t('stage.breadboard')}>

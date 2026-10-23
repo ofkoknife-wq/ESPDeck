@@ -100,7 +100,7 @@ export function PanZoomStage({ children, hint }: { children: (viewBox: string) =
   return (
     <div
       ref={wrapRef}
-      className="relative h-full w-full touch-none overflow-hidden bg-[#efe6d8]"
+      className="relative h-full w-full touch-none overflow-hidden bg-[color:var(--stage-floor)]"
       onPointerDown={(event) => {
         pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
         if (pointers.current.size === 2) {

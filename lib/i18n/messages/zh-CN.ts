@@ -14,6 +14,14 @@ export const zhCN: MessageTree = {
     progress: '课程进度',
     language: '语言',
   },
+  theme: {
+    title: '配色主题',
+    matcha: '抹茶',
+    umi: '海雾',
+    sakura: '樱色',
+    sumi: '墨白',
+    yuzu: '柚青',
+  },
   footer: {
     nav: '页脚导航',
     about: '关于我们',

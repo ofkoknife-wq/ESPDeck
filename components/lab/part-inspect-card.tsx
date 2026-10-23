@@ -44,18 +44,18 @@ export function PartInspectCard({ part, viewRef, elRef, onClose }: Props) {
             />
           </svg>
           <div
-            className="pointer-events-auto absolute w-[min(16.5rem,calc(100vw-6rem))] -translate-y-1/2 rounded-2xl border border-[#e1e5eb] bg-[#fffffe] p-3 shadow-[0_16px_40px_rgb(31_41_55/18%)]"
+            className="pointer-events-auto absolute w-[min(16.5rem,calc(100vw-6rem))] -translate-y-1/2 rounded-2xl border border-border bg-[color:var(--glass)] p-3 shadow-[var(--elevated-shadow)] backdrop-blur-xl"
             style={{ left: DX, top: DY }}
           >
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-black leading-tight text-[#020826]">{part.title}</h3>
+                <h3 className="text-sm font-extrabold leading-tight tracking-tight text-foreground">{part.title}</h3>
                 <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{part.body}</p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-[#e1e5eb] text-muted-foreground transition hover:bg-[#f4eee6] hover:text-foreground"
+                className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
                 aria-label={t('stage.closeInspect')}
               >
                 <X className="size-3.5" />
@@ -64,7 +64,7 @@ export function PartInspectCard({ part, viewRef, elRef, onClose }: Props) {
             <button
               type="button"
               onClick={() => viewRef.current?.focusAt(part.at, { inspect: true })}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#020826] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#1a2744]"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-bold text-background transition hover:opacity-90"
             >
               <Search className="size-3.5" aria-hidden />
               {t('stage.inspect')}

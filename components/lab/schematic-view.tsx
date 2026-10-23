@@ -44,7 +44,7 @@ export function SchematicView({
           <path d="M20 0H0V20" fill="none" stroke="#d8cbb8" strokeWidth="0.8" />
         </pattern>
       </defs>
-      <rect width="720" height="420" fill="#f4eee6" />
+      <rect width="720" height="420" fill="var(--stage-floor)" />
       <rect width="720" height="420" fill="url(#sch-grid)" />
       {graph.nets.map((net, index) => {
         const a = part(net.from)
@@ -70,7 +70,7 @@ export function SchematicView({
               strokeDasharray={broken ? '9 6' : undefined}
               strokeLinejoin="round"
             />
-            <text x={midX + 6} y={(y1 + y2) / 2 - 6} fontSize="11" fill="#716040">
+            <text x={midX + 6} y={(y1 + y2) / 2 - 6} fontSize="11" fill="var(--muted-foreground)">
               {net.label}
               {broken ? t('views.openCircuit') : ''}
             </text>

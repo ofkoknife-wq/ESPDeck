@@ -118,7 +118,7 @@ export function Lab() {
             </div>
             <section
               aria-label={`${t('lab.lessonN', { n: safeIndex + 1 })} · ${lesson.title}`}
-              className="relative min-h-96 flex-1 overflow-hidden rounded-[1.25rem] border bg-card lg:min-h-0"
+              className="relative min-h-96 flex-1 overflow-hidden rounded-[1.25rem] border border-border bg-card shadow-[var(--elevated-shadow)] lg:min-h-0"
             >
               {stageMode === 'scene' ? (
                 <>

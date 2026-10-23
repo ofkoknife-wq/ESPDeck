@@ -80,7 +80,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
         role="listbox"
         aria-label={t('header.language')}
         style={{ top: pos.top, right: pos.right, width: pos.width }}
-        className="fixed z-[9999] max-h-56 overflow-y-auto overscroll-contain rounded-xl border border-[#e1e5eb] bg-white p-1 shadow-[0_16px_40px_rgb(31_41_55/18%)]"
+        className="fixed z-[9999] max-h-56 overflow-y-auto overscroll-contain rounded-2xl border border-border bg-card p-1.5 shadow-[var(--elevated-shadow)]"
       >
         {LOCALE_META.map((item) => {
           const selected = item.code === locale
@@ -93,13 +93,13 @@ export function LocaleSwitcher({ className }: { className?: string }) {
                 className={cn(
                   'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-bold transition',
                   selected && 'bg-secondary',
-                  item.enabled ? 'hover:bg-[#eaddcf]' : 'cursor-not-allowed opacity-45',
+                  item.enabled ? 'hover:bg-muted' : 'cursor-not-allowed opacity-45',
                 )}
               >
                 <span aria-hidden className="text-base leading-none">
                   {item.flag}
                 </span>
-                <span className="min-w-0 flex-1 truncate">{item.nativeLabel}</span>
+                <span className="min-w-0 flex-1 truncate font-semibold">{item.nativeLabel}</span>
                 {!item.enabled && (
                   <span className="shrink-0 text-[10px] font-medium text-muted-foreground">{t('locale.soon')}</span>
                 )}
@@ -116,7 +116,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
       <button
         ref={buttonRef}
         type="button"
-        className="flex items-center gap-1.5 rounded-xl border border-[#e1e5eb] bg-white px-2 py-2 text-[11px] font-bold text-[#020826] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#eaddcf] sm:px-3 sm:text-xs"
+        className="ui-chip"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}

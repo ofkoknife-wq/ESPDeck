@@ -1,11 +1,17 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { JetBrains_Mono, Noto_Sans_SC } from 'next/font/google'
+import { JetBrains_Mono, Noto_Sans_SC, Outfit } from 'next/font/google'
 import { Providers } from '@/components/site/providers'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const SITE_TAGLINE_EN = 'Open the page. Get hands-on with ESP32.'
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+})
 
 const notoSansSC = Noto_Sans_SC({
   weight: ['400', '500', '700', '900'],
@@ -78,7 +84,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#f9f4ef',
+  themeColor: '#f3f6f2',
   colorScheme: 'light',
 }
 
@@ -88,7 +94,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`bg-background ${notoSansSC.variable} ${jetbrainsMono.variable}`}>
+    <html
+      lang="en"
+      data-theme="matcha"
+      className={`bg-background ${outfit.variable} ${notoSansSC.variable} ${jetbrainsMono.variable}`}
+    >
       <body className="font-sans antialiased">
         <Providers>
           {children}

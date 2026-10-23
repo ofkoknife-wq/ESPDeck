@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 export function LessonThumb({ id, className }: { id: LessonId; className?: string }) {
   const Icon = THUMBS[id] ?? ThumbBoard
   return (
-    <span className={cn('relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#efe6d8]', className)}>
+    <span className={cn('relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary ring-1 ring-border', className)}>
       <Icon />
     </span>
   )

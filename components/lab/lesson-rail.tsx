@@ -29,7 +29,7 @@ export function LessonRail({ lessons, activeIndex, completed, onSelect, onOpenAd
   return (
     <nav
       aria-label={t('lab.courseList')}
-      className="lesson-rail flex min-h-0 flex-col gap-4 border-b border-border bg-card/70 px-4 py-4 lg:w-80 lg:shrink-0 lg:border-b-0 lg:border-r lg:px-8 lg:py-6"
+      className="lesson-rail flex min-h-0 flex-col gap-4 border-b border-border px-4 py-4 lg:w-80 lg:shrink-0 lg:border-b-0 lg:border-r lg:px-8 lg:py-6"
     >
       <div className="grid grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-2 text-center">
         <button
