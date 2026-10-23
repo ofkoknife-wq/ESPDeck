@@ -1,3 +1,8 @@
+/**
+ * Lesson structure (ids, icons, topology). User-facing strings and sketch source
+ * are resolved from locale packs in `lib/i18n/localize-lesson.ts` — English fallback,
+ * Chinese/ja/ko as peer packs. Do not special-case zh-CN as “authoring source”.
+ */
 import {
   Antenna,
   Cable,

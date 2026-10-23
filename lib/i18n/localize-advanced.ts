@@ -1,45 +1,30 @@
 import type { AdvancedLessonPackage } from '@/lib/advanced-types'
 import { getAdvancedLesson } from '@/lib/advanced-lessons'
+import { FILL_SPECS, buildFillLesson } from '@/lib/advanced-fill'
 import type { Locale } from './config'
-import { ADVANCED_EN_PACK, type AdvancedCopy } from './content/en/advanced'
-import { resolveContentRecord } from './content/resolve'
+import { applyHandDeep, HAND_ADVANCED_EN, type HandDeep } from './advanced-hand-en'
+import { HAND_ADVANCED_ZH } from './advanced-hand-zh'
 
-const ADVANCED_PACKS: Partial<Record<Locale, Record<string, AdvancedCopy>>> = {
-  en: ADVANCED_EN_PACK,
-  // zh-CN: Chinese lives on the package itself (getAdvancedLesson)
-  // ja / ko: add content/{locale}/advanced.ts and register here
-}
-
-function asCopy(lesson: AdvancedLessonPackage): AdvancedCopy {
-  return {
-    title: lesson.title,
-    type: lesson.type,
-    goal: lesson.goal,
-    summary: lesson.summary,
-    description: lesson.description,
-  }
+/**
+ * Hand deep packs by locale. Add ja/ko the same way — register a pack, English fallback.
+ */
+const HAND_PACKS: Partial<Record<Locale, Record<string, HandDeep>>> = {
+  en: HAND_ADVANCED_EN,
+  'zh-CN': HAND_ADVANCED_ZH as Record<string, HandDeep>,
 }
 
 /**
- * Advanced lesson with locale text overlay.
- * English pack is canonical for non-zh locales; zh-CN uses source package strings.
+ * Localized advanced lesson.
+ * Every locale (including zh-CN) resolves through packs — no language is “source special”.
+ * Missing locale content falls back to English.
  */
 export function getLocalizedAdvancedLesson(id: string, locale: Locale): AdvancedLessonPackage | undefined {
+  const fillSpec = FILL_SPECS.find((spec) => spec.id === id)
+  if (fillSpec) return buildFillLesson(fillSpec, locale)
+
   const lesson = getAdvancedLesson(id)
   if (!lesson) return undefined
-  if (locale === 'zh-CN') return lesson
 
-  const copy =
-    resolveContentRecord(locale, id, ADVANCED_PACKS) ??
-    ADVANCED_EN_PACK[id] ??
-    asCopy(lesson)
-
-  return {
-    ...lesson,
-    title: copy.title,
-    type: copy.type,
-    goal: copy.goal,
-    summary: copy.summary,
-    description: copy.description,
-  }
+  const pack = HAND_PACKS[locale]?.[id] ?? HAND_ADVANCED_EN[id]
+  return applyHandDeep(lesson, pack)
 }

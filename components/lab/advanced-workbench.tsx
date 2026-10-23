@@ -57,10 +57,7 @@ export function AdvancedWorkbench({
     return t('advanced.inProgress')
   }
 
-  const packTitle = (id: string, fallback: string) => {
-    if (locale === 'zh-CN') return fallback
-    return getLocalizedAdvancedLesson(id, locale)?.title ?? fallback
-  }
+  const localizedPack = (id: string) => getLocalizedAdvancedLesson(id, locale)
 
   if (lesson) {
     return (
@@ -147,7 +144,7 @@ export function AdvancedWorkbench({
                 </p>
                 <ul className="mt-3 space-y-2">
                   {stage.lessonIds.map((id) => {
-                    const pack = ADVANCED_PACKAGES.find((item) => item.id === id)!
+                    const pack = localizedPack(id) ?? ADVANCED_PACKAGES.find((item) => item.id === id)!
                     const mastery = lessonMastery(id, records[id], true)
                     return (
                       <li key={id}>
@@ -156,7 +153,7 @@ export function AdvancedWorkbench({
                           className="flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm hover:bg-secondary"
                         >
                           <span>
-                            <span className="font-bold">{packTitle(id, pack.title)}</span>
+                            <span className="font-bold">{pack.title}</span>
                             <span className="mt-0.5 block text-xs text-muted-foreground">
                               {pack.type} · {pack.complete ? t('advanced.fullStation') : t('advanced.building')} · {masteryLabel(mastery)}
                             </span>

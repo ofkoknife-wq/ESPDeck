@@ -3,32 +3,25 @@ import type { Locale } from './config'
 import { resolveContentRecord } from './content/resolve'
 import { LESSON_CODES_EN } from './content/en/lesson-codes'
 import { LESSONS_EN, type LessonCopy } from './content/en/lessons'
+import { LESSON_CODES_ZH } from './content/zh-CN/lesson-codes'
+import { LESSONS_ZH } from './content/zh-CN/lessons'
 
-function copyFromLesson(lesson: Lesson): LessonCopy {
-  return {
-    title: lesson.title,
-    summary: lesson.summary,
-    description: lesson.description,
-    points: lesson.points.map((point) => point.text),
-    wiring: lesson.wiring.map((wire) => ({ from: wire.from, to: wire.to, note: wire.note })),
-    steps: [...lesson.steps],
-    specs: lesson.specs.map((spec) => ({ label: spec.label, value: spec.value })),
-    hint: lesson.hint,
-  }
-}
-
-/** zh-CN pack is derived from the structural LESSONS array (Chinese authoring copy). */
-const LESSONS_ZH: Record<string, LessonCopy> = Object.fromEntries(LESSONS.map((lesson) => [lesson.id, copyFromLesson(lesson)]))
-
+/**
+ * Locale content packs. Structure (icons, ids) lives in LESSONS;
+ * user-facing copy + sketch source come only from packs.
+ * Add ja/ko by shipping content/{locale}/lessons.ts (+ lesson-codes) and registering here.
+ */
 const LESSON_PACKS: Partial<Record<Locale, Record<string, LessonCopy>>> = {
   en: LESSONS_EN as Record<string, LessonCopy>,
-  'zh-CN': LESSONS_ZH,
-  // ja / ko: add content/{locale}/lessons.ts and register here — missing → en via resolveContentRecord
+  'zh-CN': LESSONS_ZH as Record<string, LessonCopy>,
 }
 
-function applyCopy(lesson: Lesson, copy: LessonCopy, locale: Locale): Lesson {
-  const englishCode = LESSON_CODES_EN[lesson.id as LessonId]
-  // Prefer locale pack arrays wholesale so missing note/extra Chinese rows never leak into EN.
+const CODE_PACKS: Partial<Record<Locale, Partial<Record<LessonId, string>>>> = {
+  en: LESSON_CODES_EN,
+  'zh-CN': LESSON_CODES_ZH,
+}
+
+function applyCopy(lesson: Lesson, copy: LessonCopy, code: string | undefined): Lesson {
   const wiring =
     copy.wiring.length > 0
       ? copy.wiring.map((wire) => ({ from: wire.from, to: wire.to, note: wire.note }))
@@ -55,21 +48,31 @@ function applyCopy(lesson: Lesson, copy: LessonCopy, locale: Locale): Lesson {
     steps: copy.steps.length ? copy.steps : lesson.steps,
     specs,
     hint: copy.hint ?? lesson.hint,
-    // zh keeps authoring sketches; other locales prefer English code when available
-    code: locale === 'zh-CN' ? lesson.code : (englishCode ?? lesson.code),
+    code: code ?? lesson.code,
   }
 }
 
-/**
- * Build localized lessons. Structure (icons) comes from LESSONS;
- * user-facing strings + sketch source come from locale packs with English fallback.
- */
+/** Build localized lessons from locale packs with English fallback. */
 export function getLessons(locale: Locale): Lesson[] {
   return LESSONS.map((lesson) => {
+    const id = lesson.id as LessonId
     const copy =
-      resolveContentRecord(locale, lesson.id, LESSON_PACKS) ??
-      LESSONS_EN[lesson.id as LessonId] ??
-      copyFromLesson(lesson)
-    return applyCopy(lesson, copy, locale)
+      resolveContentRecord(locale, id, LESSON_PACKS) ??
+      LESSONS_EN[id] ??
+      ({
+        title: lesson.title,
+        summary: lesson.summary,
+        description: lesson.description,
+        points: lesson.points.map((p) => p.text),
+        wiring: lesson.wiring.map((w) => ({ from: w.from, to: w.to, note: w.note })),
+        steps: [...lesson.steps],
+        specs: lesson.specs.map((s) => ({ label: s.label, value: s.value })),
+        hint: lesson.hint,
+      } satisfies LessonCopy)
+    const code =
+      resolveContentRecord(locale, id, CODE_PACKS as Partial<Record<Locale, Record<string, string>>>) ??
+      LESSON_CODES_EN[id] ??
+      lesson.code
+    return applyCopy(lesson, copy, code)
   })
 }

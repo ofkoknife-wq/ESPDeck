@@ -1,36 +1,37 @@
 import { ADVANCED_PACKAGES, ADVANCED_STAGES } from './advanced-lessons'
 import type { CurriculumTrack, LessonRecord, Mastery } from './advanced-types'
 
+/** English fallback titles; UI uses messages tracks.* / stages.* via t(). */
 export const TRACKS: CurriculumTrack[] = [
   {
     id: 'foundations',
     index: '01',
-    title: '零基础',
-    goal: '接线并看现象，完成第一块开发板实验',
+    title: 'Foundations',
+    goal: 'Wire up, see results, finish your first board labs',
     stageIds: [],
     usesBasicLab: true,
   },
   {
     id: 'build',
     index: '02',
-    title: '能做项目',
-    goal: '独立做出可靠的传感器节点',
+    title: 'Build projects',
+    goal: 'Ship a reliable sensor node on your own',
     stageIds: ['core', 'sensors'],
     usesBasicLab: false,
   },
   {
     id: 'engineering',
     index: '03',
-    title: '工程化开发',
-    goal: '可调试、可恢复、可联网',
+    title: 'Engineering',
+    goal: 'Debuggable, recoverable, networked systems',
     stageIds: ['protocols', 'realtime'],
     usesBasicLab: false,
   },
   {
     id: 'product',
     index: '04',
-    title: '产品级硬件',
-    goal: '功耗、结构、测试与发布',
+    title: 'Product hardware',
+    goal: 'Power, enclosure, test, and release',
     stageIds: ['product', 'projects'],
     usesBasicLab: false,
   },
