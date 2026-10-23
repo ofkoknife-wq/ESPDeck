@@ -1,10 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import { BB_TOP, BOARD_X, HEADER_Z, PCB_TOP, type Vec3, hole, mid, pinPos, up } from '@/lib/geometry'
 import type { LessonId } from '@/lib/lessons'
 import type { SimInputs, SimOutputs } from '@/lib/use-simulation'
-import { soilMoisturePct } from '@/lib/use-simulation'
 import { Esp32Board } from './board'
 import { Breadboard } from './breadboard'
 import {
@@ -18,6 +16,7 @@ import {
   Resistor,
   RgbLed,
   Servo,
+  SoilOledDisplay,
   SoilProbe,
   TouchPad,
   Waves,
@@ -359,58 +358,43 @@ function JoystickLesson({ outputs, inputs, setInput }: CircuitProps) {
 }
 const SOIL_POT: Vec3 = [-2.6, 0, 0.9]
 const SOIL_CAN: Vec3 = [3.1, 0, 1.15]
-const SOIL_OLED: Vec3 = [0, 0.85, -1.1]
+const SOIL_OLED: Vec3 = [0.2, BB_TOP + 0.95, -0.15]
 
 function SoilLesson({ outputs, inputs, setInput, onPickCallout }: CircuitProps) {
-  const moisture = soilMoisturePct(inputs.pot)
-  const [pouring, setPouringVisual] = useState(false)
-  const boostTimer = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (boostTimer.current) clearInterval(boostTimer.current)
-    }
-  }, [])
-
-  const setPouring = (down: boolean) => {
-    setPouringVisual(down)
-    if (down) {
-      if (boostTimer.current) return
-      setInput('pot', (prev) => Math.min(4095, prev + 140))
-      boostTimer.current = setInterval(() => {
-        setInput('pot', (prev) => Math.min(4095, prev + 140))
-      }, 50)
-    } else if (boostTimer.current) {
-      clearInterval(boostTimer.current)
-      boostTimer.current = null
-    }
-  }
+  const wetness = outputs.soilWetness || 0.42
+  const wilt = outputs.soilWilt || 0
+  const pct = outputs.soilMoisture
+  const message = outputs.soilMessage
 
   return (
     <group>
-      <LedCircuit brightness={outputs.led} />
       <PlantPot
         position={SOIL_POT}
-        wetness={moisture / 100}
-        onPick={() => onPickCallout?.(1)}
+        wetness={wetness}
+        wilt={wilt}
+        onPick={() => onPickCallout?.(3)}
       />
       <SoilProbe position={SOIL_POT} onPick={() => onPickCallout?.(1)} />
-      <OledDisplay
+      <SoilOledDisplay
         position={SOIL_OLED}
-        text={outputs.oledText || `${moisture}%`}
+        pct={pct}
+        message={message}
         onPick={() => onPickCallout?.(0)}
       />
       <WateringCan
         position={SOIL_CAN}
-        pouring={pouring}
-        onHold={setPouring}
+        pouring={inputs.water}
+        onHold={(down) => setInput('water', down)}
         onPick={() => onPickCallout?.(2)}
       />
-      <Wire from={pinPos('L', '34')} to={[SOIL_POT[0] + 0.28, 0.4, SOIL_POT[2]]} color={WIRE.green} toKind="free" />
-      <Wire from={pinPos('L', '3V3')} to={[-1.0, 0, -2.0]} color={WIRE.red} toKind="free" />
-      <Wire from={pinPos('R', 'GND')} to={[-0.35, 0, -2.0]} color={WIRE.black} toKind="free" />
-      <Wire from={pinPos('R', '21')} to={[0.35, 0, -2.0]} color={WIRE.green} toKind="free" />
-      <Wire from={pinPos('R', '22')} to={[1.0, 0, -2.0]} color={WIRE.blue} toKind="free" />
+      {/* Sensor power + AOUT → GPIO34 (ADC); OLED on I²C */}
+      <Wire from={pinPos('L', '5V')} to={[SOIL_POT[0] + 0.22, 0.35, SOIL_POT[2]]} color={WIRE.red} toKind="free" />
+      <Wire from={pinPos('L', 'GND')} to={[SOIL_POT[0] + 0.32, 0.3, SOIL_POT[2] + 0.15]} color={WIRE.black} toKind="free" />
+      <Wire from={pinPos('L', '34')} to={[SOIL_POT[0] + 0.42, 0.4, SOIL_POT[2]]} color={WIRE.yellow} toKind="free" />
+      <Wire from={pinPos('L', '3V3')} to={[SOIL_OLED[0] - 0.9, 0.2, SOIL_OLED[2] - 0.4]} color={WIRE.red} toKind="free" />
+      <Wire from={pinPos('R', 'GND')} to={[SOIL_OLED[0] - 0.3, 0.2, SOIL_OLED[2] - 0.4]} color={WIRE.black} toKind="free" />
+      <Wire from={pinPos('R', '21')} to={[SOIL_OLED[0] + 0.3, 0.2, SOIL_OLED[2] - 0.4]} color={WIRE.green} toKind="free" />
+      <Wire from={pinPos('R', '22')} to={[SOIL_OLED[0] + 0.9, 0.2, SOIL_OLED[2] - 0.4]} color={WIRE.blue} toKind="free" />
     </group>
   )
 }
@@ -701,47 +685,107 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
     extent: 14,
     callouts: [
       {
-        at: [SOIL_OLED[0], 1.15, SOIL_OLED[2]],
-        title: 'OLED',
-        body: '显示湿度百分比与干湿状态',
-        dx: 80,
-        dy: -100,
-        pickable: true,
-        control: { kind: 'readout', readout: 'moisture' },
-      },
-      {
-        at: [SOIL_POT[0], 1.15, SOIL_POT[2]],
-        title: '土壤探针',
-        body: '插入花盆读取湿度；拖动滑条模拟干湿',
-        dx: -80,
-        dy: -110,
-        interactive: true,
-        pickable: true,
-        control: {
-          kind: 'slider',
-          inputKey: 'pot',
-          min: 0,
-          max: 4095,
-          labelKey: 'sim.moisture',
-          display: 'moisture',
-        },
-      },
-      {
-        at: [SOIL_CAN[0], 1.2, SOIL_CAN[2]],
-        title: '洒水壶',
-        body: '按住浇水，提高土壤湿度',
-        dx: 70,
+        at: [SOIL_OLED[0], BB_TOP + 1.35, SOIL_OLED[2]],
+        title: 'OLED screen',
+        body: 'The sketch draws the reading on it.',
+        dx: -70,
         dy: -120,
+        icon: 'screen',
+        pickable: true,
+        controls: [
+          {
+            kind: 'slider',
+            inputKey: 'thirsty',
+            min: 10,
+            max: 50,
+            step: 5,
+            labelKey: 'sim.soil.thirsty',
+            unit: '%',
+            display: 'percent',
+          },
+          {
+            kind: 'slider',
+            inputKey: 'soggy',
+            min: 60,
+            max: 95,
+            step: 5,
+            labelKey: 'sim.soil.soggy',
+            unit: '%',
+            display: 'percent',
+          },
+          { kind: 'readout', readout: 'moisture' },
+        ],
+      },
+      {
+        at: [SOIL_POT[0] + 0.32, 1.25, SOIL_POT[2]],
+        title: 'Soil sensor',
+        body: 'Reads lower the wetter the soil is.',
+        dx: 80,
+        dy: -120,
+        icon: 'drop',
         interactive: true,
         pickable: true,
-        control: { kind: 'boost', inputKey: 'pot', labelKey: 'sim.holdWater', step: 140 },
+        controls: [
+          {
+            kind: 'slider',
+            inputKey: 'soilDry',
+            min: 400,
+            max: 700,
+            step: 10,
+            labelKey: 'sim.soil.dryReading',
+            display: 'raw',
+          },
+          {
+            kind: 'slider',
+            inputKey: 'soilWet',
+            min: 150,
+            max: 400,
+            step: 10,
+            labelKey: 'sim.soil.wetReading',
+            display: 'raw',
+          },
+          { kind: 'readout', readout: 'soilRaw' },
+        ],
+      },
+      {
+        at: [SOIL_CAN[0], 1.15, SOIL_CAN[2]],
+        title: 'Watering can',
+        body: 'Hold it down to water the plant.',
+        dx: 70,
+        dy: -110,
+        icon: 'can',
+        interactive: true,
+        pickable: true,
+        control: { kind: 'hold', inputKey: 'water', labelKey: 'sim.holdWater' },
+      },
+      {
+        at: [SOIL_POT[0], 1.55, SOIL_POT[2]],
+        title: 'Plant',
+        body: 'Leaves droop when dry; lift when watered.',
+        dx: -90,
+        dy: -90,
+        icon: 'plant',
+        pickable: true,
+        controls: [
+          {
+            kind: 'choice',
+            inputKey: 'sun',
+            labelKey: 'sim.soil.sun',
+            options: [
+              { value: 'shade', labelKey: 'sim.soil.shade', noteKey: 'sim.soil.shadeNote' },
+              { value: 'window', labelKey: 'sim.soil.window', noteKey: 'sim.soil.windowNote' },
+              { value: 'sun', labelKey: 'sim.soil.fullSun', noteKey: 'sim.soil.fullSunNote' },
+            ],
+          },
+        ],
       },
       {
         at: up(pinPos('L', '34'), 0.15),
         title: 'GPIO34',
-        body: '模拟读入土壤传感器信号',
+        body: 'analogRead() → 0–4095 (ADC).',
         dx: -60,
         dy: 110,
+        icon: 'wave',
       },
     ],
   },

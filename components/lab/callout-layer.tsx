@@ -5,6 +5,7 @@ import { getCalloutTexts } from '@/lib/i18n/content/callouts'
 import { useI18n } from '@/lib/i18n/provider'
 import type { LessonId } from '@/lib/lessons'
 import { cn } from '@/lib/utils'
+import { CalloutIconMark } from './callout-icon'
 import type { CalloutSpec } from './three/parts'
 
 /** Positions are written each frame via transform from the 3D scene — avoid React re-renders. */
@@ -68,8 +69,13 @@ export function CalloutLayer({
               )}
               style={{ left: c.dx, top: c.dy }}
             >
-              <p className="text-sm font-bold leading-tight text-foreground">{text.title}</p>
-              <p className="mt-0.5 hidden text-xs leading-snug text-muted-foreground md:block">{text.body}</p>
+              <div className="flex items-start gap-1.5">
+                {c.icon ? <CalloutIconMark icon={c.icon} className="mt-0.5 text-accent" /> : null}
+                <div className="min-w-0">
+                  <p className="text-sm font-bold leading-tight text-foreground">{text.title}</p>
+                  <p className="mt-0.5 hidden text-xs leading-snug text-muted-foreground md:block">{text.body}</p>
+                </div>
+              </div>
             </div>
           </div>
         )

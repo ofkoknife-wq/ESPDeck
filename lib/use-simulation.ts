@@ -7,6 +7,8 @@ import type { LessonId } from './lessons'
 
 export type Phase = 'idle' | 'uploading' | 'running'
 
+export type SunMode = 'shade' | 'window' | 'sun'
+
 export type SimInputs = {
   button: boolean
   pot: number
@@ -14,6 +16,18 @@ export type SimInputs = {
   temp: number
   webLed: boolean
   sound: boolean
+  /** Hold watering can (soil lesson). */
+  water: boolean
+  /** Capacitive sensor calibration — reading in dry air (Arduino-style 0–1023). */
+  soilDry: number
+  /** Capacitive sensor calibration — reading in water. */
+  soilWet: number
+  /** OLED “Water me!” threshold (%). */
+  thirsty: number
+  /** OLED “Too wet!” threshold (%). */
+  soggy: number
+  /** How fast the pot dries when not watering. */
+  sun: SunMode
 }
 
 export type SimOutputs = {
@@ -25,11 +39,17 @@ export type SimOutputs = {
   touchValue: number
   wifi: boolean
   oledText: string
+  /** Soil lesson live state (mirrors reference plant sim). */
+  soilWetness: number
+  soilWilt: number
+  soilMoisture: number
+  soilRaw: number
+  soilMessage: string
 }
 
 export type LogLine = { id: number; text: string; tone?: 'info' | 'ok' | 'warn' }
 
-const IDLE_OUTPUTS: SimOutputs = {
+export const IDLE_OUTPUTS: SimOutputs = {
   led: 0,
   onboard: 0,
   rgb: [0, 0, 0],
@@ -38,20 +58,51 @@ const IDLE_OUTPUTS: SimOutputs = {
   touchValue: 60,
   wifi: false,
   oledText: '',
+  soilWetness: 0.42,
+  soilWilt: 0,
+  soilMoisture: 42,
+  soilRaw: 412,
+  soilMessage: '',
 }
 
-const DEFAULT_INPUTS: SimInputs = {
+export const DEFAULT_INPUTS: SimInputs = {
   button: false,
   pot: 2048,
   touch: false,
   temp: 25,
   webLed: false,
   sound: true,
+  water: false,
+  soilDry: 520,
+  soilWet: 260,
+  thirsty: 30,
+  soggy: 85,
+  sun: 'window',
 }
 
-/** Soil lesson maps pot ADC → moisture % (dry ~35, wet ~90). */
-export function soilMoisturePct(pot: number) {
-  return Math.round(35 + (pot / 4095) * 55)
+/** Reference plant sim: shade / window / sun dry rates (wetness units per second). */
+export const SUN_DRY_RATE: Record<SunMode, number> = {
+  shade: 0.0045,
+  window: 0.009,
+  sun: 0.018,
+}
+
+/** Arduino `map(raw, dry, wet, 0, 100)` + constrain — wetter soil → lower ADC. */
+export function mapSoilMoisture(raw: number, dry: number, wet: number) {
+  if (wet === dry) return 0
+  const v = Math.trunc(((raw - dry) * 100) / (wet - dry))
+  return Math.min(100, Math.max(0, v))
+}
+
+/** Reference: raw ≈ 515 − 245 × wetness (0 dry → ~515, 1 wet → ~270). */
+export function soilRawFromWetness(wetness: number) {
+  return Math.round(515 - 245 * wetness)
+}
+
+/** @deprecated use mapSoilMoisture — kept for any leftover call sites. */
+export function soilMoisturePct(pot: number, dry = 520, wet = 260) {
+  const raw = soilRawFromWetness(pot / 4095)
+  return mapSoilMoisture(raw, dry, wet)
 }
 
 const MELODY = [262, 262, 392, 392, 440, 440, 392, 349, 349, 330, 330, 294, 294, 262]
@@ -120,7 +171,7 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
     clearTimers()
     setPhase('idle')
     setOutputs(IDLE_OUTPUTS)
-    setInputs((prev) => ({ ...prev, button: false, touch: false, webLed: false }))
+    setInputs((prev) => ({ ...prev, button: false, touch: false, webLed: false, water: false }))
   }, [])
 
   const reset = useCallback(() => {
@@ -386,11 +437,39 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
           break
         }
         case 'soil': {
-          const moisture = soilMoisturePct(input.pot)
-          out.led = moisture < 50 ? 1 : 0
+          // Match learn-arduino plant sim: continuous wetness, hold-to-water, sun dry rate.
+          let wetness = typeof memo.soilWetness === 'number' ? (memo.soilWetness as number) : 0.42
+          let wilt = typeof memo.soilWilt === 'number' ? (memo.soilWilt as number) : 0
+          const dt = TICK_MS / 1000
+          const dryRate = SUN_DRY_RATE[input.sun] ?? SUN_DRY_RATE.window
+          wetness += ((input.water ? 0.12 : 0) - dryRate * (wetness > 0.02 ? 1 : 0)) * dt
+          wetness = Math.min(1, Math.max(0, wetness))
+          const thirstWilt = Math.min(1, Math.max(0, (0.3 - wetness) / 0.22))
+          wilt += (thirstWilt - wilt) * (1 - Math.exp(-TICK_MS / 900))
+          memo.soilWetness = wetness
+          memo.soilWilt = wilt
+
+          const raw = soilRawFromWetness(wetness)
+          const moisture = mapSoilMoisture(raw, input.soilDry, input.soilWet)
+          const message =
+            moisture < input.thirsty
+              ? tLog('sim.soil.waterMe')
+              : moisture > input.soggy
+                ? tLog('sim.soil.tooWet')
+                : tLog('sim.soil.happy')
+
+          out.soilWetness = wetness
+          out.soilWilt = wilt
+          out.soilMoisture = moisture
+          out.soilRaw = raw
+          out.soilMessage = message
+          out.led = moisture < input.thirsty ? 1 : 0
           out.onboard = out.led
-          out.oledText = moisture < 50 ? `DRY ${moisture}%` : `OK  ${moisture}%`
-          if (every('soil', t, 700)) pushLog(tLog(moisture < 50 ? 'sim.log.soilDry' : 'sim.log.soilOk', { pct: moisture }), moisture < 50 ? 'warn' : 'ok')
+          // Compact OLED lines: big % + mood (rendered specially in SoilOled).
+          out.oledText = `${moisture}%\n${message}`
+          if (every('soil', t, 500)) {
+            pushLog(tLog('sim.log.soilRaw', { raw, pct: moisture }), moisture < input.thirsty ? 'warn' : 'ok')
+          }
           break
         }
         case 'gas': {

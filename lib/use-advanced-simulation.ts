@@ -5,7 +5,14 @@ import { useI18n } from './i18n/provider'
 import { translateLocale } from './i18n/messages'
 import { testsPassed } from './code-tests'
 import type { AdvancedLessonPackage, Fault } from './advanced-types'
-import type { LogLine, Phase, SimInputs, SimOutputs } from './use-simulation'
+import {
+  DEFAULT_INPUTS as BASE_INPUTS,
+  IDLE_OUTPUTS,
+  type LogLine,
+  type Phase,
+  type SimInputs,
+  type SimOutputs,
+} from './use-simulation'
 
 export type AdvancedOutputs = SimOutputs & {
   scope: number[]
@@ -15,25 +22,8 @@ export type AdvancedOutputs = SimOutputs & {
   packets: { time: string; proto: string; dir: string; data: string; status: string }[]
 }
 
-const IDLE: SimOutputs = {
-  led: 0,
-  onboard: 0,
-  rgb: [0, 0, 0],
-  servo: 90,
-  tone: 0,
-  touchValue: 60,
-  wifi: false,
-  oledText: '',
-}
-
-const DEFAULT_INPUTS: SimInputs = {
-  button: false,
-  pot: 2048,
-  touch: false,
-  temp: 25,
-  webLed: false,
-  sound: false,
-}
+const IDLE: SimOutputs = { ...IDLE_OUTPUTS }
+const DEFAULT_INPUTS: SimInputs = { ...BASE_INPUTS, sound: false }
 
 function activeFault(lesson: AdvancedLessonPackage, injected: string | null, solved: string[]): Fault | undefined {
   if (!injected || solved.includes(injected)) return undefined

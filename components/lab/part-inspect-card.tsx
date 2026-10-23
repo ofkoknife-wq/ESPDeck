@@ -1,10 +1,9 @@
 'use client'
 
 import { Search, X } from 'lucide-react'
-import { type RefObject, useEffect, useRef } from 'react'
+import type { RefObject } from 'react'
 import { useI18n } from '@/lib/i18n/provider'
 import type { SimInputs, SimOutputs } from '@/lib/use-simulation'
-import { soilMoisturePct } from '@/lib/use-simulation'
 import { cn } from '@/lib/utils'
 import type { ScenePart } from './scene-parts'
 import type { PartControl } from './three/parts'
@@ -24,20 +23,21 @@ type Props = {
   setInput?: <K extends keyof SimInputs>(key: K, value: SimInputs[K] | ((prev: SimInputs[K]) => SimInputs[K])) => void
 }
 
-function formatSliderDisplay(control: Extract<PartControl, { kind: 'slider' }>, value: number): string {
+function formatSlider(control: Extract<PartControl, { kind: 'slider' }>, value: number): string {
+  const unit = control.unit ?? ''
   switch (control.display) {
     case 'voltage':
       return `${Math.round(value)} · ${((value * 3.3) / 4095).toFixed(2)}V`
-    case 'moisture':
-      return `${soilMoisturePct(value)}%`
+    case 'percent':
+      return `${Math.round(value)}${unit || '%'}`
     case 'temp':
       return `${value.toFixed(1)} °C`
     default:
-      return String(Math.round(value))
+      return `${Math.round(value)}${unit}`
   }
 }
 
-function InspectControl({
+function ControlRow({
   control,
   inputs,
   outputs,
@@ -49,21 +49,14 @@ function InspectControl({
   setInput: NonNullable<Props['setInput']>
 }) {
   const { t } = useI18n()
-  const boostTimer = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (boostTimer.current) clearInterval(boostTimer.current)
-    }
-  }, [])
 
   if (control.kind === 'slider') {
     const value = inputs[control.inputKey] as number
     return (
-      <label className="mt-3 flex flex-col gap-1.5">
+      <label className="flex flex-col gap-1.5">
         <span className="flex items-center justify-between text-[11px]">
           <span className="font-medium text-muted-foreground">{t(control.labelKey)}</span>
-          <span className="font-mono font-bold tabular-nums text-foreground">{formatSliderDisplay(control, value)}</span>
+          <span className="font-mono font-bold tabular-nums text-foreground">{formatSlider(control, value)}</span>
         </span>
         <input
           type="range"
@@ -88,7 +81,7 @@ function InspectControl({
         onPointerLeave={() => setInput(control.inputKey, false)}
         aria-pressed={active}
         className={cn(
-          'mt-3 h-9 w-full select-none rounded-xl border-2 border-foreground text-xs font-bold transition-all',
+          'h-9 w-full select-none rounded-xl border-2 border-foreground text-xs font-bold transition-all',
           active ? 'translate-y-0.5 bg-foreground text-background' : 'bg-card text-foreground shadow-[0_2px_0_var(--foreground)]',
         )}
       >
@@ -97,40 +90,47 @@ function InspectControl({
     )
   }
 
-  if (control.kind === 'boost') {
-    const start = () => {
-      if (boostTimer.current) return
-      setInput(control.inputKey, (prev) => Math.min(4095, (prev as number) + control.step) as SimInputs[typeof control.inputKey])
-      boostTimer.current = setInterval(() => {
-        setInput(control.inputKey, (prev) => Math.min(4095, (prev as number) + control.step) as SimInputs[typeof control.inputKey])
-      }, 50)
-    }
-    const stop = () => {
-      if (boostTimer.current) {
-        clearInterval(boostTimer.current)
-        boostTimer.current = null
-      }
-    }
+  if (control.kind === 'choice') {
+    const current = inputs[control.inputKey]
     return (
-      <button
-        type="button"
-        onPointerDown={start}
-        onPointerUp={stop}
-        onPointerLeave={stop}
-        className="mt-3 h-9 w-full select-none rounded-xl border-2 border-foreground bg-card text-xs font-bold text-foreground shadow-[0_2px_0_var(--foreground)] active:translate-y-0.5 active:shadow-none"
-      >
-        {t(control.labelKey)}
-      </button>
+      <fieldset className="flex flex-col gap-1.5">
+        <legend className="text-[11px] font-medium text-muted-foreground">{t(control.labelKey)}</legend>
+        <div className="grid grid-cols-3 gap-1">
+          {control.options.map((opt) => {
+            const on = current === opt.value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setInput(control.inputKey, opt.value)}
+                className={cn(
+                  'rounded-lg border px-1.5 py-1.5 text-[10px] font-bold leading-tight transition',
+                  on ? 'border-foreground bg-foreground text-background' : 'border-border bg-card text-foreground hover:bg-muted',
+                )}
+                title={opt.noteKey ? t(opt.noteKey) : undefined}
+              >
+                {t(opt.labelKey)}
+              </button>
+            )
+          })}
+        </div>
+        {control.options.find((o) => o.value === current)?.noteKey ? (
+          <p className="text-[10px] leading-snug text-muted-foreground">
+            {t(control.options.find((o) => o.value === current)!.noteKey!)}
+          </p>
+        ) : null}
+      </fieldset>
     )
   }
 
   if (control.kind === 'readout') {
     let value = '—'
     if (control.readout === 'oled') value = outputs.oledText || t('stage.oledIdle')
-    else if (control.readout === 'moisture') value = `${soilMoisturePct(inputs.pot)}%`
+    else if (control.readout === 'moisture') value = outputs.soilMoisture ? `${outputs.soilMoisture}%` : '—'
+    else if (control.readout === 'soilRaw') value = outputs.soilRaw ? String(outputs.soilRaw) : '—'
     else if (control.readout === 'touch') value = String(outputs.touchValue)
     return (
-      <p className="mt-3 rounded-xl border border-border bg-muted/40 px-3 py-2 font-mono text-xs font-bold tabular-nums text-foreground">
+      <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 font-mono text-xs font-bold tabular-nums text-foreground">
         {value}
       </p>
     )
@@ -139,10 +139,31 @@ function InspectControl({
   return null
 }
 
+function InspectControls({
+  controls,
+  inputs,
+  outputs,
+  setInput,
+}: {
+  controls: PartControl[]
+  inputs: SimInputs
+  outputs: SimOutputs
+  setInput: NonNullable<Props['setInput']>
+}) {
+  return (
+    <div className="mt-3 flex flex-col gap-3">
+      {controls.map((control, i) => (
+        <ControlRow key={i} control={control} inputs={inputs} outputs={outputs} setInput={setInput} />
+      ))}
+    </div>
+  )
+}
+
 /** Screen-space card projected onto the focused component (position written each frame). */
 export function PartInspectCard({ part, viewRef, elRef, onClose, inputs, outputs, setInput }: Props) {
   const { t } = useI18n()
-  const showControl = part?.control && inputs && outputs && setInput
+  const controls = part?.controls?.length ? part.controls : part?.control ? [part.control] : []
+  const showControl = controls.length > 0 && inputs && outputs && setInput
 
   return (
     <div
@@ -150,7 +171,7 @@ export function PartInspectCard({ part, viewRef, elRef, onClose, inputs, outputs
       className="pointer-events-none absolute left-0 top-0 z-30 opacity-0 transition-opacity duration-200"
       aria-hidden={!part}
     >
-      <span className="absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_0_6px_rgb(14_124_123/28%)]" />
+      <span className="absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_0_6px_rgb(26_163_161/28%)]" />
       <span className="absolute size-3.5 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full bg-accent/50" />
       {part && (
         <>
@@ -184,9 +205,7 @@ export function PartInspectCard({ part, viewRef, elRef, onClose, inputs, outputs
                 <X className="size-3.5" />
               </button>
             </div>
-            {showControl && (
-              <InspectControl control={part.control!} inputs={inputs!} outputs={outputs!} setInput={setInput!} />
-            )}
+            {showControl && <InspectControls controls={controls} inputs={inputs!} outputs={outputs!} setInput={setInput!} />}
             <button
               type="button"
               onClick={() => viewRef.current?.focusAt(part.at, { inspect: true })}

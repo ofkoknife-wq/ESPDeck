@@ -564,27 +564,28 @@ export function Waves({ position, active, color }: { position: Vec3; active: boo
   )
 }
 
-/** Live control shown on the inspect card (and optionally driven from the mesh). */
+/** Live control(s) on the inspect card — keyed like the reference plant lesson params. */
 export type PartControl =
   | {
       kind: 'slider'
-      inputKey: 'pot' | 'temp'
+      inputKey: 'pot' | 'temp' | 'soilDry' | 'soilWet' | 'thirsty' | 'soggy'
       min: number
       max: number
       step?: number
       labelKey: string
-      /** How to format the numeric readout next to the slider. */
-      display?: 'raw' | 'voltage' | 'moisture' | 'temp'
+      unit?: string
+      display?: 'raw' | 'voltage' | 'moisture' | 'temp' | 'percent'
     }
-  | { kind: 'hold'; inputKey: 'button' | 'touch'; labelKey: string }
+  | { kind: 'hold'; inputKey: 'button' | 'touch' | 'water'; labelKey: string }
   | {
-      kind: 'boost'
-      inputKey: 'pot'
+      kind: 'choice'
+      inputKey: 'sun'
       labelKey: string
-      /** Units added to the input per ~50ms while held. */
-      step: number
+      options: { value: 'shade' | 'window' | 'sun'; labelKey: string; noteKey?: string }[]
     }
-  | { kind: 'readout'; readout: 'oled' | 'moisture' | 'touch' }
+  | { kind: 'readout'; readout: 'oled' | 'moisture' | 'soilRaw' | 'touch' }
+
+export type CalloutIcon = 'drop' | 'screen' | 'can' | 'wave' | 'plant'
 
 export type CalloutSpec = {
   at: Vec3
@@ -593,46 +594,52 @@ export type CalloutSpec = {
   dx: number
   dy: number
   interactive?: boolean
-  /** When true, clicking the related mesh focuses this callout. */
   pickable?: boolean
+  icon?: CalloutIcon
+  /** Prefer `controls` (multiple rows). `control` kept for single-control lessons. */
   control?: PartControl
+  controls?: PartControl[]
 }
 
-/** Accent ring under the focused part (reference-style cyan glow). */
+/** Accent ring — reference uses #1aa3a1 double ring under the selection. */
 export function SelectionRing({ at }: { at: [number, number, number] | null }) {
   const ref = useRef<THREE.Group>(null)
   useFrame(({ clock }) => {
     const g = ref.current
     if (!g || !at) return
-    const pulse = 1 + Math.sin(clock.elapsedTime * 3.2) * 0.045
+    const pulse = 1 + Math.sin(clock.elapsedTime * 3.2) * 0.04
     g.scale.set(pulse, 1, pulse)
   })
   if (!at) return null
   return (
-    <group ref={ref} position={[at[0], 0.035, at[2]]}>
+    <group ref={ref} position={[at[0], 0.03, at[2]]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.52, 0.7, 64]} />
-        <meshBasicMaterial color="#0aa5a6" transparent opacity={0.9} depthWrite={false} side={THREE.DoubleSide} />
+        <ringGeometry args={[0.55, 0.62, 64]} />
+        <meshBasicMaterial color="#1aa3a1" transparent opacity={0.45} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.7, 0.92, 64]} />
-        <meshBasicMaterial color="#0aa5a6" transparent opacity={0.28} depthWrite={false} side={THREE.DoubleSide} />
+        <ringGeometry args={[0.68, 0.78, 64]} />
+        <meshBasicMaterial color="#1aa3a1" transparent opacity={0.85} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
     </group>
   )
 }
 
-/** Stylized plant pot + soil + leaf cluster for the soil lesson. */
+/** Peace-lily style pot — leaves droop with wilt (reference plant). */
 export function PlantPot({
   position,
   wetness,
+  wilt = 0,
   onPick,
 }: {
   position: Vec3
   wetness: number
+  wilt?: number
   onPick?: () => void
 }) {
-  const soil = wetness > 0.55 ? '#3d2a1a' : wetness > 0.4 ? '#5a3d24' : '#7a5a38'
+  const soilColor = new THREE.Color('#5c4030').lerp(new THREE.Color('#2a1a10'), Math.min(1, wetness * 1.25))
+  const leafColor = new THREE.Color('#3a9a55').lerp(new THREE.Color('#8a9a4a'), wilt * wilt * 0.85)
+  const droop = wilt * 0.55
   return (
     <group
       position={position}
@@ -641,37 +648,51 @@ export function PlantPot({
         onPick?.()
       }}
     >
-      <mesh position={[0, 0.35, 0]}>
-        <cylinderGeometry args={[0.55, 0.42, 0.7, 24]} />
-        <meshStandardMaterial color="#c45a3a" roughness={0.65} />
+      <mesh position={[0, 0.38, 0]}>
+        <cylinderGeometry args={[0.62, 0.48, 0.76, 28]} />
+        <meshStandardMaterial color="#c9b8a0" roughness={0.7} />
       </mesh>
-      <mesh position={[0, 0.68, 0]}>
-        <cylinderGeometry args={[0.58, 0.58, 0.08, 24]} />
-        <meshStandardMaterial color="#a84830" roughness={0.6} />
+      <mesh position={[0, 0.74, 0]}>
+        <cylinderGeometry args={[0.66, 0.66, 0.08, 28]} />
+        <meshStandardMaterial color="#b8a68c" roughness={0.65} />
       </mesh>
-      <mesh position={[0, 0.72, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.5, 24]} />
-        <meshStandardMaterial color={soil} roughness={1} />
+      <mesh position={[0, 0.78, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.56, 28]} />
+        <meshStandardMaterial color={soilColor} roughness={1} />
       </mesh>
-      <mesh position={[0, 1.05, 0]}>
-        <cylinderGeometry args={[0.04, 0.06, 0.55, 8]} />
-        <meshStandardMaterial color="#2a6b3c" roughness={0.7} />
+      <mesh position={[0, 1.15, 0]}>
+        <cylinderGeometry args={[0.035, 0.05, 0.7, 8]} />
+        <meshStandardMaterial color="#2f6b3c" roughness={0.7} />
       </mesh>
-      {[
-        [0.18, 1.25, 0.05, 0.4],
-        [-0.16, 1.2, -0.08, -0.5],
-        [0.05, 1.35, -0.12, 0.2],
-      ].map(([x, y, z, rot], i) => (
-        <mesh key={i} position={[x, y, z]} rotation={[0.4, rot, 0.3]}>
-          <sphereGeometry args={[0.22, 12, 10]} />
-          <meshStandardMaterial color="#2f8f4e" roughness={0.55} />
+      {/* Flower head */}
+      <group position={[0, 1.55, 0.05]} rotation={[droop * 0.8, 0, 0]}>
+        <mesh position={[0, 0.12, 0]}>
+          <sphereGeometry args={[0.14, 12, 10]} />
+          <meshStandardMaterial color="#f2c23a" roughness={0.55} />
         </mesh>
+        <mesh position={[0, 0.02, 0.02]}>
+          <sphereGeometry args={[0.2, 12, 10]} />
+          <meshStandardMaterial color="#f7f2e4" roughness={0.5} />
+        </mesh>
+      </group>
+      {[
+        [0.22, 1.15, 0.08, 0.35 + droop],
+        [-0.2, 1.1, -0.06, -0.45 - droop],
+        [0.06, 1.28, -0.14, 0.15 + droop * 0.6],
+        [-0.08, 1.05, 0.18, 0.55 + droop],
+      ].map(([x, y, z, lean], i) => (
+        <group key={i} position={[x, y, z]} rotation={[lean, i * 0.7, lean * 0.3]}>
+          <mesh>
+            <sphereGeometry args={[0.26, 12, 10]} />
+            <meshStandardMaterial color={leafColor} roughness={0.55} />
+          </mesh>
+        </group>
       ))}
     </group>
   )
 }
 
-/** Capacitive-style soil probe sticks into the pot. */
+/** Capacitive soil moisture v1.2 — PCB + long probe into soil. */
 export function SoilProbe({ position, onPick }: { position: Vec3; onPick?: () => void }) {
   return (
     <group
@@ -681,19 +702,29 @@ export function SoilProbe({ position, onPick }: { position: Vec3; onPick?: () =>
         onPick?.()
       }}
     >
-      <mesh position={[0.28, 0.95, 0]} rotation={[0.15, 0, 0.2]}>
-        <boxGeometry args={[0.12, 0.55, 0.04]} />
-        <meshStandardMaterial color="#c4c8cc" metalness={0.7} roughness={0.35} />
+      <mesh position={[0.32, 0.55, 0]} rotation={[0.12, 0, 0.15]}>
+        <boxGeometry args={[0.14, 0.95, 0.035]} />
+        <meshStandardMaterial color="#efe9dc" roughness={0.45} metalness={0.15} />
       </mesh>
-      <mesh position={[0.28, 1.28, 0]}>
-        <boxGeometry args={[0.28, 0.18, 0.12]} />
-        <meshStandardMaterial color="#1f6b5a" roughness={0.45} />
+      <mesh position={[0.32, 1.15, 0]}>
+        <boxGeometry args={[0.42, 0.28, 0.1]} />
+        <meshStandardMaterial color="#1c1e24" roughness={0.55} />
       </mesh>
+      <mesh position={[0.32, 1.15, 0.06]}>
+        <boxGeometry args={[0.28, 0.14, 0.02]} />
+        <meshStandardMaterial color="#2e3038" roughness={0.4} />
+      </mesh>
+      {[-0.1, 0, 0.1].map((x, i) => (
+        <mesh key={i} position={[0.32 + x, 1.32, 0]}>
+          <boxGeometry args={[0.05, 0.08, 0.05]} />
+          <meshStandardMaterial color="#d9d4ca" metalness={0.6} roughness={0.35} />
+        </mesh>
+      ))}
     </group>
   )
 }
 
-/** Watering can — hold to raise soil moisture. */
+/** Blue watering can — lift + tip + stream while held (reference du()). */
 export function WateringCan({
   position,
   pouring,
@@ -705,37 +736,110 @@ export function WateringCan({
   onHold: (down: boolean) => void
   onPick?: () => void
 }) {
+  const lift = pouring ? 0.55 : 0
+  const tip = pouring ? 0.55 : 0.08
   return (
     <group
-      position={position}
-      rotation={[0, pouring ? -0.55 : -0.25, pouring ? 0.45 : 0.1]}
+      position={[position[0], position[1] + lift, position[2]]}
+      rotation={[0, -0.35, tip]}
       onPointerDown={(e) => {
         e.stopPropagation()
         onPick?.()
         onHold(true)
+        setPointer(true)
       }}
-      onPointerUp={() => onHold(false)}
-      onPointerOut={() => onHold(false)}
+      onPointerUp={() => {
+        onHold(false)
+        setPointer(false)
+      }}
+      onPointerOut={() => {
+        onHold(false)
+        setPointer(false)
+      }}
       onPointerLeave={() => onHold(false)}
+      onPointerOver={() => setPointer(true)}
     >
-      <mesh position={[0, 0.55, 0]}>
-        <cylinderGeometry args={[0.32, 0.38, 0.55, 16]} />
-        <meshStandardMaterial color="#2d6fd6" roughness={0.45} metalness={0.25} />
+      <mesh position={[0, 0.48, 0]}>
+        <cylinderGeometry args={[0.36, 0.4, 0.72, 24]} />
+        <meshStandardMaterial color="#4b86c9" roughness={0.42} metalness={0.15} />
       </mesh>
-      <mesh position={[0.42, 0.72, 0]} rotation={[0, 0, -0.9]}>
-        <cylinderGeometry args={[0.05, 0.08, 0.55, 10]} />
-        <meshStandardMaterial color="#2d6fd6" roughness={0.45} metalness={0.25} />
+      <mesh position={[0, 0.86, 0]}>
+        <cylinderGeometry args={[0.38, 0.38, 0.08, 24]} />
+        <meshStandardMaterial color="#d9e4ef" roughness={0.35} />
       </mesh>
-      <mesh position={[-0.05, 0.95, 0]}>
-        <torusGeometry args={[0.18, 0.035, 8, 16, Math.PI]} />
-        <meshStandardMaterial color="#1e4f9a" roughness={0.4} metalness={0.3} />
+      <mesh position={[0, 0.96, 0]}>
+        <cylinderGeometry args={[0.18, 0.2, 0.14, 16]} />
+        <meshStandardMaterial color="#4b86c9" roughness={0.42} />
+      </mesh>
+      {/* Handle */}
+      <mesh position={[-0.02, 0.78, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.28, 0.04, 8, 20, Math.PI]} />
+        <meshStandardMaterial color="#4b86c9" roughness={0.42} />
+      </mesh>
+      {/* Spout */}
+      <mesh position={[0.48, 0.62, 0]} rotation={[0, 0, -1.05]}>
+        <cylinderGeometry args={[0.05, 0.09, 0.55, 12]} />
+        <meshStandardMaterial color="#4b86c9" roughness={0.42} />
+      </mesh>
+      <mesh position={[0.72, 0.42, 0]} rotation={[0, 0, -1.05]}>
+        <cylinderGeometry args={[0.1, 0.06, 0.16, 12]} />
+        <meshStandardMaterial color="#d9e4ef" roughness={0.35} />
       </mesh>
       {pouring && (
-        <mesh position={[0.72, 0.35, 0]}>
-          <cylinderGeometry args={[0.03, 0.06, 0.45, 8]} />
-          <meshStandardMaterial color="#4db8e8" transparent opacity={0.65} />
+        <mesh position={[0.9, 0.05, 0]}>
+          <cylinderGeometry args={[0.035, 0.07, 0.55, 8]} />
+          <meshStandardMaterial color="#6ec8ef" transparent opacity={0.7} />
         </mesh>
       )}
+    </group>
+  )
+}
+
+/** OLED for plant lesson — big %, bar, mood line (reference We()). */
+export function SoilOledDisplay({
+  position,
+  pct,
+  message,
+  onPick,
+}: {
+  position: Vec3
+  pct: number
+  message: string
+  onPick?: () => void
+}) {
+  const bar = Math.min(1, Math.max(0, pct / 100))
+  return (
+    <group
+      position={position}
+      rotation={[-Math.PI / 2, 0, 0]}
+      onPointerDown={(e) => {
+        e.stopPropagation()
+        onPick?.()
+      }}
+    >
+      <mesh>
+        <boxGeometry args={[2.5, 1.55, 0.18]} />
+        <meshStandardMaterial color="#17202a" roughness={0.35} />
+      </mesh>
+      <mesh position={[0, 0, 0.11]}>
+        <boxGeometry args={[2.15, 1.2, 0.025]} />
+        <meshStandardMaterial color="#041e24" emissive="#0aa5a6" emissiveIntensity={0.2} />
+      </mesh>
+      <Text position={[-0.9, 0.32, 0.14]} fontSize={0.36} color="#9ff7df" anchorX="left" anchorY="middle">
+        {`${Math.round(pct)}%`}
+      </Text>
+      {/* Progress bar outline + fill */}
+      <mesh position={[0, -0.05, 0.14]}>
+        <planeGeometry args={[1.9, 0.12]} />
+        <meshBasicMaterial color="#1a4a4a" />
+      </mesh>
+      <mesh position={[-0.95 + bar * 0.95, -0.05, 0.145]} scale={[bar || 0.001, 1, 1]}>
+        <planeGeometry args={[1.9, 0.1]} />
+        <meshBasicMaterial color="#9ff7df" />
+      </mesh>
+      <Text position={[-0.9, -0.38, 0.14]} fontSize={0.18} color="#72d9d1" anchorX="left" anchorY="middle">
+        {message || '—'}
+      </Text>
     </group>
   )
 }

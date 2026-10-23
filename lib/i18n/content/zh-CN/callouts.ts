@@ -124,10 +124,11 @@ export const CALLOUTS_ZH: Partial<Record<LessonId, CalloutText[]>> = {
     { title: '双轴摇杆', body: 'X/Y 轴和按键都能读取' },
   ],
   'soil': [
-    { title: 'OLED', body: '显示湿度百分比与干湿状态' },
-    { title: '土壤探针', body: '插入花盆读取湿度；拖动滑条模拟干湿' },
-    { title: '洒水壶', body: '按住浇水，提高土壤湿度' },
-    { title: 'GPIO34', body: '模拟读入土壤传感器信号' },
+    { title: 'OLED 屏幕', body: '程序在上面显示读数。' },
+    { title: '土壤传感器', body: '土壤越湿，读数越低。' },
+    { title: '洒水壶', body: '按住给植物浇水。' },
+    { title: '植物', body: '土干时叶子下垂，浇水后又抬起来。' },
+    { title: 'GPIO34', body: 'analogRead() 得到 ADC 值，供 map() 换算。' },
   ],
   'gas': [
     { title: 'MQ 气体传感器', body: '数值超过阈值时报警' },

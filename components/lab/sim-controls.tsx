@@ -3,8 +3,7 @@
 import { Lightbulb, LightbulbOff, Volume2, VolumeX, Wifi } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/provider'
 import type { Lesson } from '@/lib/lessons'
-import type { Phase, SimInputs, SimOutputs } from '@/lib/use-simulation'
-import { soilMoisturePct } from '@/lib/use-simulation'
+import type { Phase, SimInputs, SimOutputs, SunMode } from '@/lib/use-simulation'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -104,26 +103,32 @@ export function SimControls({ lesson, phase, inputs, outputs, setInput }: Props)
     case 'soil':
       body = (
         <div className="flex flex-col gap-2">
-          <Slider
-            label={t('sim.moisture')}
-            value={inputs.pot}
-            min={0}
-            max={4095}
-            display={`${soilMoisturePct(inputs.pot)}%`}
-            onChange={(v) => setInput('pot', v)}
-          />
-          <HoldButton
-            label={t('sim.holdWater')}
-            active={false}
-            onChange={(down) => {
-              if (down) setInput('pot', (prev) => Math.min(4095, prev + 280))
-            }}
-          />
-          {running && outputs.oledText ? (
-            <p className="font-mono text-xs text-muted-foreground">
-              OLED · <span className="font-bold text-foreground">{outputs.oledText}</span>
-            </p>
-          ) : null}
+          <HoldButton label={t('sim.holdWater')} active={inputs.water} onChange={(v) => setInput('water', v)} />
+          <div className="grid grid-cols-3 gap-1">
+            {(['shade', 'window', 'sun'] as SunMode[]).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setInput('sun', mode)}
+                className={cn(
+                  'rounded-md border px-1 py-1.5 text-[10px] font-bold',
+                  inputs.sun === mode ? 'border-foreground bg-foreground text-background' : 'border-border bg-card',
+                )}
+              >
+                {t(`sim.soil.${mode === 'sun' ? 'fullSun' : mode}`)}
+              </button>
+            ))}
+          </div>
+          <p className="font-mono text-xs text-muted-foreground">
+            {running ? (
+              <>
+                ADC {outputs.soilRaw} → <span className="font-bold text-foreground">{outputs.soilMoisture}%</span>
+                {outputs.soilMessage ? ` · ${outputs.soilMessage}` : ''}
+              </>
+            ) : (
+              t('sim.wifiRunFirst')
+            )}
+          </p>
         </div>
       )
       break
