@@ -468,20 +468,28 @@ export const LESSON_EN: Partial<Record<LessonId, LessonCopy>> = {
   'soil': {
     title: 'Soil moisture',
     summary: 'Know when plants need water.',
-    description: 'A capacitive soil probe outputs an analog voltage; below a threshold you can start a pump.',
-    points: ['analogRead()', 'GPIO34 ADC', 'Run the sim and watch serial'],
+    description:
+      'A capacitive soil probe outputs an analog voltage on GPIO34; an I²C OLED can show the mapped moisture % and a short mood line.',
+    points: ['analogRead() + map()', 'GPIO34 ADC', 'OLED on SDA 21 / SCL 22'],
     wiring: [
-      { from: 'GPIO34 ADC', to: 'ESP32', note: 'Follow board labels' },
-      { from: 'VCC', to: '3V3 / 5V', note: 'Check module voltage' },
-      { from: 'GND', to: 'Common ground' },
+      { from: 'Soil AOUT', to: 'GPIO34', note: 'ADC in' },
+      { from: 'Soil VCC / GND', to: '3V3 / GND' },
+      { from: 'OLED SDA / SCL', to: 'GPIO21 / GPIO22' },
+      { from: 'OLED VCC / GND', to: '3V3 / GND' },
     ],
-    steps: ['Confirm the module and voltage.', 'Wire signal, power, and GND.', 'Install any required library.', 'Upload and open Serial Monitor.', 'Run the sim before real hardware.'],
+    steps: [
+      'Confirm the capacitive module runs at 3.3 V.',
+      'Wire soil AOUT → GPIO34, VCC → 3V3, GND → GND.',
+      'Wire OLED I²C (SDA 21, SCL 22) and power.',
+      'Upload and open Serial Monitor.',
+      'Run the sim: hold the watering can after upload.',
+    ],
     specs: [
-      { label: 'Interface', value: 'GPIO34 ADC' },
-      { label: 'API', value: 'analogRead()' },
+      { label: 'Sensor', value: 'Capacitive soil · GPIO34' },
+      { label: 'Display', value: 'OLED 128×64 · 0x3C' },
       { label: 'Safety', value: 'Power off before rewiring; share GND' },
     ],
-    hint: 'Click Run to watch simulated data',
+    hint: 'Run, then hold the watering can',
   },
   'gas': {
     title: 'Air quality',

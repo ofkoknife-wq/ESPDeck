@@ -9,6 +9,7 @@ import type { LessonId } from '@/lib/lessons'
 import type { SimInputs, SimOutputs } from '@/lib/use-simulation'
 import { LESSON_SCENES, LessonCircuit } from './circuits'
 import { SelectionRing } from './parts'
+import { truckGate } from './primitives'
 
 export type FocusOpts = {
   /** Stronger pull-in + zoom for the “inspect” action. */
@@ -69,13 +70,21 @@ function Controls({ extent, viewRef }: { extent: number; viewRef: RefObject<View
     const c = controls.current
     if (!c) return
     // Drag = pan the board; right-drag / Q·E = rotate (like the reference lab).
+    // Left truck is suppressed while hovering/clicking pickable parts.
     const A = CameraControlsImpl.ACTION
-    c.mouseButtons.left = A.TRUCK
-    c.mouseButtons.right = A.ROTATE
-    c.mouseButtons.middle = A.ZOOM
-    c.mouseButtons.wheel = A.ZOOM
-    c.touches.one = A.TOUCH_TRUCK
-    c.touches.two = A.TOUCH_ZOOM_ROTATE
+    const apply = () => {
+      c.mouseButtons.left = truckGate.suppress ? A.NONE : A.TRUCK
+      c.mouseButtons.right = A.ROTATE
+      c.mouseButtons.middle = A.ZOOM
+      c.mouseButtons.wheel = A.ZOOM
+      c.touches.one = truckGate.suppress ? A.NONE : A.TOUCH_TRUCK
+      c.touches.two = A.TOUCH_ZOOM_ROTATE
+    }
+    truckGate.apply = apply
+    apply()
+    return () => {
+      if (truckGate.apply === apply) truckGate.apply = undefined
+    }
   }, [])
 
   useEffect(() => {

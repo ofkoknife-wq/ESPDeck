@@ -42,6 +42,15 @@ export function setPointer(active: boolean) {
   if (typeof document !== 'undefined') document.body.style.cursor = active ? 'pointer' : 'auto'
 }
 
+/** When true, CameraControls ignores left-drag so mesh picks work. */
+export const truckGate: { suppress: boolean; apply?: () => void } = { suppress: false }
+
+export function setInteractiveHover(active: boolean) {
+  truckGate.suppress = active
+  truckGate.apply?.()
+  setPointer(active)
+}
+
 export function useCanvasTexture(width: number, height: number, draw: (ctx: CanvasRenderingContext2D) => void) {
   return useMemo(() => {
     const canvas = document.createElement('canvas')

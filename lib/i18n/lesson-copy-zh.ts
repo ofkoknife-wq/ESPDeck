@@ -1282,50 +1282,53 @@ export const LESSON_ZH: Partial<Record<LessonId, LessonCopy>> = {
   "soil": {
     "title": "土壤湿度",
     "summary": "让 ESP32 知道植物渴不渴。",
-    "description": "电容式土壤湿度传感器输出模拟电压，低于阈值时可以启动水泵。",
+    "description": "电容式土壤湿度传感器在 GPIO34 输出模拟电压；可用 I²C OLED 显示换算后的湿度百分比和状态。",
     "points": [
-      "analogRead()",
+      "analogRead() + map()",
       "GPIO34 ADC",
-      "运行模拟，观察串口日志"
+      "OLED · SDA 21 / SCL 22"
     ],
     "wiring": [
       {
-        "from": "GPIO34 ADC",
-        "to": "ESP32",
-        "note": "按开发板标注连接"
+        "from": "土壤 AOUT",
+        "to": "GPIO34",
+        "note": "ADC 输入"
       },
       {
-        "from": "VCC",
-        "to": "3V3 / 5V",
-        "note": "确认模块电压"
+        "from": "土壤 VCC / GND",
+        "to": "3V3 / GND"
       },
       {
-        "from": "GND",
-        "to": "公共地"
+        "from": "OLED SDA / SCL",
+        "to": "GPIO21 / GPIO22"
+      },
+      {
+        "from": "OLED VCC / GND",
+        "to": "3V3 / GND"
       }
     ],
     "steps": [
-      "确认模块型号和工作电压。",
-      "按接线表连接信号线、电源和 GND。",
-      "安装对应 Arduino 库（如需要）。",
+      "确认电容模块工作在 3.3 V。",
+      "接土壤 AOUT → GPIO34，VCC → 3V3，GND → GND。",
+      "接 OLED I²C（SDA 21、SCL 22）与电源。",
       "上传程序并打开串口监视器。",
-      "运行模拟，观察数据变化后再接真实硬件。"
+      "运行模拟：上传后按住洒水壶浇水。"
     ],
     "specs": [
       {
-        "label": "核心接口",
-        "value": "GPIO34 ADC"
+        "label": "传感器",
+        "value": "电容式土壤 · GPIO34"
       },
       {
-        "label": "数据方式",
-        "value": "analogRead()"
+        "label": "显示",
+        "value": "OLED 128×64 · 0x3C"
       },
       {
         "label": "安全提醒",
         "value": "先断电接线，电源必须共地"
       }
     ],
-    "hint": "点击「运行」观察模拟数据"
+    "hint": "先运行，再按住洒水壶"
   },
   "gas": {
     "title": "空气质量",

@@ -151,6 +151,7 @@ export function Lab() {
                       callouts={LESSON_SCENES[lesson.id].callouts}
                       elementsRef={calloutsRef}
                       highlightIndex={focusedPart?.calloutIndex ?? null}
+                      onSelect={focusByCallout}
                     />
                   )}
                   <PartInspectCard

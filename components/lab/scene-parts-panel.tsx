@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { useI18n } from '@/lib/i18n/provider'
 import type { LessonId } from '@/lib/lessons'
 import { cn } from '@/lib/utils'
+import { CalloutIconMark } from './callout-icon'
 import { getSceneParts, type ScenePart } from './scene-parts'
 
 type Props = {
@@ -61,7 +62,7 @@ export function ScenePartsPanel({ lessonId, open, focusedKey, onFocus }: Props) 
                 )}
                 aria-hidden
               >
-                <Crosshair className="size-3.5" />
+                {part.icon ? <CalloutIconMark icon={part.icon} className="size-3.5" /> : <Crosshair className="size-3.5" />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-bold text-foreground">{part.title}</span>

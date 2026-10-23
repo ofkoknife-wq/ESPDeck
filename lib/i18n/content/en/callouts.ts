@@ -124,11 +124,11 @@ export const CALLOUTS_EN: Partial<Record<LessonId, CalloutText[]>> = {
     { title: 'Dual-axis joystick', body: 'Read X/Y axes and the button' },
   ],
   'soil': [
-    { title: 'OLED screen', body: 'The sketch draws the reading on it.' },
-    { title: 'Soil sensor', body: 'Reads lower the wetter the soil is.' },
-    { title: 'Watering can', body: 'Hold it down to water the plant.' },
-    { title: 'Plant', body: 'Leaves droop when dry; lift when watered.' },
-    { title: 'GPIO34', body: 'analogRead() → ADC value for map().' },
+    { title: 'OLED', body: 'I²C screen shows moisture % and mood.' },
+    { title: 'Soil moisture', body: 'Capacitive probe → GPIO34 ADC.' },
+    { title: 'Watering can', body: 'Hold to water (sim prop).' },
+    { title: 'Plant', body: 'Leaves droop when dry.' },
+    { title: 'GPIO34', body: 'ADC in — analogRead() for map().' },
   ],
   'gas': [
     { title: 'MQ gas sensor', body: 'Alarms when reading exceeds threshold' },

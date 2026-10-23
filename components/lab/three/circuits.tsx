@@ -356,9 +356,13 @@ function PirLesson({ outputs, inputs, setInput }: CircuitProps) {
 function JoystickLesson({ outputs, inputs, setInput }: CircuitProps) {
   return <group><OledDisplay position={[0, 0.85, -1.1]} text={outputs.oledText} /><PushButton center={[2.5, BB_TOP, 0]} pressed={inputs.button} onPress={(down) => setInput('button', down)} /><Wire from={pinPos('L', '34')} to={[-1.35, 0.2, -2.25]} color={WIRE.green} toKind="free" /><Wire from={pinPos('L', '35')} to={[-0.55, 0.2, -2.25]} color={WIRE.blue} toKind="free" /></group>
 }
-const SOIL_POT: Vec3 = [-2.6, 0, 0.9]
-const SOIL_CAN: Vec3 = [3.1, 0, 1.15]
-const SOIL_OLED: Vec3 = [0.2, BB_TOP + 0.95, -0.15]
+/**
+ * Soil lesson BOM (matches lesson-diagrams): ESP32 + capacitive soil + OLED.
+ * Plant pot / watering can are interaction props on the floor — not breadboard clutter.
+ */
+const SOIL_OLED: Vec3 = [0.15, 0.95, -1.35]
+const SOIL_POT: Vec3 = [2.4, 0, 2.55]
+const SOIL_CAN: Vec3 = [4.35, 0, 2.75]
 
 function SoilLesson({ outputs, inputs, setInput, onPickCallout }: CircuitProps) {
   const wetness = outputs.soilWetness || 0.42
@@ -368,6 +372,12 @@ function SoilLesson({ outputs, inputs, setInput, onPickCallout }: CircuitProps) 
 
   return (
     <group>
+      <SoilOledDisplay
+        position={SOIL_OLED}
+        pct={pct}
+        message={message}
+        onPick={() => onPickCallout?.(0)}
+      />
       <PlantPot
         position={SOIL_POT}
         wetness={wetness}
@@ -375,26 +385,21 @@ function SoilLesson({ outputs, inputs, setInput, onPickCallout }: CircuitProps) 
         onPick={() => onPickCallout?.(3)}
       />
       <SoilProbe position={SOIL_POT} onPick={() => onPickCallout?.(1)} />
-      <SoilOledDisplay
-        position={SOIL_OLED}
-        pct={pct}
-        message={message}
-        onPick={() => onPickCallout?.(0)}
-      />
       <WateringCan
         position={SOIL_CAN}
         pouring={inputs.water}
         onHold={(down) => setInput('water', down)}
         onPick={() => onPickCallout?.(2)}
       />
-      {/* Sensor power + AOUT → GPIO34 (ADC); OLED on I²C */}
-      <Wire from={pinPos('L', '5V')} to={[SOIL_POT[0] + 0.22, 0.35, SOIL_POT[2]]} color={WIRE.red} toKind="free" />
-      <Wire from={pinPos('L', 'GND')} to={[SOIL_POT[0] + 0.32, 0.3, SOIL_POT[2] + 0.15]} color={WIRE.black} toKind="free" />
-      <Wire from={pinPos('L', '34')} to={[SOIL_POT[0] + 0.42, 0.4, SOIL_POT[2]]} color={WIRE.yellow} toKind="free" />
-      <Wire from={pinPos('L', '3V3')} to={[SOIL_OLED[0] - 0.9, 0.2, SOIL_OLED[2] - 0.4]} color={WIRE.red} toKind="free" />
-      <Wire from={pinPos('R', 'GND')} to={[SOIL_OLED[0] - 0.3, 0.2, SOIL_OLED[2] - 0.4]} color={WIRE.black} toKind="free" />
-      <Wire from={pinPos('R', '21')} to={[SOIL_OLED[0] + 0.3, 0.2, SOIL_OLED[2] - 0.4]} color={WIRE.green} toKind="free" />
-      <Wire from={pinPos('R', '22')} to={[SOIL_OLED[0] + 0.9, 0.2, SOIL_OLED[2] - 0.4]} color={WIRE.blue} toKind="free" />
+      {/* Capacitive soil: VCC / GND / AOUT → GPIO34 */}
+      <Wire from={pinPos('L', '3V3')} to={[SOIL_POT[0] + 0.22, 0.35, SOIL_POT[2]]} color={WIRE.red} toKind="free" lift={1.05} />
+      <Wire from={pinPos('L', 'GND')} to={[SOIL_POT[0] + 0.32, 0.3, SOIL_POT[2] + 0.15]} color={WIRE.black} toKind="free" lift={0.95} />
+      <Wire from={pinPos('L', '34')} to={[SOIL_POT[0] + 0.42, 0.4, SOIL_POT[2]]} color={WIRE.yellow} toKind="free" lift={1.1} />
+      {/* OLED I²C — free-standing, same as the dedicated OLED lesson */}
+      <Wire from={pinPos('L', '3V3')} to={[SOIL_OLED[0] - 1.0, 0.15, SOIL_OLED[2] - 0.35]} color={WIRE.red} toKind="free" />
+      <Wire from={pinPos('R', 'GND')} to={[SOIL_OLED[0] - 0.35, 0.15, SOIL_OLED[2] - 0.35]} color={WIRE.black} toKind="free" />
+      <Wire from={pinPos('R', '21')} to={[SOIL_OLED[0] + 0.35, 0.15, SOIL_OLED[2] - 0.35]} color={WIRE.green} toKind="free" />
+      <Wire from={pinPos('R', '22')} to={[SOIL_OLED[0] + 1.0, 0.15, SOIL_OLED[2] - 0.35]} color={WIRE.blue} toKind="free" />
     </group>
   )
 }
@@ -680,16 +685,16 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
   joystick: { Component: JoystickLesson, breadboard: true, offsetX: 0, extent: 13, callouts: [{ at: [0, 1.15, -1.1], title: '双轴摇杆', body: 'X/Y 轴和按键都能读取', dx: 80, dy: -100 }] },
   soil: {
     Component: SoilLesson,
-    breadboard: true,
+    breadboard: false,
     offsetX: 0,
-    extent: 14,
+    extent: 15,
     callouts: [
       {
-        at: [SOIL_OLED[0], BB_TOP + 1.35, SOIL_OLED[2]],
-        title: 'OLED screen',
-        body: 'The sketch draws the reading on it.',
-        dx: -70,
-        dy: -120,
+        at: [SOIL_OLED[0], 1.25, SOIL_OLED[2]],
+        title: 'OLED',
+        body: 'I²C screen shows moisture % and mood.',
+        dx: 80,
+        dy: -100,
         icon: 'screen',
         pickable: true,
         controls: [
@@ -718,10 +723,10 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
       },
       {
         at: [SOIL_POT[0] + 0.32, 1.25, SOIL_POT[2]],
-        title: 'Soil sensor',
-        body: 'Reads lower the wetter the soil is.',
-        dx: 80,
-        dy: -120,
+        title: 'Soil moisture',
+        body: 'Capacitive probe → GPIO34 ADC.',
+        dx: 90,
+        dy: -100,
         icon: 'drop',
         interactive: true,
         pickable: true,
@@ -748,11 +753,11 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
         ],
       },
       {
-        at: [SOIL_CAN[0], 1.15, SOIL_CAN[2]],
+        at: [SOIL_CAN[0], 0.9, SOIL_CAN[2]],
         title: 'Watering can',
-        body: 'Hold it down to water the plant.',
-        dx: 70,
-        dy: -110,
+        body: 'Hold to water (sim prop).',
+        dx: 80,
+        dy: -90,
         icon: 'can',
         interactive: true,
         pickable: true,
@@ -761,9 +766,9 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
       {
         at: [SOIL_POT[0], 1.55, SOIL_POT[2]],
         title: 'Plant',
-        body: 'Leaves droop when dry; lift when watered.',
-        dx: -90,
-        dy: -90,
+        body: 'Leaves droop when dry.',
+        dx: -100,
+        dy: -80,
         icon: 'plant',
         pickable: true,
         controls: [
@@ -782,10 +787,11 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
       {
         at: up(pinPos('L', '34'), 0.15),
         title: 'GPIO34',
-        body: 'analogRead() → 0–4095 (ADC).',
+        body: 'ADC in — analogRead() for map().',
         dx: -60,
         dy: 110,
         icon: 'wave',
+        pickable: true,
       },
     ],
   },

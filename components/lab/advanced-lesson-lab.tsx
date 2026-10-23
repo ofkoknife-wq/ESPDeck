@@ -286,6 +286,7 @@ export function AdvancedLessonLab({
                     callouts={LESSON_SCENES[lesson.sceneLessonId].callouts}
                     elementsRef={calloutsRef}
                     highlightIndex={focusedPart?.calloutIndex ?? null}
+                    onSelect={focusByCallout}
                   />
                 )}
                 <PartInspectCard

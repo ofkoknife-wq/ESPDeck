@@ -6,7 +6,47 @@ import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { BB_TOP, PIN_TOP, type Vec3, mid } from '@/lib/geometry'
 import { useI18n } from '@/lib/i18n/provider'
-import { Rod, setPointer } from './primitives'
+import { Rod, setInteractiveHover, setPointer } from './primitives'
+
+/** Transparent hit volume (must stay raycastable — visible:false skips picking in three.js). */
+function HitBox({
+  args = [1.2, 1.4, 1.2],
+  position = [0, 0.55, 0],
+}: {
+  args?: [number, number, number]
+  position?: Vec3
+}) {
+  return (
+    <mesh position={position}>
+      <boxGeometry args={args} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+    </mesh>
+  )
+}
+
+function usePickHandlers(onPick?: () => void, onHold?: (down: boolean) => void) {
+  return {
+    onPointerOver: (e: { stopPropagation: () => void }) => {
+      e.stopPropagation()
+      setInteractiveHover(true)
+    },
+    onPointerOut: () => {
+      setInteractiveHover(false)
+      onHold?.(false)
+    },
+    onPointerDown: (e: { stopPropagation: () => void }) => {
+      e.stopPropagation()
+      setInteractiveHover(true)
+      onPick?.()
+      onHold?.(true)
+    },
+    onPointerUp: () => onHold?.(false),
+    onClick: (e: { stopPropagation: () => void }) => {
+      e.stopPropagation()
+      onPick?.()
+    },
+  }
+}
 
 type EndKind = 'pin' | 'hole' | 'free'
 
@@ -219,15 +259,16 @@ export function PushButton({
         position={[0, bodyY + (pressed ? 0.27 : 0.33), 0]}
         onPointerDown={(e) => {
           e.stopPropagation()
+          setInteractiveHover(true)
           onPick?.()
           onPress(true)
         }}
         onPointerUp={() => onPress(false)}
         onPointerOut={() => {
-          setPointer(false)
+          setInteractiveHover(false)
           onPress(false)
         }}
-        onPointerOver={() => setPointer(true)}
+        onPointerOver={() => setInteractiveHover(true)}
       >
         <cylinderGeometry args={[0.17, 0.18, 0.16, 24]} />
         <meshStandardMaterial color="#d63a2c" roughness={0.45} />
@@ -253,8 +294,11 @@ export function Potentiometer({
   const drag = useRef<{ x: number; start: number } | null>(null)
   return (
     <group
+      onPointerOver={() => setInteractiveHover(true)}
+      onPointerOut={() => setInteractiveHover(false)}
       onPointerDown={(e) => {
         e.stopPropagation()
+        setInteractiveHover(true)
         onPick?.()
         if (!onChange) return
         drag.current = { x: e.clientX, start: value }
@@ -267,6 +311,7 @@ export function Potentiometer({
       }}
       onPointerUp={(e) => {
         drag.current = null
+        setInteractiveHover(false)
         try {
           ;(e.target as HTMLElement).releasePointerCapture?.(e.pointerId)
         } catch {
@@ -509,15 +554,10 @@ export function OledDisplay({
   onPick?: () => void
 }) {
   const { t } = useI18n()
+  const pick = usePickHandlers(onPick)
   return (
-    <group
-      position={position}
-      rotation={[-Math.PI / 2, 0, 0]}
-      onPointerDown={(e) => {
-        e.stopPropagation()
-        onPick?.()
-      }}
-    >
+    <group position={position} rotation={[-Math.PI / 2, 0, 0]} {...pick}>
+      <HitBox args={[2.8, 1.8, 0.5]} position={[0, 0, 0]} />
       <mesh>
         <boxGeometry args={[2.5, 1.55, 0.18]} />
         <meshStandardMaterial color="#17202a" roughness={0.35} />
@@ -640,14 +680,10 @@ export function PlantPot({
   const soilColor = new THREE.Color('#5c4030').lerp(new THREE.Color('#2a1a10'), Math.min(1, wetness * 1.25))
   const leafColor = new THREE.Color('#3a9a55').lerp(new THREE.Color('#8a9a4a'), wilt * wilt * 0.85)
   const droop = wilt * 0.55
+  const pick = usePickHandlers(onPick)
   return (
-    <group
-      position={position}
-      onPointerDown={(e) => {
-        e.stopPropagation()
-        onPick?.()
-      }}
-    >
+    <group position={position} {...pick}>
+      <HitBox args={[1.6, 2.2, 1.6]} position={[0, 0.9, 0]} />
       <mesh position={[0, 0.38, 0]}>
         <cylinderGeometry args={[0.62, 0.48, 0.76, 28]} />
         <meshStandardMaterial color="#c9b8a0" roughness={0.7} />
@@ -664,7 +700,6 @@ export function PlantPot({
         <cylinderGeometry args={[0.035, 0.05, 0.7, 8]} />
         <meshStandardMaterial color="#2f6b3c" roughness={0.7} />
       </mesh>
-      {/* Flower head */}
       <group position={[0, 1.55, 0.05]} rotation={[droop * 0.8, 0, 0]}>
         <mesh position={[0, 0.12, 0]}>
           <sphereGeometry args={[0.14, 12, 10]} />
@@ -694,14 +729,10 @@ export function PlantPot({
 
 /** Capacitive soil moisture v1.2 — PCB + long probe into soil. */
 export function SoilProbe({ position, onPick }: { position: Vec3; onPick?: () => void }) {
+  const pick = usePickHandlers(onPick)
   return (
-    <group
-      position={position}
-      onPointerDown={(e) => {
-        e.stopPropagation()
-        onPick?.()
-      }}
-    >
+    <group position={position} {...pick}>
+      <HitBox args={[0.7, 1.5, 0.5]} position={[0.32, 0.85, 0]} />
       <mesh position={[0.32, 0.55, 0]} rotation={[0.12, 0, 0.15]}>
         <boxGeometry args={[0.14, 0.95, 0.035]} />
         <meshStandardMaterial color="#efe9dc" roughness={0.45} metalness={0.15} />
@@ -724,7 +755,7 @@ export function SoilProbe({ position, onPick }: { position: Vec3; onPick?: () =>
   )
 }
 
-/** Blue watering can — lift + tip + stream while held (reference du()). */
+/** Blue watering can — sits on the floor next to the pot; hold to water. */
 export function WateringCan({
   position,
   pouring,
@@ -738,27 +769,10 @@ export function WateringCan({
 }) {
   const lift = pouring ? 0.55 : 0
   const tip = pouring ? 0.55 : 0.08
+  const pick = usePickHandlers(onPick, onHold)
   return (
-    <group
-      position={[position[0], position[1] + lift, position[2]]}
-      rotation={[0, -0.35, tip]}
-      onPointerDown={(e) => {
-        e.stopPropagation()
-        onPick?.()
-        onHold(true)
-        setPointer(true)
-      }}
-      onPointerUp={() => {
-        onHold(false)
-        setPointer(false)
-      }}
-      onPointerOut={() => {
-        onHold(false)
-        setPointer(false)
-      }}
-      onPointerLeave={() => onHold(false)}
-      onPointerOver={() => setPointer(true)}
-    >
+    <group position={[position[0], position[1] + lift, position[2]]} rotation={[0, -0.35, tip]} {...pick}>
+      <HitBox args={[1.4, 1.6, 1.2]} position={[0.15, 0.55, 0]} />
       <mesh position={[0, 0.48, 0]}>
         <cylinderGeometry args={[0.36, 0.4, 0.72, 24]} />
         <meshStandardMaterial color="#4b86c9" roughness={0.42} metalness={0.15} />
@@ -771,12 +785,10 @@ export function WateringCan({
         <cylinderGeometry args={[0.18, 0.2, 0.14, 16]} />
         <meshStandardMaterial color="#4b86c9" roughness={0.42} />
       </mesh>
-      {/* Handle */}
       <mesh position={[-0.02, 0.78, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.28, 0.04, 8, 20, Math.PI]} />
         <meshStandardMaterial color="#4b86c9" roughness={0.42} />
       </mesh>
-      {/* Spout */}
       <mesh position={[0.48, 0.62, 0]} rotation={[0, 0, -1.05]}>
         <cylinderGeometry args={[0.05, 0.09, 0.55, 12]} />
         <meshStandardMaterial color="#4b86c9" roughness={0.42} />
@@ -808,15 +820,10 @@ export function SoilOledDisplay({
   onPick?: () => void
 }) {
   const bar = Math.min(1, Math.max(0, pct / 100))
+  const pick = usePickHandlers(onPick)
   return (
-    <group
-      position={position}
-      rotation={[-Math.PI / 2, 0, 0]}
-      onPointerDown={(e) => {
-        e.stopPropagation()
-        onPick?.()
-      }}
-    >
+    <group position={position} rotation={[-Math.PI / 2, 0, 0]} {...pick}>
+      <HitBox args={[2.8, 1.8, 0.6]} position={[0, 0, 0]} />
       <mesh>
         <boxGeometry args={[2.5, 1.55, 0.18]} />
         <meshStandardMaterial color="#17202a" roughness={0.35} />
@@ -828,7 +835,6 @@ export function SoilOledDisplay({
       <Text position={[-0.9, 0.32, 0.14]} fontSize={0.36} color="#9ff7df" anchorX="left" anchorY="middle">
         {`${Math.round(pct)}%`}
       </Text>
-      {/* Progress bar outline + fill */}
       <mesh position={[0, -0.05, 0.14]}>
         <planeGeometry args={[1.9, 0.12]} />
         <meshBasicMaterial color="#1a4a4a" />

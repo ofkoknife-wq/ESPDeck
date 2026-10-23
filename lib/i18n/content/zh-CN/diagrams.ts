@@ -30,7 +30,7 @@ export const DIAGRAMS_ZH: Partial<Record<LessonId, DiagramLabelPack>> = {
   fan: { parts: { fan: { label: 'PWM 风扇' } } },
   pir: { parts: { led: { label: '报警 LED' } } },
   joystick: { parts: { joy: { label: '摇杆' } } },
-  soil: { parts: { soil: { label: '土壤湿度' } } },
+  soil: { parts: { soil: { label: '土壤湿度' }, oled: { label: 'OLED' } } },
   gas: { parts: { mq: { label: 'MQ 气体' }, buz: { label: '蜂鸣器' } } },
   lightstrip: { parts: { strip: { label: '灯带' } } },
 }
