@@ -124,7 +124,10 @@ export const CALLOUTS_EN: Partial<Record<LessonId, CalloutText[]>> = {
     { title: 'Dual-axis joystick', body: 'Read X/Y axes and the button' },
   ],
   'soil': [
-    { title: 'Soil moisture', body: 'Drag to fake wet/dry soil' },
+    { title: 'OLED', body: 'Shows moisture % and dry/wet status' },
+    { title: 'Soil probe', body: 'Reads moisture in the pot — drag the slider to fake wet/dry' },
+    { title: 'Watering can', body: 'Hold to water and raise soil moisture' },
+    { title: 'GPIO34', body: 'Analog input from the soil sensor' },
   ],
   'gas': [
     { title: 'MQ gas sensor', body: 'Alarms when reading exceeds threshold' },

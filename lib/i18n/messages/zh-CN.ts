@@ -191,6 +191,8 @@ export const zhCN: MessageTree = {
   sim: {
     holdButton: '按住按钮',
     pot: '旋转电位器',
+    moisture: '土壤湿度',
+    holdWater: '按住浇水',
     touch: '触摸铜片',
     temp: '环境温度',
     webLed: '网页 LED',

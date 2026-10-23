@@ -1,8 +1,10 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { BB_TOP, BOARD_X, HEADER_Z, PCB_TOP, type Vec3, hole, mid, pinPos, up } from '@/lib/geometry'
 import type { LessonId } from '@/lib/lessons'
 import type { SimInputs, SimOutputs } from '@/lib/use-simulation'
+import { soilMoisturePct } from '@/lib/use-simulation'
 import { Esp32Board } from './board'
 import { Breadboard } from './breadboard'
 import {
@@ -10,13 +12,16 @@ import {
   type CalloutSpec,
   Dht11,
   Led,
+  PlantPot,
   Potentiometer,
   PushButton,
   Resistor,
   RgbLed,
   Servo,
+  SoilProbe,
   TouchPad,
   Waves,
+  WateringCan,
   OledDisplay,
   Wire,
 } from './parts'
@@ -35,7 +40,8 @@ const WIRE = {
 type CircuitProps = {
   outputs: SimOutputs
   inputs: SimInputs
-  setInput: <K extends keyof SimInputs>(key: K, value: SimInputs[K]) => void
+  setInput: <K extends keyof SimInputs>(key: K, value: SimInputs[K] | ((prev: SimInputs[K]) => SimInputs[K])) => void
+  onPickCallout?: (index: number) => void
 }
 
 const LED_ANODE = hole(7, 1)
@@ -109,7 +115,7 @@ function BlinkLesson({ outputs }: CircuitProps) {
 }
 
 const BUTTON_CENTER = hole(12, 1)
-function ButtonLesson({ outputs, inputs, setInput }: CircuitProps) {
+function ButtonLesson({ outputs, inputs, setInput, onPickCallout }: CircuitProps) {
   return (
     <group>
       <LedCircuit brightness={outputs.led} />
@@ -117,6 +123,7 @@ function ButtonLesson({ outputs, inputs, setInput }: CircuitProps) {
         center={[BUTTON_CENTER[0], BB_TOP, 0]}
         pressed={inputs.button}
         onPress={(down) => setInput('button', down)}
+        onPick={() => onPickCallout?.(2)}
       />
       <Wire from={pinPos('R', '4')} to={hole(11, 3)} color={WIRE.orange} />
       <Wire from={hole(13, 3)} to={hole(13, 6)} color={WIRE.black} fromKind="hole" lift={0.3} />
@@ -125,11 +132,16 @@ function ButtonLesson({ outputs, inputs, setInput }: CircuitProps) {
 }
 
 const POT_LEGS: [Vec3, Vec3, Vec3] = [hole(14, -2), hole(15, -2), hole(16, -2)]
-function PotLesson({ outputs, inputs }: CircuitProps) {
+function PotLesson({ outputs, inputs, setInput, onPickCallout }: CircuitProps) {
   return (
     <group>
       <LedCircuit brightness={outputs.led} />
-      <Potentiometer legs={POT_LEGS} value={inputs.pot} />
+      <Potentiometer
+        legs={POT_LEGS}
+        value={inputs.pot}
+        onPick={() => onPickCallout?.(2)}
+        onChange={(v) => setInput('pot', v)}
+      />
       <Wire from={pinPos('L', '3V3')} to={hole(14, -4)} color={WIRE.red} />
       <Wire from={pinPos('L', '34')} to={hole(15, -4)} color={WIRE.green} />
       <Wire from={pinPos('L', 'GND')} to={hole(16, -4)} color={WIRE.black} />
@@ -209,11 +221,11 @@ function ServoLesson({ outputs }: CircuitProps) {
 }
 
 const ANTENNA_POS: Vec3 = [BOARD_X + 2.45, PCB_TOP + 0.15, 0]
-function OledLesson({ outputs }: CircuitProps) {
+function OledLesson({ outputs, onPickCallout }: CircuitProps) {
   const displayPos: Vec3 = [0, 0.85, -1.1]
   return (
     <group>
-      <OledDisplay position={displayPos} text={outputs.oledText} />
+      <OledDisplay position={displayPos} text={outputs.oledText} onPick={() => onPickCallout?.(0)} />
       <Wire from={pinPos('L', '3V3')} to={[-1.0, 0, -2.0]} color={WIRE.red} toKind="free" />
       <Wire from={pinPos('R', 'GND')} to={[-0.35, 0, -2.0]} color={WIRE.black} toKind="free" />
       <Wire from={pinPos('R', '21')} to={[0.35, 0, -2.0]} color={WIRE.green} toKind="free" />
@@ -345,7 +357,63 @@ function PirLesson({ outputs, inputs, setInput }: CircuitProps) {
 function JoystickLesson({ outputs, inputs, setInput }: CircuitProps) {
   return <group><OledDisplay position={[0, 0.85, -1.1]} text={outputs.oledText} /><PushButton center={[2.5, BB_TOP, 0]} pressed={inputs.button} onPress={(down) => setInput('button', down)} /><Wire from={pinPos('L', '34')} to={[-1.35, 0.2, -2.25]} color={WIRE.green} toKind="free" /><Wire from={pinPos('L', '35')} to={[-0.55, 0.2, -2.25]} color={WIRE.blue} toKind="free" /></group>
 }
-function SoilLesson({ outputs, inputs }: CircuitProps) { return <group><LedCircuit brightness={outputs.led} /><Potentiometer legs={[hole(14, -2), hole(15, -2), hole(16, -2)]} value={inputs.pot} /><Wire from={pinPos('L', '34')} to={hole(15, -4)} color={WIRE.green} /></group> }
+const SOIL_POT: Vec3 = [-2.6, 0, 0.9]
+const SOIL_CAN: Vec3 = [3.1, 0, 1.15]
+const SOIL_OLED: Vec3 = [0, 0.85, -1.1]
+
+function SoilLesson({ outputs, inputs, setInput, onPickCallout }: CircuitProps) {
+  const moisture = soilMoisturePct(inputs.pot)
+  const [pouring, setPouringVisual] = useState(false)
+  const boostTimer = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (boostTimer.current) clearInterval(boostTimer.current)
+    }
+  }, [])
+
+  const setPouring = (down: boolean) => {
+    setPouringVisual(down)
+    if (down) {
+      if (boostTimer.current) return
+      setInput('pot', (prev) => Math.min(4095, prev + 140))
+      boostTimer.current = setInterval(() => {
+        setInput('pot', (prev) => Math.min(4095, prev + 140))
+      }, 50)
+    } else if (boostTimer.current) {
+      clearInterval(boostTimer.current)
+      boostTimer.current = null
+    }
+  }
+
+  return (
+    <group>
+      <LedCircuit brightness={outputs.led} />
+      <PlantPot
+        position={SOIL_POT}
+        wetness={moisture / 100}
+        onPick={() => onPickCallout?.(1)}
+      />
+      <SoilProbe position={SOIL_POT} onPick={() => onPickCallout?.(1)} />
+      <OledDisplay
+        position={SOIL_OLED}
+        text={outputs.oledText || `${moisture}%`}
+        onPick={() => onPickCallout?.(0)}
+      />
+      <WateringCan
+        position={SOIL_CAN}
+        pouring={pouring}
+        onHold={setPouring}
+        onPick={() => onPickCallout?.(2)}
+      />
+      <Wire from={pinPos('L', '34')} to={[SOIL_POT[0] + 0.28, 0.4, SOIL_POT[2]]} color={WIRE.green} toKind="free" />
+      <Wire from={pinPos('L', '3V3')} to={[-1.0, 0, -2.0]} color={WIRE.red} toKind="free" />
+      <Wire from={pinPos('R', 'GND')} to={[-0.35, 0, -2.0]} color={WIRE.black} toKind="free" />
+      <Wire from={pinPos('R', '21')} to={[0.35, 0, -2.0]} color={WIRE.green} toKind="free" />
+      <Wire from={pinPos('R', '22')} to={[1.0, 0, -2.0]} color={WIRE.blue} toKind="free" />
+    </group>
+  )
+}
 function GasLesson({ outputs, inputs }: CircuitProps) { return <group><LedCircuit brightness={outputs.led} /><Dht11 legs={[hole(14, 2), hole(15, 2), hole(16, 2)]} /><Wire from={pinPos('L', '34')} to={hole(15, 4)} color={WIRE.orange} /><Wire from={pinPos('L', '5V')} to={hole(14, 4)} color={WIRE.red} /></group> }
 function ImuLesson({ outputs }: CircuitProps) { return <group><OledDisplay position={[0, 0.85, -1.1]} text={`Tilt ${Math.round(outputs.servo - 90)}°`} /><Wire from={pinPos('R', '21')} to={[-1.25, 0, -2.25]} color={WIRE.green} toKind="free" /><Wire from={pinPos('R', '22')} to={[1.25, 0, -2.25]} color={WIRE.blue} toKind="free" /></group> }
 function GpsLesson({ outputs }: CircuitProps) { return <group><OledDisplay position={[0, 0.85, -1.1]} text={outputs.oledText} /><Waves position={ANTENNA_POS} active={outputs.wifi} color="#2d6fd6" /></group> }
@@ -378,6 +446,8 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
         dx: 60,
         dy: -120,
         interactive: true,
+        pickable: true,
+        control: { kind: 'hold', inputKey: 'button', labelKey: 'sim.holdButton' },
       },
     ],
   },
@@ -389,7 +459,16 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
     callouts: [
       LED_CALLOUTS[2],
       { at: up(pinPos('L', '34'), 0.15), title: 'GPIO34 (ADC)', body: '把 0–3.3V 转成 0–4095', dx: -60, dy: -110 },
-      { at: [POT_LEGS[1][0], BB_TOP + 0.9, POT_LEGS[1][2] - 0.12], title: '电位器', body: '旋转改变滑片电压', dx: 60, dy: -110 },
+      {
+        at: [POT_LEGS[1][0], BB_TOP + 0.9, POT_LEGS[1][2] - 0.12],
+        title: '电位器',
+        body: '旋转改变滑片电压',
+        dx: 60,
+        dy: -110,
+        interactive: true,
+        pickable: true,
+        control: { kind: 'slider', inputKey: 'pot', min: 0, max: 4095, labelKey: 'sim.pot', display: 'voltage' },
+      },
     ],
   },
   rgb: {
@@ -460,7 +539,15 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
     offsetX: 0,
     extent: 13,
     callouts: [
-      { at: [0, 1.15, -1.1], title: 'I2C OLED', body: '128×64 像素屏，地址通常是 0x3C', dx: 80, dy: -100 },
+      {
+        at: [0, 1.15, -1.1],
+        title: 'I2C OLED',
+        body: '128×64 像素屏，地址通常是 0x3C',
+        dx: 80,
+        dy: -100,
+        pickable: true,
+        control: { kind: 'readout', readout: 'oled' },
+      },
       { at: up(pinPos('R', '21'), 0.15), title: 'SDA → GPIO21', body: 'I2C 数据线', dx: -60, dy: 110 },
       { at: up(pinPos('R', '22'), 0.15), title: 'SCL → GPIO22', body: 'I2C 时钟线', dx: 80, dy: 120 },
     ],
@@ -607,7 +694,57 @@ export const LESSON_SCENES: Record<LessonId, LessonScene> = {
     ],
   },
   joystick: { Component: JoystickLesson, breadboard: true, offsetX: 0, extent: 13, callouts: [{ at: [0, 1.15, -1.1], title: '双轴摇杆', body: 'X/Y 轴和按键都能读取', dx: 80, dy: -100 }] },
-  soil: { Component: SoilLesson, breadboard: true, offsetX: 0, extent: 13, callouts: [{ at: up(hole(15, -2), 0.9), title: '土壤湿度', body: '拖动旋钮模拟干湿变化', dx: 70, dy: -100, interactive: true }] },
+  soil: {
+    Component: SoilLesson,
+    breadboard: true,
+    offsetX: 0,
+    extent: 14,
+    callouts: [
+      {
+        at: [SOIL_OLED[0], 1.15, SOIL_OLED[2]],
+        title: 'OLED',
+        body: '显示湿度百分比与干湿状态',
+        dx: 80,
+        dy: -100,
+        pickable: true,
+        control: { kind: 'readout', readout: 'moisture' },
+      },
+      {
+        at: [SOIL_POT[0], 1.15, SOIL_POT[2]],
+        title: '土壤探针',
+        body: '插入花盆读取湿度；拖动滑条模拟干湿',
+        dx: -80,
+        dy: -110,
+        interactive: true,
+        pickable: true,
+        control: {
+          kind: 'slider',
+          inputKey: 'pot',
+          min: 0,
+          max: 4095,
+          labelKey: 'sim.moisture',
+          display: 'moisture',
+        },
+      },
+      {
+        at: [SOIL_CAN[0], 1.2, SOIL_CAN[2]],
+        title: '洒水壶',
+        body: '按住浇水，提高土壤湿度',
+        dx: 70,
+        dy: -120,
+        interactive: true,
+        pickable: true,
+        control: { kind: 'boost', inputKey: 'pot', labelKey: 'sim.holdWater', step: 140 },
+      },
+      {
+        at: up(pinPos('L', '34'), 0.15),
+        title: 'GPIO34',
+        body: '模拟读入土壤传感器信号',
+        dx: -60,
+        dy: 110,
+      },
+    ],
+  },
   gas: { Component: GasLesson, breadboard: true, offsetX: 0, extent: 13, callouts: [{ at: up(hole(15, 2), 1.1), title: 'MQ 气体传感器', body: '数值超过阈值时报警', dx: 70, dy: -110 }] },
   imu: { Component: ImuLesson, breadboard: false, offsetX: 0, extent: 13, callouts: [{ at: [0, 1.15, -1.1], title: 'MPU6050', body: 'I2C 读取姿态变化', dx: 80, dy: -100 }] },
   gps: { Component: GpsLesson, breadboard: false, offsetX: 0, extent: 13, callouts: [{ at: [0, 1.15, -1.1], title: 'GPS 坐标', body: '等待卫星定位并输出经纬度', dx: 80, dy: -100 }] },

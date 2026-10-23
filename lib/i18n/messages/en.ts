@@ -189,6 +189,8 @@ export const en = {
   sim: {
     holdButton: 'Hold button',
     pot: 'Turn potentiometer',
+    moisture: 'Soil moisture',
+    holdWater: 'Hold to water',
     touch: 'Touch pad',
     temp: 'Ambient temperature',
     webLed: 'Web LED',

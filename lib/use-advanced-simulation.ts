@@ -103,9 +103,15 @@ export function useAdvancedSimulation(lesson: AdvancedLessonPackage, code: strin
     )
   }, [pushLog])
 
-  const setInput = useCallback(<K extends keyof SimInputs>(key: K, value: SimInputs[K]) => {
-    setInputs((prev) => ({ ...prev, [key]: value }))
-  }, [])
+  const setInput = useCallback(
+    <K extends keyof SimInputs>(key: K, value: SimInputs[K] | ((prev: SimInputs[K]) => SimInputs[K])) => {
+      setInputs((prev) => ({
+        ...prev,
+        [key]: typeof value === 'function' ? (value as (p: SimInputs[K]) => SimInputs[K])(prev[key]) : value,
+      }))
+    },
+    [],
+  )
 
   useEffect(() => {
     reset()

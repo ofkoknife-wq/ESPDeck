@@ -4,6 +4,7 @@ import { Lightbulb, LightbulbOff, Volume2, VolumeX, Wifi } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/provider'
 import type { Lesson } from '@/lib/lessons'
 import type { Phase, SimInputs, SimOutputs } from '@/lib/use-simulation'
+import { soilMoisturePct } from '@/lib/use-simulation'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -11,7 +12,7 @@ type Props = {
   phase: Phase
   inputs: SimInputs
   outputs: SimOutputs
-  setInput: <K extends keyof SimInputs>(key: K, value: SimInputs[K]) => void
+  setInput: <K extends keyof SimInputs>(key: K, value: SimInputs[K] | ((prev: SimInputs[K]) => SimInputs[K])) => void
 }
 
 function HoldButton({ label, active, onChange }: { label: string; active: boolean; onChange: (v: boolean) => void }) {
@@ -98,6 +99,32 @@ export function SimControls({ lesson, phase, inputs, outputs, setInput }: Props)
           display={`${Math.round(inputs.pot)} · ${((inputs.pot * 3.3) / 4095).toFixed(2)}V`}
           onChange={(v) => setInput('pot', v)}
         />
+      )
+      break
+    case 'soil':
+      body = (
+        <div className="flex flex-col gap-2">
+          <Slider
+            label={t('sim.moisture')}
+            value={inputs.pot}
+            min={0}
+            max={4095}
+            display={`${soilMoisturePct(inputs.pot)}%`}
+            onChange={(v) => setInput('pot', v)}
+          />
+          <HoldButton
+            label={t('sim.holdWater')}
+            active={false}
+            onChange={(down) => {
+              if (down) setInput('pot', (prev) => Math.min(4095, prev + 280))
+            }}
+          />
+          {running && outputs.oledText ? (
+            <p className="font-mono text-xs text-muted-foreground">
+              OLED · <span className="font-bold text-foreground">{outputs.oledText}</span>
+            </p>
+          ) : null}
+        </div>
       )
       break
     case 'dht':

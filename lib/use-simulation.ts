@@ -49,6 +49,11 @@ const DEFAULT_INPUTS: SimInputs = {
   sound: true,
 }
 
+/** Soil lesson maps pot ADC → moisture % (dry ~35, wet ~90). */
+export function soilMoisturePct(pot: number) {
+  return Math.round(35 + (pot / 4095) * 55)
+}
+
 const MELODY = [262, 262, 392, 392, 440, 440, 392, 349, 349, 330, 330, 294, 294, 262]
 const NOTE_NAMES: Record<number, string> = {
   262: 'Do',
@@ -149,9 +154,15 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
     )
   }, [lessonId, pushLog])
 
-  const setInput = useCallback(<K extends keyof SimInputs>(key: K, value: SimInputs[K]) => {
-    setInputs((prev) => ({ ...prev, [key]: value }))
-  }, [])
+  const setInput = useCallback(
+    <K extends keyof SimInputs>(key: K, value: SimInputs[K] | ((prev: SimInputs[K]) => SimInputs[K])) => {
+      setInputs((prev) => ({
+        ...prev,
+        [key]: typeof value === 'function' ? (value as (p: SimInputs[K]) => SimInputs[K])(prev[key]) : value,
+      }))
+    },
+    [],
+  )
 
   useEffect(() => {
     reset()
@@ -375,9 +386,10 @@ export function useSimulation(lessonId: LessonId, onRunning?: (id: LessonId) => 
           break
         }
         case 'soil': {
-          const moisture = Math.round(35 + (input.pot / 4095) * 55)
+          const moisture = soilMoisturePct(input.pot)
           out.led = moisture < 50 ? 1 : 0
           out.onboard = out.led
+          out.oledText = moisture < 50 ? `DRY ${moisture}%` : `OK  ${moisture}%`
           if (every('soil', t, 700)) pushLog(tLog(moisture < 50 ? 'sim.log.soilDry' : 'sim.log.soilOk', { pct: moisture }), moisture < 50 ? 'warn' : 'ok')
           break
         }

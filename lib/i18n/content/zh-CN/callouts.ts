@@ -124,7 +124,10 @@ export const CALLOUTS_ZH: Partial<Record<LessonId, CalloutText[]>> = {
     { title: '双轴摇杆', body: 'X/Y 轴和按键都能读取' },
   ],
   'soil': [
-    { title: '土壤湿度', body: '拖动旋钮模拟干湿变化' },
+    { title: 'OLED', body: '显示湿度百分比与干湿状态' },
+    { title: '土壤探针', body: '插入花盆读取湿度；拖动滑条模拟干湿' },
+    { title: '洒水壶', body: '按住浇水，提高土壤湿度' },
+    { title: 'GPIO34', body: '模拟读入土壤传感器信号' },
   ],
   'gas': [
     { title: 'MQ 气体传感器', body: '数值超过阈值时报警' },

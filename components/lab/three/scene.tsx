@@ -8,6 +8,7 @@ import type * as THREE from 'three'
 import type { LessonId } from '@/lib/lessons'
 import type { SimInputs, SimOutputs } from '@/lib/use-simulation'
 import { LESSON_SCENES, LessonCircuit } from './circuits'
+import { SelectionRing } from './parts'
 
 export type FocusOpts = {
   /** Stronger pull-in + zoom for the “inspect” action. */
@@ -36,11 +37,13 @@ type SceneProps = {
   lessonId: LessonId
   outputs: SimOutputs
   inputs: SimInputs
-  setInput: <K extends keyof SimInputs>(key: K, value: SimInputs[K]) => void
+  setInput: <K extends keyof SimInputs>(key: K, value: SimInputs[K] | ((prev: SimInputs[K]) => SimInputs[K])) => void
   viewRef: RefObject<ViewApi | null>
   calloutsRef: RefObject<(HTMLDivElement | null)[]>
   focusTargetRef?: RefObject<[number, number, number] | null>
   focusElRef?: RefObject<HTMLDivElement | null>
+  focusAt?: [number, number, number] | null
+  onPickCallout?: (index: number) => void
 }
 
 function Controls({ extent, viewRef }: { extent: number; viewRef: RefObject<ViewApi | null> }) {
@@ -225,6 +228,8 @@ export default function Scene({
   calloutsRef,
   focusTargetRef,
   focusElRef,
+  focusAt = null,
+  onPickCallout,
 }: SceneProps) {
   const { extent } = LESSON_SCENES[lessonId]
   return (
@@ -254,8 +259,15 @@ export default function Scene({
         <shadowMaterial opacity={0.14} />
       </mesh>
       <ShadowCasters>
-        <LessonCircuit lessonId={lessonId} outputs={outputs} inputs={inputs} setInput={setInput} />
+        <LessonCircuit
+          lessonId={lessonId}
+          outputs={outputs}
+          inputs={inputs}
+          setInput={setInput}
+          onPickCallout={onPickCallout}
+        />
       </ShadowCasters>
+      <SelectionRing at={focusAt} />
       <CalloutProjector lessonId={lessonId} elementsRef={calloutsRef} />
       {focusTargetRef && focusElRef && <FocusProjector targetRef={focusTargetRef} elRef={focusElRef} />}
       <Controls extent={extent} viewRef={viewRef} />

@@ -20,7 +20,7 @@ import { PartInspectCard } from './part-inspect-card'
 import { PinoutView } from './pinout-view'
 import { SchematicView } from './schematic-view'
 import { ScenePartsPanel } from './scene-parts-panel'
-import type { ScenePart } from './scene-parts'
+import { getSceneParts, type ScenePart } from './scene-parts'
 import { SimControls } from './sim-controls'
 import { StageTitleBar } from './stage-title-bar'
 import { StageToolbar, type StageViewMode } from './stage-toolbar'
@@ -62,11 +62,27 @@ export function Lab() {
     setStageMode('scene')
   }, [lesson.id])
 
+  const sceneParts = useMemo(
+    () =>
+      getSceneParts(lesson.id, locale, {
+        partBoard: t('stage.partBoard'),
+        partBoardBody: t('stage.partBoardBody'),
+        partBreadboard: t('stage.partBreadboard'),
+        partBreadboardBody: t('stage.partBreadboardBody'),
+      }),
+    [lesson.id, locale, t],
+  )
+
   const focusPart = (part: ScenePart) => {
     setFocusedPart(part)
     focusTargetRef.current = part.at
     setShowLabels(true)
     viewRef.current?.focusAt(part.at)
+  }
+
+  const focusByCallout = (index: number) => {
+    const part = sceneParts.find((p) => p.calloutIndex === index)
+    if (part) focusPart(part)
   }
 
   const clearFocus = () => {
@@ -125,6 +141,8 @@ export function Lab() {
                     calloutsRef={calloutsRef}
                     focusTargetRef={focusTargetRef}
                     focusElRef={focusElRef}
+                    focusAt={focusedPart?.at ?? null}
+                    onPickCallout={focusByCallout}
                   />
                   {showLabels && (
                     <CalloutLayer
@@ -135,7 +153,15 @@ export function Lab() {
                       highlightIndex={focusedPart?.calloutIndex ?? null}
                     />
                   )}
-                  <PartInspectCard part={focusedPart} viewRef={viewRef} elRef={focusElRef} onClose={clearFocus} />
+                  <PartInspectCard
+                    part={focusedPart}
+                    viewRef={viewRef}
+                    elRef={focusElRef}
+                    onClose={clearFocus}
+                    inputs={sim.inputs}
+                    outputs={sim.outputs}
+                    setInput={sim.setInput}
+                  />
                   <ScenePartsPanel
                     lessonId={lesson.id}
                     open={showParts}

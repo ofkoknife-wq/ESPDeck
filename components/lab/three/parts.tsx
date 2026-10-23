@@ -189,10 +189,12 @@ export function PushButton({
   center,
   pressed,
   onPress,
+  onPick,
 }: {
   center: Vec3
   pressed: boolean
   onPress: (down: boolean) => void
+  onPick?: () => void
 }) {
   const bodyY = BB_TOP + 0.06
   return (
@@ -217,6 +219,7 @@ export function PushButton({
         position={[0, bodyY + (pressed ? 0.27 : 0.33), 0]}
         onPointerDown={(e) => {
           e.stopPropagation()
+          onPick?.()
           onPress(true)
         }}
         onPointerUp={() => onPress(false)}
@@ -233,12 +236,44 @@ export function PushButton({
   )
 }
 
-export function Potentiometer({ legs, value }: { legs: [Vec3, Vec3, Vec3]; value: number }) {
+export function Potentiometer({
+  legs,
+  value,
+  onPick,
+  onChange,
+}: {
+  legs: [Vec3, Vec3, Vec3]
+  value: number
+  onPick?: () => void
+  onChange?: (v: number) => void
+}) {
   const c = legs[1]
   const bodyY = BB_TOP + 0.12
   const rot = ((135 - (value / 4095) * 270) * Math.PI) / 180
+  const drag = useRef<{ x: number; start: number } | null>(null)
   return (
-    <group>
+    <group
+      onPointerDown={(e) => {
+        e.stopPropagation()
+        onPick?.()
+        if (!onChange) return
+        drag.current = { x: e.clientX, start: value }
+        ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
+      }}
+      onPointerMove={(e) => {
+        if (!drag.current || !onChange) return
+        const delta = (e.clientX - drag.current.x) * 12
+        onChange(Math.max(0, Math.min(4095, drag.current.start + delta)))
+      }}
+      onPointerUp={(e) => {
+        drag.current = null
+        try {
+          ;(e.target as HTMLElement).releasePointerCapture?.(e.pointerId)
+        } catch {
+          /* ignore */
+        }
+      }}
+    >
       {legs.map((p, i) => (
         <Rod key={i} from={p} to={[p[0], bodyY, p[2]]} radius={0.03} />
       ))}
@@ -464,10 +499,25 @@ export function TouchPad({
   )
 }
 
-export function OledDisplay({ position, text }: { position: Vec3; text: string }) {
+export function OledDisplay({
+  position,
+  text,
+  onPick,
+}: {
+  position: Vec3
+  text: string
+  onPick?: () => void
+}) {
   const { t } = useI18n()
   return (
-    <group position={position} rotation={[-Math.PI / 2, 0, 0]}>
+    <group
+      position={position}
+      rotation={[-Math.PI / 2, 0, 0]}
+      onPointerDown={(e) => {
+        e.stopPropagation()
+        onPick?.()
+      }}
+    >
       <mesh>
         <boxGeometry args={[2.5, 1.55, 0.18]} />
         <meshStandardMaterial color="#17202a" roughness={0.35} />
@@ -514,6 +564,28 @@ export function Waves({ position, active, color }: { position: Vec3; active: boo
   )
 }
 
+/** Live control shown on the inspect card (and optionally driven from the mesh). */
+export type PartControl =
+  | {
+      kind: 'slider'
+      inputKey: 'pot' | 'temp'
+      min: number
+      max: number
+      step?: number
+      labelKey: string
+      /** How to format the numeric readout next to the slider. */
+      display?: 'raw' | 'voltage' | 'moisture' | 'temp'
+    }
+  | { kind: 'hold'; inputKey: 'button' | 'touch'; labelKey: string }
+  | {
+      kind: 'boost'
+      inputKey: 'pot'
+      labelKey: string
+      /** Units added to the input per ~50ms while held. */
+      step: number
+    }
+  | { kind: 'readout'; readout: 'oled' | 'moisture' | 'touch' }
+
 export type CalloutSpec = {
   at: Vec3
   title: string
@@ -521,4 +593,149 @@ export type CalloutSpec = {
   dx: number
   dy: number
   interactive?: boolean
+  /** When true, clicking the related mesh focuses this callout. */
+  pickable?: boolean
+  control?: PartControl
+}
+
+/** Accent ring under the focused part (reference-style cyan glow). */
+export function SelectionRing({ at }: { at: [number, number, number] | null }) {
+  const ref = useRef<THREE.Group>(null)
+  useFrame(({ clock }) => {
+    const g = ref.current
+    if (!g || !at) return
+    const pulse = 1 + Math.sin(clock.elapsedTime * 3.2) * 0.045
+    g.scale.set(pulse, 1, pulse)
+  })
+  if (!at) return null
+  return (
+    <group ref={ref} position={[at[0], 0.035, at[2]]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.52, 0.7, 64]} />
+        <meshBasicMaterial color="#0aa5a6" transparent opacity={0.9} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.7, 0.92, 64]} />
+        <meshBasicMaterial color="#0aa5a6" transparent opacity={0.28} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  )
+}
+
+/** Stylized plant pot + soil + leaf cluster for the soil lesson. */
+export function PlantPot({
+  position,
+  wetness,
+  onPick,
+}: {
+  position: Vec3
+  wetness: number
+  onPick?: () => void
+}) {
+  const soil = wetness > 0.55 ? '#3d2a1a' : wetness > 0.4 ? '#5a3d24' : '#7a5a38'
+  return (
+    <group
+      position={position}
+      onPointerDown={(e) => {
+        e.stopPropagation()
+        onPick?.()
+      }}
+    >
+      <mesh position={[0, 0.35, 0]}>
+        <cylinderGeometry args={[0.55, 0.42, 0.7, 24]} />
+        <meshStandardMaterial color="#c45a3a" roughness={0.65} />
+      </mesh>
+      <mesh position={[0, 0.68, 0]}>
+        <cylinderGeometry args={[0.58, 0.58, 0.08, 24]} />
+        <meshStandardMaterial color="#a84830" roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.72, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.5, 24]} />
+        <meshStandardMaterial color={soil} roughness={1} />
+      </mesh>
+      <mesh position={[0, 1.05, 0]}>
+        <cylinderGeometry args={[0.04, 0.06, 0.55, 8]} />
+        <meshStandardMaterial color="#2a6b3c" roughness={0.7} />
+      </mesh>
+      {[
+        [0.18, 1.25, 0.05, 0.4],
+        [-0.16, 1.2, -0.08, -0.5],
+        [0.05, 1.35, -0.12, 0.2],
+      ].map(([x, y, z, rot], i) => (
+        <mesh key={i} position={[x, y, z]} rotation={[0.4, rot, 0.3]}>
+          <sphereGeometry args={[0.22, 12, 10]} />
+          <meshStandardMaterial color="#2f8f4e" roughness={0.55} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+/** Capacitive-style soil probe sticks into the pot. */
+export function SoilProbe({ position, onPick }: { position: Vec3; onPick?: () => void }) {
+  return (
+    <group
+      position={position}
+      onPointerDown={(e) => {
+        e.stopPropagation()
+        onPick?.()
+      }}
+    >
+      <mesh position={[0.28, 0.95, 0]} rotation={[0.15, 0, 0.2]}>
+        <boxGeometry args={[0.12, 0.55, 0.04]} />
+        <meshStandardMaterial color="#c4c8cc" metalness={0.7} roughness={0.35} />
+      </mesh>
+      <mesh position={[0.28, 1.28, 0]}>
+        <boxGeometry args={[0.28, 0.18, 0.12]} />
+        <meshStandardMaterial color="#1f6b5a" roughness={0.45} />
+      </mesh>
+    </group>
+  )
+}
+
+/** Watering can — hold to raise soil moisture. */
+export function WateringCan({
+  position,
+  pouring,
+  onHold,
+  onPick,
+}: {
+  position: Vec3
+  pouring: boolean
+  onHold: (down: boolean) => void
+  onPick?: () => void
+}) {
+  return (
+    <group
+      position={position}
+      rotation={[0, pouring ? -0.55 : -0.25, pouring ? 0.45 : 0.1]}
+      onPointerDown={(e) => {
+        e.stopPropagation()
+        onPick?.()
+        onHold(true)
+      }}
+      onPointerUp={() => onHold(false)}
+      onPointerOut={() => onHold(false)}
+      onPointerLeave={() => onHold(false)}
+    >
+      <mesh position={[0, 0.55, 0]}>
+        <cylinderGeometry args={[0.32, 0.38, 0.55, 16]} />
+        <meshStandardMaterial color="#2d6fd6" roughness={0.45} metalness={0.25} />
+      </mesh>
+      <mesh position={[0.42, 0.72, 0]} rotation={[0, 0, -0.9]}>
+        <cylinderGeometry args={[0.05, 0.08, 0.55, 10]} />
+        <meshStandardMaterial color="#2d6fd6" roughness={0.45} metalness={0.25} />
+      </mesh>
+      <mesh position={[-0.05, 0.95, 0]}>
+        <torusGeometry args={[0.18, 0.035, 8, 16, Math.PI]} />
+        <meshStandardMaterial color="#1e4f9a" roughness={0.4} metalness={0.3} />
+      </mesh>
+      {pouring && (
+        <mesh position={[0.72, 0.35, 0]}>
+          <cylinderGeometry args={[0.03, 0.06, 0.45, 8]} />
+          <meshStandardMaterial color="#4db8e8" transparent opacity={0.65} />
+        </mesh>
+      )}
+    </group>
+  )
 }

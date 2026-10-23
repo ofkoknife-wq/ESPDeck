@@ -3,6 +3,7 @@ import { getCalloutTexts } from '@/lib/i18n/content/callouts'
 import type { Locale } from '@/lib/i18n/config'
 import type { LessonId } from '@/lib/lessons'
 import { LESSON_SCENES } from './three/circuits'
+import type { PartControl } from './three/parts'
 
 export type ScenePart = {
   key: string
@@ -12,6 +13,8 @@ export type ScenePart = {
   /** Index into LESSON_SCENES[id].callouts, or null for synthetic board/breadboard rows. */
   calloutIndex: number | null
   interactive?: boolean
+  pickable?: boolean
+  control?: PartControl
 }
 
 type Copy = {
@@ -55,6 +58,8 @@ export function getSceneParts(lessonId: LessonId, locale: Locale, copy: Copy): S
       at: [callout.at[0] + ox, callout.at[1], callout.at[2]],
       calloutIndex: index,
       interactive: Boolean(callout.interactive),
+      pickable: Boolean(callout.pickable ?? callout.interactive),
+      control: callout.control,
     })
   })
 

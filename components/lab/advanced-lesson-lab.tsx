@@ -17,7 +17,7 @@ import { PartInspectCard } from './part-inspect-card'
 import { QuizPanel } from './quiz-panel'
 import { PanZoomStage } from './pan-zoom-stage'
 import { PcbView } from './pcb-view'
-import type { ScenePart } from './scene-parts'
+import { getSceneParts, type ScenePart } from './scene-parts'
 import { ScenePartsPanel } from './scene-parts-panel'
 import { SchematicView } from './schematic-view'
 import { StageToolbar } from './stage-toolbar'
@@ -45,7 +45,7 @@ export function AdvancedLessonLab({
   onPatch: (patch: Partial<LessonRecord>) => void
   onBack: () => void
 }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [view, setView] = useState<ViewMode>('schematic')
   const [step, setStep] = useState<TaskStep>('observe')
   const [code, setCode] = useState(lesson.challenge.skeleton)
@@ -66,11 +66,27 @@ export function AdvancedLessonLab({
     focusTargetRef.current = null
   }, [lesson.sceneLessonId, view])
 
+  const sceneParts = useMemo(
+    () =>
+      getSceneParts(lesson.sceneLessonId, locale, {
+        partBoard: t('stage.partBoard'),
+        partBoardBody: t('stage.partBoardBody'),
+        partBreadboard: t('stage.partBreadboard'),
+        partBreadboardBody: t('stage.partBreadboardBody'),
+      }),
+    [lesson.sceneLessonId, locale, t],
+  )
+
   const focusPart = (part: ScenePart) => {
     setFocusedPart(part)
     focusTargetRef.current = part.at
     setShowLabels(true)
     viewRef.current?.focusAt(part.at)
+  }
+
+  const focusByCallout = (index: number) => {
+    const part = sceneParts.find((p) => p.calloutIndex === index)
+    if (part) focusPart(part)
   }
 
   const clearFocus = () => {
@@ -260,6 +276,8 @@ export function AdvancedLessonLab({
                   calloutsRef={calloutsRef}
                   focusTargetRef={focusTargetRef}
                   focusElRef={focusElRef}
+                  focusAt={focusedPart?.at ?? null}
+                  onPickCallout={focusByCallout}
                 />
                 {showLabels && (
                   <CalloutLayer
@@ -270,7 +288,15 @@ export function AdvancedLessonLab({
                     highlightIndex={focusedPart?.calloutIndex ?? null}
                   />
                 )}
-                <PartInspectCard part={focusedPart} viewRef={viewRef} elRef={focusElRef} onClose={clearFocus} />
+                <PartInspectCard
+                  part={focusedPart}
+                  viewRef={viewRef}
+                  elRef={focusElRef}
+                  onClose={clearFocus}
+                  inputs={sim.inputs}
+                  outputs={sim.outputs}
+                  setInput={sim.setInput}
+                />
                 <ScenePartsPanel
                   lessonId={lesson.sceneLessonId}
                   open={showParts}
