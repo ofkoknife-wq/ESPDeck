@@ -11,7 +11,7 @@ export function DocShell({ children }: { children: ReactNode }) {
   const { t } = useI18n()
   return (
     <div className="lab-shell flex min-h-dvh flex-col">
-      <header className="relative z-[100] flex items-center justify-between gap-4 border-b border-[#e1e5eb] bg-white/95 px-4 py-3 shadow-[0_2px_14px_rgb(31_41_55/6%)] backdrop-blur lg:px-6">
+      <header className="relative z-40 flex items-center justify-between gap-4 border-b border-[#e1e5eb] bg-white/95 px-4 py-3 shadow-[0_2px_14px_rgb(31_41_55/6%)] backdrop-blur lg:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <Image src="/logo.svg" alt="" width={40} height={40} className="size-10 rounded-2xl" priority />
           <div className="min-w-0">
