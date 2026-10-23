@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { SiteFooter } from '@/components/site/site-footer'
 import { ThanksHost } from '@/components/site/thanks-modal'
+import { getLessonDiagram } from '@/lib/lesson-diagrams'
 import { useI18n } from '@/lib/i18n/provider'
 import { getLessons } from '@/lib/i18n/localize-lesson'
 import { useProgress } from '@/lib/use-progress'
@@ -14,11 +15,14 @@ import { CodePanel } from './code-panel'
 import { Header } from './header'
 import { LessonPanel } from './lesson-panel'
 import { LessonRail } from './lesson-rail'
+import { PanZoomStage } from './pan-zoom-stage'
 import { PartInspectCard } from './part-inspect-card'
+import { PinoutView } from './pinout-view'
+import { SchematicView } from './schematic-view'
 import { ScenePartsPanel } from './scene-parts-panel'
 import type { ScenePart } from './scene-parts'
 import { SimControls } from './sim-controls'
-import { StageToolbar } from './stage-toolbar'
+import { StageToolbar, type StageViewMode } from './stage-toolbar'
 import { LESSON_SCENES } from './three/circuits'
 import type { ViewApi } from './three/scene'
 
@@ -39,9 +43,11 @@ export function Lab() {
   const [showLabels, setShowLabels] = useState(true)
   const [showParts, setShowParts] = useState(true)
   const [advanced, setAdvanced] = useState(false)
+  const [stageMode, setStageMode] = useState<StageViewMode>('scene')
   const [focusedPart, setFocusedPart] = useState<ScenePart | null>(null)
   const safeIndex = Math.min(index, lessons.length - 1)
   const lesson = lessons[safeIndex]
+  const diagram = useMemo(() => getLessonDiagram(lesson.id), [lesson.id])
   const { completed, markComplete, advanced: advancedRecords, patchAdvanced } = useProgress()
   const sim = useSimulation(lesson.id, markComplete)
   const viewRef = useRef<ViewApi | null>(null)
@@ -52,6 +58,7 @@ export function Lab() {
   useEffect(() => {
     setFocusedPart(null)
     focusTargetRef.current = null
+    setStageMode('scene')
   }, [lesson.id])
 
   const focusPart = (part: ScenePart) => {
@@ -111,43 +118,60 @@ export function Lab() {
             </div>
             <section
               aria-label={`${t('lab.lessonN', { n: safeIndex + 1 })} · ${lesson.title}`}
-              className="relative min-h-96 flex-1 lg:min-h-0"
+              className="relative min-h-96 flex-1 overflow-hidden rounded-[1.25rem] border bg-card lg:min-h-0"
             >
-              <Scene
-                lessonId={lesson.id}
-                outputs={sim.outputs}
-                inputs={sim.inputs}
-                setInput={sim.setInput}
-                viewRef={viewRef}
-                calloutsRef={calloutsRef}
-                focusTargetRef={focusTargetRef}
-                focusElRef={focusElRef}
-              />
-              {showLabels && (
-                <CalloutLayer
-                  key={lesson.id}
-                  lessonId={lesson.id}
-                  callouts={LESSON_SCENES[lesson.id].callouts}
-                  elementsRef={calloutsRef}
-                  highlightIndex={focusedPart?.calloutIndex ?? null}
-                />
+              {stageMode === 'scene' ? (
+                <>
+                  <Scene
+                    lessonId={lesson.id}
+                    outputs={sim.outputs}
+                    inputs={sim.inputs}
+                    setInput={sim.setInput}
+                    viewRef={viewRef}
+                    calloutsRef={calloutsRef}
+                    focusTargetRef={focusTargetRef}
+                    focusElRef={focusElRef}
+                  />
+                  {showLabels && (
+                    <CalloutLayer
+                      key={lesson.id}
+                      lessonId={lesson.id}
+                      callouts={LESSON_SCENES[lesson.id].callouts}
+                      elementsRef={calloutsRef}
+                      highlightIndex={focusedPart?.calloutIndex ?? null}
+                    />
+                  )}
+                  <PartInspectCard part={focusedPart} viewRef={viewRef} elRef={focusElRef} onClose={clearFocus} />
+                  <ScenePartsPanel
+                    lessonId={lesson.id}
+                    open={showParts}
+                    focusedKey={focusedPart?.key ?? null}
+                    onFocus={focusPart}
+                  />
+                  <div className="pointer-events-none absolute bottom-3 left-0 z-10 hidden md:block">
+                    <SimControls lesson={lesson} phase={sim.phase} inputs={sim.inputs} outputs={sim.outputs} setInput={sim.setInput} />
+                  </div>
+                </>
+              ) : (
+                <PanZoomStage key={`${lesson.id}-${stageMode}`}>
+                  {(viewBox) =>
+                    stageMode === 'schematic' ? (
+                      <SchematicView graph={diagram.schematic} viewBox={viewBox} />
+                    ) : (
+                      <PinoutView activePins={diagram.pins} viewBox={viewBox} />
+                    )
+                  }
+                </PanZoomStage>
               )}
-              <PartInspectCard part={focusedPart} viewRef={viewRef} elRef={focusElRef} onClose={clearFocus} />
-              <ScenePartsPanel
-                lessonId={lesson.id}
-                open={showParts}
-                focusedKey={focusedPart?.key ?? null}
-                onFocus={focusPart}
-              />
-              <div className="pointer-events-none absolute bottom-3 left-0 z-10 hidden md:block">
-                <SimControls lesson={lesson} phase={sim.phase} inputs={sim.inputs} outputs={sim.outputs} setInput={sim.setInput} />
-              </div>
               <StageToolbar
                 viewRef={viewRef}
                 showLabels={showLabels}
                 onToggleLabels={() => setShowLabels((v) => !v)}
                 showParts={showParts}
                 onToggleParts={() => setShowParts((v) => !v)}
+                mode={stageMode}
+                onModeChange={setStageMode}
+                showCameraControls={stageMode === 'scene'}
               />
             </section>
 

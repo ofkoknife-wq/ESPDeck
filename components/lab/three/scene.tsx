@@ -1,6 +1,6 @@
 'use client'
 
-import { CameraControls } from '@react-three/drei'
+import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { Vector3 } from 'three'
@@ -18,6 +18,8 @@ export type ViewApi = {
   reset: () => void
   zoom: (dir: 1 | -1) => void
   rotate: (dir: 1 | -1) => void
+  /** Pan the orthographic view in screen space (positive x = right, positive y = up). */
+  pan: (dx: number, dy: number) => void
   /** Animate camera to look at a world-space point (already includes scene offsetX). */
   focusAt: (at: [number, number, number], opts?: FocusOpts) => void
 }
@@ -61,6 +63,51 @@ function Controls({ extent, viewRef }: { extent: number; viewRef: RefObject<View
   }, [reset])
 
   useEffect(() => {
+    const c = controls.current
+    if (!c) return
+    // Drag = pan the board; right-drag / Q·E = rotate (like the reference lab).
+    const A = CameraControlsImpl.ACTION
+    c.mouseButtons.left = A.TRUCK
+    c.mouseButtons.right = A.ROTATE
+    c.mouseButtons.middle = A.ZOOM
+    c.mouseButtons.wheel = A.ZOOM
+    c.touches.one = A.TOUCH_TRUCK
+    c.touches.two = A.TOUCH_ZOOM_ROTATE
+  }, [])
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const c = controls.current
+      if (!c) return
+      const tag = (event.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (event.target as HTMLElement | null)?.isContentEditable) return
+      const step = event.shiftKey ? 1.2 : 0.55
+      const key = event.key.toLowerCase()
+      if (key === 'w' || key === 'arrowup') {
+        event.preventDefault()
+        void c.truck(0, step, true)
+      } else if (key === 's' || key === 'arrowdown') {
+        event.preventDefault()
+        void c.truck(0, -step, true)
+      } else if (key === 'a' || key === 'arrowleft') {
+        event.preventDefault()
+        void c.truck(-step, 0, true)
+      } else if (key === 'd' || key === 'arrowright') {
+        event.preventDefault()
+        void c.truck(step, 0, true)
+      } else if (key === 'q') {
+        event.preventDefault()
+        void c.rotate(Math.PI / 10, 0, true)
+      } else if (key === 'e') {
+        event.preventDefault()
+        void c.rotate(-Math.PI / 10, 0, true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  useEffect(() => {
     viewRef.current = {
       reset: () => reset(true),
       zoom: (dir) => {
@@ -69,6 +116,9 @@ function Controls({ extent, viewRef }: { extent: number; viewRef: RefObject<View
       },
       rotate: (dir) => {
         void controls.current?.rotate((dir * Math.PI) / 8, 0, true)
+      },
+      pan: (dx, dy) => {
+        void controls.current?.truck(dx, dy, true)
       },
       focusAt: (at, opts) => {
         const c = controls.current

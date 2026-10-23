@@ -28,10 +28,10 @@ export function SchematicView({
 }: {
   graph: CircuitGraph
   fault?: Fault
-  solved: string[]
+  solved?: string[]
   viewBox?: string
-  onSelectNet: (id: string) => void
-  onSelectPart: (id: string) => void
+  onSelectNet?: (id: string) => void
+  onSelectPart?: (id: string) => void
 }) {
   const { t } = useI18n()
   const part = (id: string) => graph.parts.find((item) => item.id === id)
@@ -60,7 +60,7 @@ export function SchematicView({
         const d = `M${x1} ${y1} L${midX} ${y1} L${midX} ${y2} L${x2} ${y2}`
         const broken = fault?.netId === net.id
         return (
-          <g key={net.id} className="cursor-pointer" onClick={() => onSelectNet(net.id)}>
+          <g key={net.id} className={onSelectNet ? 'cursor-pointer' : undefined} onClick={() => onSelectNet?.(net.id)}>
             <path d={d} fill="none" stroke="transparent" strokeWidth="16" />
             <path
               d={d}
@@ -81,7 +81,7 @@ export function SchematicView({
         const [w, h] = sizeOf(item.kind)
         const suspect = fault?.partId === item.id
         return (
-          <g key={item.id} className="cursor-pointer" onClick={() => onSelectPart(item.id)}>
+          <g key={item.id} className={onSelectPart ? 'cursor-pointer' : undefined} onClick={() => onSelectPart?.(item.id)}>
             <rect
               x={item.x}
               y={item.y}
