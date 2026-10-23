@@ -117,6 +117,7 @@ export const zhCN: MessageTree = {
     pinoutActive: '高亮引脚',
     breadboard: '3D 面包板',
     pcb: 'PCB',
+    oledIdle: '准备就绪',
   },
   advanced: {
     roadmap: '路线图',

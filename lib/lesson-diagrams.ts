@@ -1,4 +1,6 @@
 import type { CircuitGraph, CircuitNet, CircuitPart, PartKind } from './advanced-types'
+import type { Locale } from './i18n/config'
+import { DIAGRAMS_ZH } from './i18n/content/zh-CN/diagrams'
 import type { LessonId } from './lessons'
 
 export type LessonDiagram = {
@@ -48,7 +50,7 @@ const MCU: PartSpec = { id: 'mcu', kind: 'mcu', label: 'ESP32', value: 'DevKitC'
 /** Per-lesson schematic + pinout highlights for the basic lab stage. */
 export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
   board: diagram(
-    [MCU, { id: 'usb', kind: 'usb', label: 'USB', value: 'UART' }, { id: 'led', kind: 'led', label: '板载 LED', value: 'GPIO2' }],
+    [MCU, { id: 'usb', kind: 'usb', label: 'USB', value: 'UART' }, { id: 'led', kind: 'led', label: 'Onboard LED', value: 'GPIO2' }],
     [
       { id: 'usb', label: 'USB', from: 'mcu', to: 'usb', color: COLORS.data },
       { id: 'led', label: 'GPIO2', from: 'mcu', to: 'led', color: COLORS.pwm },
@@ -58,12 +60,12 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
   blink: diagram(
     [
       MCU,
-      { id: 'r', kind: 'resistor', label: '220Ω', value: '限流' },
-      { id: 'led', kind: 'led', label: 'LED', value: '阳极' },
+      { id: 'r', kind: 'resistor', label: '220Ω', value: 'current limit' },
+      { id: 'led', kind: 'led', label: 'LED', value: 'anode' },
     ],
     [
       { id: 'gpio', label: 'GPIO2', from: 'mcu', to: 'r', color: COLORS.pwm },
-      { id: 'led', label: '阳极', from: 'r', to: 'led', color: COLORS.signal },
+      { id: 'led', label: 'anode', from: 'r', to: 'led', color: COLORS.signal },
       { id: 'gnd', label: 'GND', from: 'led', to: 'mcu', color: COLORS.gnd },
     ],
     ['2', 'GND'],
@@ -71,7 +73,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
   button: diagram(
     [
       MCU,
-      { id: 'btn', kind: 'button', label: '按钮', value: 'INPUT_PULLUP' },
+      { id: 'btn', kind: 'button', label: 'Button', value: 'INPUT_PULLUP' },
       { id: 'led', kind: 'led', label: 'LED', value: 'GPIO2' },
     ],
     [
@@ -84,7 +86,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
   pot: diagram(
     [
       MCU,
-      { id: 'pot', kind: 'pot', label: '电位器', value: '10kΩ' },
+      { id: 'pot', kind: 'pot', label: 'Potentiometer', value: '10kΩ' },
       { id: 'led', kind: 'led', label: 'LED', value: 'PWM' },
     ],
     [
@@ -99,7 +101,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     [
       MCU,
       { id: 'rr', kind: 'resistor', label: '220Ω×3' },
-      { id: 'rgb', kind: 'led', label: 'RGB LED', value: '共阴' },
+      { id: 'rgb', kind: 'led', label: 'RGB LED', value: 'common cathode' },
     ],
     [
       { id: 'r', label: 'GPIO25', from: 'mcu', to: 'rr', color: '#d63a2c' },
@@ -110,7 +112,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['25', '26', '27', 'GND'],
   ),
   touch: diagram(
-    [MCU, { id: 'pad', kind: 'device', label: '触摸垫', value: 'T0' }, { id: 'led', kind: 'led', label: 'LED' }],
+    [MCU, { id: 'pad', kind: 'device', label: 'Touch pad', value: 'T0' }, { id: 'led', kind: 'led', label: 'LED' }],
     [
       { id: 't0', label: 'GPIO4/T0', from: 'mcu', to: 'pad', color: COLORS.analog },
       { id: 'led', label: 'GPIO2', from: 'mcu', to: 'led', color: COLORS.pwm },
@@ -118,7 +120,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['4', '2', 'GND'],
   ),
   dht: diagram(
-    [MCU, { id: 'dht', kind: 'dht', label: 'DHT11' }, { id: 'led', kind: 'led', label: '报警 LED' }],
+    [MCU, { id: 'dht', kind: 'dht', label: 'DHT11' }, { id: 'led', kind: 'led', label: 'Alarm LED' }],
     [
       { id: 'data', label: 'GPIO4', from: 'mcu', to: 'dht', color: COLORS.data },
       { id: 'vcc', label: '3V3', from: 'mcu', to: 'dht', color: COLORS.power },
@@ -128,7 +130,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['4', '3V3', 'GND', '2'],
   ),
   buzzer: diagram(
-    [MCU, { id: 'buz', kind: 'device', label: '无源蜂鸣器' }],
+    [MCU, { id: 'buz', kind: 'device', label: 'Passive buzzer' }],
     [
       { id: 'tone', label: 'GPIO18', from: 'mcu', to: 'buz', color: COLORS.pwm },
       { id: 'gnd', label: 'GND', from: 'buz', to: 'mcu', color: COLORS.gnd },
@@ -136,7 +138,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['18', 'GND'],
   ),
   servo: diagram(
-    [MCU, { id: 'servo', kind: 'device', label: '舵机', value: 'PWM' }],
+    [MCU, { id: 'servo', kind: 'device', label: 'Servo', value: 'PWM' }],
     [
       { id: 'sig', label: 'GPIO18', from: 'mcu', to: 'servo', color: COLORS.pwm },
       { id: 'vcc', label: '5V', from: 'mcu', to: 'servo', color: COLORS.power },
@@ -145,7 +147,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['18', '5V', 'GND'],
   ),
   wifi: diagram(
-    [MCU, { id: 'ant', kind: 'device', label: 'Wi-Fi 天线', value: '2.4GHz' }, { id: 'led', kind: 'led', label: '状态 LED' }],
+    [MCU, { id: 'ant', kind: 'device', label: 'Wi-Fi antenna', value: '2.4GHz' }, { id: 'led', kind: 'led', label: 'Status LED' }],
     [
       { id: 'rf', label: 'RF', from: 'mcu', to: 'ant', color: COLORS.analog },
       { id: 'led', label: 'GPIO2', from: 'mcu', to: 'led', color: COLORS.pwm },
@@ -163,7 +165,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['21', '22', '3V3', 'GND'],
   ),
   ldr: diagram(
-    [MCU, { id: 'ldr', kind: 'pot', label: '光敏电阻', value: '分压' }, { id: 'led', kind: 'led', label: 'LED' }],
+    [MCU, { id: 'ldr', kind: 'pot', label: 'Photoresistor', value: 'divider' }, { id: 'led', kind: 'led', label: 'LED' }],
     [
       { id: 'adc', label: 'GPIO34', from: 'ldr', to: 'mcu', color: COLORS.analog },
       { id: 'vcc', label: '3V3', from: 'mcu', to: 'ldr', color: COLORS.power },
@@ -182,7 +184,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['5', '18', '5V', 'GND'],
   ),
   relay: diagram(
-    [MCU, { id: 'relay', kind: 'device', label: '继电器模块' }, { id: 'load', kind: 'led', label: '负载' }],
+    [MCU, { id: 'relay', kind: 'device', label: 'Relay module' }, { id: 'load', kind: 'led', label: 'Load' }],
     [
       { id: 'in', label: 'GPIO26', from: 'mcu', to: 'relay', color: COLORS.signal },
       { id: 'vcc', label: '5V', from: 'mcu', to: 'relay', color: COLORS.power },
@@ -191,7 +193,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['26', '5V', 'GND'],
   ),
   motor: diagram(
-    [MCU, { id: 'drv', kind: 'device', label: '电机驱动' }, { id: 'mot', kind: 'device', label: '直流电机' }],
+    [MCU, { id: 'drv', kind: 'device', label: 'Motor driver' }, { id: 'mot', kind: 'device', label: 'DC motor' }],
     [
       { id: 'pwm', label: 'PWM', from: 'mcu', to: 'drv', color: COLORS.pwm },
       { id: 'dir', label: 'DIR', from: 'mcu', to: 'drv', color: COLORS.signal },
@@ -200,7 +202,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['25', '26', 'GND', '5V'],
   ),
   keypad: diagram(
-    [MCU, { id: 'pad', kind: 'button', label: '4×4 键盘' }],
+    [MCU, { id: 'pad', kind: 'button', label: '4×4 keypad' }],
     [
       { id: 'row', label: 'ROW', from: 'mcu', to: 'pad', color: COLORS.signal },
       { id: 'col', label: 'COL', from: 'pad', to: 'mcu', color: COLORS.data },
@@ -208,7 +210,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['13', '12', '14', '27', '26', '25', '33', '32'],
   ),
   sleep: diagram(
-    [MCU, { id: 'btn', kind: 'button', label: '唤醒键' }, { id: 'bat', kind: 'device', label: '电池', value: '3.7V' }],
+    [MCU, { id: 'btn', kind: 'button', label: 'Wake button' }, { id: 'bat', kind: 'device', label: 'Battery', value: '3.7V' }],
     [
       { id: 'wake', label: 'GPIO33', from: 'btn', to: 'mcu', color: COLORS.signal },
       { id: 'vbat', label: 'VBAT', from: 'bat', to: 'mcu', color: COLORS.power },
@@ -216,7 +218,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['33', 'GND', 'EN'],
   ),
   bluetooth: diagram(
-    [MCU, { id: 'ant', kind: 'device', label: 'BLE 天线' }, { id: 'led', kind: 'led', label: '状态' }],
+    [MCU, { id: 'ant', kind: 'device', label: 'BLE antenna' }, { id: 'led', kind: 'led', label: 'Status' }],
     [
       { id: 'rf', label: 'RF', from: 'mcu', to: 'ant', color: COLORS.analog },
       { id: 'led', label: 'GPIO2', from: 'mcu', to: 'led', color: COLORS.pwm },
@@ -233,7 +235,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['23', '5V', 'GND'],
   ),
   ir: diagram(
-    [MCU, { id: 'rx', kind: 'device', label: 'IR 接收' }, { id: 'led', kind: 'led', label: '指示' }],
+    [MCU, { id: 'rx', kind: 'device', label: 'IR receiver' }, { id: 'led', kind: 'led', label: 'Indicator' }],
     [
       { id: 'out', label: 'GPIO15', from: 'rx', to: 'mcu', color: COLORS.signal },
       { id: 'vcc', label: '3V3', from: 'mcu', to: 'rx', color: COLORS.power },
@@ -242,7 +244,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['15', '3V3', 'GND', '2'],
   ),
   fan: diagram(
-    [MCU, { id: 'fan', kind: 'device', label: 'PWM 风扇' }],
+    [MCU, { id: 'fan', kind: 'device', label: 'PWM fan' }],
     [
       { id: 'pwm', label: 'GPIO25', from: 'mcu', to: 'fan', color: COLORS.pwm },
       { id: 'vcc', label: '5V', from: 'mcu', to: 'fan', color: COLORS.power },
@@ -259,7 +261,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['21', '22', '3V3', 'GND'],
   ),
   pir: diagram(
-    [MCU, { id: 'pir', kind: 'device', label: 'PIR' }, { id: 'led', kind: 'led', label: '报警 LED' }],
+    [MCU, { id: 'pir', kind: 'device', label: 'PIR' }, { id: 'led', kind: 'led', label: 'Alarm LED' }],
     [
       { id: 'out', label: 'GPIO27', from: 'pir', to: 'mcu', color: COLORS.signal },
       { id: 'vcc', label: '5V', from: 'mcu', to: 'pir', color: COLORS.power },
@@ -268,7 +270,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['27', '5V', 'GND', '2'],
   ),
   joystick: diagram(
-    [MCU, { id: 'joy', kind: 'pot', label: '摇杆', value: 'X/Y' }, { id: 'oled', kind: 'oled', label: 'OLED' }],
+    [MCU, { id: 'joy', kind: 'pot', label: 'Joystick', value: 'X/Y' }, { id: 'oled', kind: 'oled', label: 'OLED' }],
     [
       { id: 'x', label: 'GPIO34', from: 'joy', to: 'mcu', color: COLORS.analog },
       { id: 'y', label: 'GPIO35', from: 'joy', to: 'mcu', color: COLORS.analog },
@@ -277,7 +279,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['34', '35', '32', '3V3', 'GND'],
   ),
   soil: diagram(
-    [MCU, { id: 'soil', kind: 'device', label: '土壤湿度' }, { id: 'oled', kind: 'oled', label: 'OLED' }],
+    [MCU, { id: 'soil', kind: 'device', label: 'Soil moisture' }, { id: 'oled', kind: 'oled', label: 'OLED' }],
     [
       { id: 'adc', label: 'GPIO34', from: 'soil', to: 'mcu', color: COLORS.analog },
       { id: 'sda', label: 'SDA 21', from: 'mcu', to: 'oled', color: COLORS.data },
@@ -285,7 +287,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['34', '21', '22', '3V3', 'GND'],
   ),
   gas: diagram(
-    [MCU, { id: 'mq', kind: 'device', label: 'MQ 气体' }, { id: 'buz', kind: 'device', label: '蜂鸣器' }],
+    [MCU, { id: 'mq', kind: 'device', label: 'MQ gas' }, { id: 'buz', kind: 'device', label: 'Buzzer' }],
     [
       { id: 'ao', label: 'GPIO34', from: 'mq', to: 'mcu', color: COLORS.analog },
       { id: 'tone', label: 'GPIO18', from: 'mcu', to: 'buz', color: COLORS.pwm },
@@ -317,7 +319,7 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
     ['GND', '5V', '3V3'],
   ),
   lightstrip: diagram(
-    [MCU, { id: 'strip', kind: 'led', label: '灯带', value: 'DIN' }],
+    [MCU, { id: 'strip', kind: 'led', label: 'LED strip', value: 'DIN' }],
     [
       { id: 'din', label: 'GPIO23', from: 'mcu', to: 'strip', color: COLORS.data },
       { id: 'vcc', label: '5V', from: 'mcu', to: 'strip', color: COLORS.power },
@@ -327,6 +329,30 @@ export const LESSON_DIAGRAMS: Record<LessonId, LessonDiagram> = {
   ),
 }
 
-export function getLessonDiagram(lessonId: LessonId): LessonDiagram {
-  return LESSON_DIAGRAMS[lessonId]
+function localizeDiagram(diagram: LessonDiagram, lessonId: LessonId, locale: Locale): LessonDiagram {
+  if (locale !== 'zh-CN') return diagram
+  const pack = DIAGRAMS_ZH[lessonId]
+  if (!pack) return diagram
+  return {
+    pins: diagram.pins,
+    schematic: {
+      parts: diagram.schematic.parts.map((part) => {
+        const overlay = pack.parts?.[part.id]
+        if (!overlay) return part
+        return {
+          ...part,
+          label: overlay.label ?? part.label,
+          value: overlay.value ?? part.value,
+        }
+      }),
+      nets: diagram.schematic.nets.map((net) => ({
+        ...net,
+        label: pack.nets?.[net.id] ?? net.label,
+      })),
+    },
+  }
+}
+
+export function getLessonDiagram(lessonId: LessonId, locale: Locale = 'en'): LessonDiagram {
+  return localizeDiagram(LESSON_DIAGRAMS[lessonId], lessonId, locale)
 }

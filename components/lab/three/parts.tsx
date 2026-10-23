@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { BB_TOP, PIN_TOP, type Vec3, mid } from '@/lib/geometry'
+import { useI18n } from '@/lib/i18n/provider'
 import { Rod, setPointer } from './primitives'
 
 type EndKind = 'pin' | 'hole' | 'free'
@@ -464,6 +465,7 @@ export function TouchPad({
 }
 
 export function OledDisplay({ position, text }: { position: Vec3; text: string }) {
+  const { t } = useI18n()
   return (
     <group position={position} rotation={[-Math.PI / 2, 0, 0]}>
       <mesh>
@@ -478,7 +480,7 @@ export function OledDisplay({ position, text }: { position: Vec3; text: string }
         {text || 'I2C OLED'}
       </Text>
       <Text position={[-0.8, -0.08, 0.14]} rotation={[0, 0, 0]} fontSize={0.13} color="#72d9d1" anchorX="left" anchorY="middle">
-        {text ? 'ESP32  ·  3.3V' : '准备就绪'}
+        {text ? 'ESP32  ·  3.3V' : t('stage.oledIdle')}
       </Text>
     </group>
   )

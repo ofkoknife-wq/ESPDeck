@@ -115,6 +115,7 @@ export const en = {
     pinoutActive: 'Pins in use',
     breadboard: '3D breadboard',
     pcb: 'PCB',
+    oledIdle: 'Ready',
   },
   advanced: {
     roadmap: 'Roadmap',

@@ -48,7 +48,7 @@ export function Lab() {
   const [focusedPart, setFocusedPart] = useState<ScenePart | null>(null)
   const safeIndex = Math.min(index, lessons.length - 1)
   const lesson = lessons[safeIndex]
-  const diagram = useMemo(() => getLessonDiagram(lesson.id), [lesson.id])
+  const diagram = useMemo(() => getLessonDiagram(lesson.id, locale), [lesson.id, locale])
   const { completed, markComplete, advanced: advancedRecords, patchAdvanced } = useProgress()
   const sim = useSimulation(lesson.id, markComplete)
   const viewRef = useRef<ViewApi | null>(null)
