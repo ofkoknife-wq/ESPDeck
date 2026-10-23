@@ -1,1 +1,1 @@
-export { getSceneParts, type ScenePart } from '@/components/lab/scene-parts'
+export { getBoardHotspotPart, getSceneParts, type ScenePart } from '@/components/lab/scene-parts'

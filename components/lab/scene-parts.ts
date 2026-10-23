@@ -1,4 +1,4 @@
-import { BB_TOP } from '@/lib/geometry'
+import { BOARD_X, BB_TOP, PCB_TOP } from '@/lib/geometry'
 import { getCalloutTexts } from '@/lib/i18n/content/callouts'
 import type { Locale } from '@/lib/i18n/config'
 import type { LessonId } from '@/lib/lessons'
@@ -27,19 +27,21 @@ type Copy = {
   partBreadboardBody: string
 }
 
-function boardHotspotParts(locale: Locale, offsetX: number, texts: { title: string; body: string }[]): ScenePart[] {
-  return BOARD_HOTSPOTS.map((h, index) => {
-    const text = texts[index] ?? { title: h.title, body: h.body }
-    return {
-      key: `board-${h.id}`,
-      title: text.title,
-      body: text.body,
-      at: boardHotspotWorldAt(h, offsetX),
-      calloutIndex: null,
-      pickable: true,
-      interactive: Boolean(h.pressable),
-    }
-  })
+/** Resolve a board-tour hotspot for 3D pick (not listed in the parts panel on other lessons). */
+export function getBoardHotspotPart(id: string, locale: Locale, offsetX = 0): ScenePart | null {
+  const index = BOARD_HOTSPOTS.findIndex((h) => h.id === id)
+  if (index < 0) return null
+  const h = BOARD_HOTSPOTS[index]
+  const text = getCalloutTexts('board', locale)[index] ?? { title: '—', body: '' }
+  return {
+    key: `board-${h.id}`,
+    title: text.title,
+    body: text.body,
+    at: boardHotspotWorldAt(h, offsetX),
+    calloutIndex: null,
+    pickable: true,
+    interactive: Boolean(h.pressable),
+  }
 }
 
 export function getSceneParts(lessonId: LessonId, locale: Locale, copy: Copy): ScenePart[] {
@@ -49,9 +51,9 @@ export function getSceneParts(lessonId: LessonId, locale: Locale, copy: Copy): S
   const rows: ScenePart[] = []
 
   if (lessonId === 'board') {
-    // Callouts === board hotspots (same order); keys stay board-${id}.
+    // Board tour: each hotspot is a list row.
     scene.callouts.forEach((callout, index) => {
-      const text = texts[index] ?? { title: callout.title, body: callout.body }
+      const text = texts[index] ?? { title: '—', body: '' }
       const id = callout.hotspotId ?? BOARD_HOTSPOTS[index]?.id
       rows.push({
         key: id ? `board-${id}` : `callout-${index}`,
@@ -69,9 +71,14 @@ export function getSceneParts(lessonId: LessonId, locale: Locale, copy: Copy): S
     return rows
   }
 
-  // Other lessons: fine-grained board tour parts (3D pick + panel) + breadboard + lesson callouts.
-  const boardTexts = getCalloutTexts('board', locale)
-  rows.push(...boardHotspotParts(locale, ox, boardTexts))
+  // Other lessons: one board row + breadboard + lesson parts — not every chip on the DevKit.
+  rows.push({
+    key: 'board',
+    title: copy.partBoard,
+    body: copy.partBoardBody,
+    at: [BOARD_X + ox, PCB_TOP + 0.2, 0],
+    calloutIndex: null,
+  })
 
   if (scene.breadboard) {
     rows.push({
@@ -84,7 +91,7 @@ export function getSceneParts(lessonId: LessonId, locale: Locale, copy: Copy): S
   }
 
   scene.callouts.forEach((callout, index) => {
-    const text = texts[index] ?? { title: callout.title, body: callout.body }
+    const text = texts[index] ?? { title: '—', body: '' }
     rows.push({
       key: `callout-${index}`,
       title: text.title,

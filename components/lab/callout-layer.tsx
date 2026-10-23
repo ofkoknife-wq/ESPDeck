@@ -32,7 +32,7 @@ export function CalloutLayer({
     <div className="callout-layer pointer-events-none absolute inset-0 overflow-hidden">
       {callouts.map((c, i) => {
         const left = c.dx < 0
-        const text = texts[i] ?? { title: c.title, body: c.body }
+        const text = texts[i] ?? { title: '—', body: '' }
         const active = highlightIndex === i
         // Any callout can focus its part when the stage provides onSelect.
         const clickable = Boolean(onSelect)

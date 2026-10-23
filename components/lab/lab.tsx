@@ -20,7 +20,7 @@ import { PartInspectCard } from './part-inspect-card'
 import { PinoutView } from './pinout-view'
 import { SchematicView } from './schematic-view'
 import { ScenePartsPanel } from './scene-parts-panel'
-import { getSceneParts, type ScenePart } from './scene-parts'
+import { getBoardHotspotPart, getSceneParts, type ScenePart } from './scene-parts'
 import { SimControls } from './sim-controls'
 import { StageTitleBar } from './stage-title-bar'
 import { StageToolbar, type StageViewMode } from './stage-toolbar'
@@ -86,7 +86,10 @@ export function Lab() {
   }
 
   const focusBoardHotspot = (id: string) => {
-    const part = sceneParts.find((p) => p.key === `board-${id}`)
+    // Board chips stay pickable in 3D but are not listed in the parts panel.
+    const part =
+      sceneParts.find((p) => p.key === `board-${id}`) ??
+      getBoardHotspotPart(id, locale, LESSON_SCENES[lesson.id].offsetX)
     if (part) focusPart(part)
   }
 

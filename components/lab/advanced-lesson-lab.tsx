@@ -17,7 +17,7 @@ import { PartInspectCard } from './part-inspect-card'
 import { QuizPanel } from './quiz-panel'
 import { PanZoomStage } from './pan-zoom-stage'
 import { PcbView } from './pcb-view'
-import { getSceneParts, type ScenePart } from './scene-parts'
+import { getBoardHotspotPart, getSceneParts, type ScenePart } from './scene-parts'
 import { ScenePartsPanel } from './scene-parts-panel'
 import { SchematicView } from './schematic-view'
 import { StageToolbar } from './stage-toolbar'
@@ -90,7 +90,9 @@ export function AdvancedLessonLab({
   }
 
   const focusBoardHotspot = (id: string) => {
-    const part = sceneParts.find((p) => p.key === `board-${id}`)
+    const part =
+      sceneParts.find((p) => p.key === `board-${id}`) ??
+      getBoardHotspotPart(id, locale, LESSON_SCENES[lesson.sceneLessonId].offsetX)
     if (part) focusPart(part)
   }
 

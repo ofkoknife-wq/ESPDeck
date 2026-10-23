@@ -668,10 +668,9 @@ export type PartControl =
 
 export type CalloutIcon = 'drop' | 'screen' | 'can' | 'wave' | 'plant'
 
+/** Scene geometry only — titles/bodies live in `lib/i18n/content/{locale}/callouts.ts`. */
 export type CalloutSpec = {
   at: Vec3
-  title: string
-  body: string
   dx: number
   dy: number
   interactive?: boolean
@@ -723,7 +722,10 @@ export function SelectionRing({ at }: { at: [number, number, number] | null }) {
   )
 }
 
-/** Peace-lily style pot — leaves droop with wilt (reference plant). */
+/**
+ * Peace lily (reference Zl) — terracotta pot, soil + pebbles, elongated leaves
+ * that droop with wilt, white spathe + yellow spadix. No Y-spin on select.
+ */
 export function PlantPot({
   position,
   wetness,
@@ -735,79 +737,142 @@ export function PlantPot({
   wilt?: number
   onPick?: () => void
 }) {
-  const soilColor = new THREE.Color('#5c4030').lerp(new THREE.Color('#2a1a10'), Math.min(1, wetness * 1.25))
-  const leafColor = new THREE.Color('#3a9a55').lerp(new THREE.Color('#8a9a4a'), wilt * wilt * 0.85)
-  const droop = wilt * 0.55
+  const soilColor = useMemo(
+    () => new THREE.Color('#c29a68').lerp(new THREE.Color('#5a3d27'), Math.min(1, wetness * 1.25)),
+    [wetness],
+  )
+  const leafColor = useMemo(
+    () => new THREE.Color('#3fa064').lerp(new THREE.Color('#a9a85a'), wilt * wilt * 0.85),
+    [wilt],
+  )
   const pick = usePickHandlers(onPick)
+  const baseLean = 0.22
+  const leaves: [number, number, number, number][] = [
+    // yaw°, stemLen, bladeLen, baseLean(rad)
+    [0.1, 0.72, 0.85, 0.18],
+    [1.1, 0.68, 0.8, 0.28],
+    [2.2, 0.78, 0.9, 0.15],
+    [3.3, 0.62, 0.72, 0.32],
+    [4.2, 0.7, 0.78, 0.22],
+    [5.0, 0.55, 0.62, 0.38],
+    [5.8, 0.58, 0.65, 0.3],
+  ]
+
   return (
     <group position={position} {...pick}>
-      <HitBox args={[1.6, 2.2, 1.6]} position={[0, 0.9, 0]} />
-      <mesh position={[0, 0.38, 0]}>
-        <cylinderGeometry args={[0.62, 0.48, 0.76, 28]} />
-        <meshStandardMaterial color="#c9b8a0" roughness={0.7} />
+      <HitBox args={[1.7, 2.6, 1.7]} position={[0, 1.1, 0]} />
+
+      {/* Terracotta pot */}
+      <mesh position={[0, 0.42, 0]} castShadow>
+        <cylinderGeometry args={[0.68, 0.52, 0.84, 32]} />
+        <meshStandardMaterial color="#d4774e" roughness={0.78} />
       </mesh>
-      <mesh position={[0, 0.74, 0]}>
-        <cylinderGeometry args={[0.66, 0.66, 0.08, 28]} />
-        <meshStandardMaterial color="#b8a68c" roughness={0.65} />
+      <mesh position={[0, 0.86, 0]}>
+        <cylinderGeometry args={[0.72, 0.7, 0.1, 32]} />
+        <meshStandardMaterial color="#b9603d" roughness={0.75} />
       </mesh>
-      <mesh position={[0, 0.78, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.56, 28]} />
-        <meshStandardMaterial color={soilColor} roughness={1} />
+      <mesh position={[0, 0.04, 0]}>
+        <cylinderGeometry args={[0.5, 0.52, 0.08, 32]} />
+        <meshStandardMaterial color="#a85232" roughness={0.8} />
       </mesh>
-      <mesh position={[0, 1.15, 0]}>
-        <cylinderGeometry args={[0.035, 0.05, 0.7, 8]} />
-        <meshStandardMaterial color="#2f6b3c" roughness={0.7} />
+
+      {/* Soil surface */}
+      <mesh position={[0, 0.88, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.62, 32]} />
+        <meshStandardMaterial color={soilColor} roughness={0.95} />
       </mesh>
-      <group position={[0, 1.55, 0.05]} rotation={[droop * 0.8, 0, 0]}>
-        <mesh position={[0, 0.12, 0]}>
-          <sphereGeometry args={[0.14, 12, 10]} />
-          <meshStandardMaterial color="#f2c23a" roughness={0.55} />
-        </mesh>
-        <mesh position={[0, 0.02, 0.02]}>
-          <sphereGeometry args={[0.2, 12, 10]} />
-          <meshStandardMaterial color="#f7f2e4" roughness={0.5} />
-        </mesh>
-      </group>
-      {/* Pitch only when wilted — no Y spin (that looked like a fan on select). */}
       {[
-        [0.22, 1.15, 0.08, 0.35 + droop],
-        [-0.2, 1.1, -0.06, -0.4 - droop],
-        [0.06, 1.28, -0.14, 0.2 + droop * 0.5],
-        [-0.08, 1.05, 0.18, 0.45 + droop],
-      ].map(([x, y, z, lean], i) => (
-        <group key={i} position={[x, y, z]} rotation={[lean, 0, lean * 0.2]}>
-          <mesh>
-            <sphereGeometry args={[0.26, 12, 10]} />
-            <meshStandardMaterial color={leafColor} roughness={0.55} />
-          </mesh>
-        </group>
+        [0.22, -0.18, 0.07],
+        [-0.28, -0.1, 0.055],
+        [0.32, 0.16, 0.05],
+        [-0.08, 0.28, 0.06],
+        [0.1, 0.08, 0.04],
+        [-0.35, 0.18, 0.05],
+      ].map(([x, z, r], i) => (
+        <mesh key={i} position={[x, 0.9, z]} scale={[1, 0.45, 1]}>
+          <sphereGeometry args={[r, 10, 8]} />
+          <meshStandardMaterial color={soilColor} roughness={0.95} />
+        </mesh>
       ))}
+
+      {/* Leaves — stem + flattened blade; droop with wilt */}
+      {leaves.map(([yaw, stemLen, bladeLen, lean], i) => {
+        const tilt = lean + wilt * (1.05 - lean * 0.35)
+        const bladePitch = baseLean + wilt * 0.85
+        return (
+          <group key={i} position={[-0.06, 0.9, -0.1]} rotation={[0, yaw, 0]}>
+            <group rotation={[tilt, 0, 0]}>
+              <mesh position={[0, stemLen / 2, 0]}>
+                <cylinderGeometry args={[0.025, 0.035, stemLen, 8]} />
+                <meshStandardMaterial color="#4f9a5a" roughness={0.65} />
+              </mesh>
+              <group position={[0, stemLen, 0]} rotation={[bladePitch, 0, 0]}>
+                <mesh scale={[0.2, bladeLen * 0.55, 0.035]} castShadow>
+                  <sphereGeometry args={[1, 14, 10]} />
+                  <meshStandardMaterial color={leafColor} roughness={0.55} />
+                </mesh>
+              </group>
+            </group>
+          </group>
+        )
+      })}
+
+      {/* Spathe flower */}
+      <group position={[-0.06, 0.9, -0.1]} rotation={[0, 2.2, 0]}>
+        <group rotation={[0.12 + wilt * 0.75, 0, 0]}>
+          <mesh position={[0, 0.55, 0]}>
+            <cylinderGeometry args={[0.022, 0.03, 1.05, 8]} />
+            <meshStandardMaterial color="#4f9a5a" roughness={0.65} />
+          </mesh>
+          <group position={[0, 1.1, 0]} rotation={[wilt * 1.2, 0, 0]}>
+            <mesh position={[0, 0.22, -0.04]} rotation={[-0.25, 0, 0]} scale={[0.28, 0.42, 0.05]}>
+              <sphereGeometry args={[1, 12, 10]} />
+              <meshStandardMaterial color="#f6f1e4" roughness={0.5} />
+            </mesh>
+            <mesh position={[0, 0.38, 0.02]}>
+              <sphereGeometry args={[0.07, 10, 8]} />
+              <meshStandardMaterial color="#f2c23a" roughness={0.55} />
+            </mesh>
+            <mesh position={[0, 0.52, 0.02]}>
+              <cylinderGeometry args={[0.035, 0.05, 0.22, 10]} />
+              <meshStandardMaterial color="#f2c23a" roughness={0.55} />
+            </mesh>
+          </group>
+        </group>
+      </group>
     </group>
   )
 }
 
-/** Capacitive soil moisture v1.2 — PCB + long probe into soil. */
+/** Capacitive soil moisture v1.2 — PCB header above soil, probe into the pot. */
 export function SoilProbe({ position, onPick }: { position: Vec3; onPick?: () => void }) {
   const pick = usePickHandlers(onPick)
   return (
     <group position={position} {...pick}>
-      <HitBox args={[0.7, 1.5, 0.5]} position={[0.32, 0.85, 0]} />
-      <mesh position={[0.32, 0.55, 0]} rotation={[0.12, 0, 0.15]}>
-        <boxGeometry args={[0.14, 0.95, 0.035]} />
-        <meshStandardMaterial color="#efe9dc" roughness={0.45} metalness={0.15} />
+      <HitBox args={[0.75, 1.6, 0.55]} position={[0.38, 0.95, 0.05]} />
+      {/* Probe blade into soil */}
+      <mesh position={[0.38, 0.55, 0.05]} rotation={[0.08, 0, 0.08]}>
+        <boxGeometry args={[0.12, 1.05, 0.028]} />
+        <meshStandardMaterial color="#efe9dc" roughness={0.4} metalness={0.2} />
       </mesh>
-      <mesh position={[0.32, 1.15, 0]}>
-        <boxGeometry args={[0.42, 0.28, 0.1]} />
-        <meshStandardMaterial color="#1c1e24" roughness={0.55} />
+      <mesh position={[0.38, 0.55, 0.05]} rotation={[0.08, 0, 0.08]}>
+        <boxGeometry args={[0.04, 0.85, 0.032]} />
+        <meshStandardMaterial color="#c8c2b4" metalness={0.55} roughness={0.35} />
       </mesh>
-      <mesh position={[0.32, 1.15, 0.06]}>
-        <boxGeometry args={[0.28, 0.14, 0.02]} />
-        <meshStandardMaterial color="#2e3038" roughness={0.4} />
+      {/* Module PCB */}
+      <mesh position={[0.38, 1.22, 0.05]} castShadow>
+        <boxGeometry args={[0.48, 0.32, 0.1]} />
+        <meshStandardMaterial color="#1a1c22" roughness={0.55} />
       </mesh>
-      {[-0.1, 0, 0.1].map((x, i) => (
-        <mesh key={i} position={[0.32 + x, 1.32, 0]}>
-          <boxGeometry args={[0.05, 0.08, 0.05]} />
-          <meshStandardMaterial color="#d9d4ca" metalness={0.6} roughness={0.35} />
+      <mesh position={[0.38, 1.22, 0.11]}>
+        <boxGeometry args={[0.32, 0.16, 0.02]} />
+        <meshStandardMaterial color="#2a2e38" roughness={0.4} />
+      </mesh>
+      {/* Header pins */}
+      {[-0.12, 0, 0.12].map((x, i) => (
+        <mesh key={i} position={[0.38 + x, 1.42, 0.05]}>
+          <boxGeometry args={[0.055, 0.1, 0.055]} />
+          <meshStandardMaterial color="#d9d4ca" metalness={0.65} roughness={0.3} />
         </mesh>
       ))}
     </group>

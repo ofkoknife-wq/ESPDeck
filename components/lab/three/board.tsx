@@ -1,7 +1,7 @@
 'use client'
 
 import { useFrame } from '@react-three/fiber'
-import { useRef, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
 import {
   BOARD_X,
@@ -40,7 +40,24 @@ function HitBox({ args }: { args: [number, number, number] }) {
   )
 }
 
-/** Hover lift + click select — mirrors reference Uno part tour. */
+/** Meshes under this group are display-only — picking goes through the planted HitBox. */
+function VisualOnly({ children }: { children: ReactNode }) {
+  const ref = useRef<THREE.Group>(null)
+  useLayoutEffect(() => {
+    const root = ref.current
+    if (!root) return
+    root.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) obj.raycast = () => undefined
+    })
+  }, [children])
+  return <group ref={ref}>{children}</group>
+}
+
+/**
+ * Hover lift + click select.
+ * Hit volume stays planted; visuals lift but do not raycast — otherwise
+ * pointerOut↔pointerOver thrash (module flicker).
+ */
 function BoardPart({
   spot,
   selected,
@@ -52,28 +69,27 @@ function BoardPart({
   onPick?: (id: string) => void
   children: ReactNode
 }) {
-  const root = useRef<THREE.Group>(null)
+  const visual = useRef<THREE.Group>(null)
   const hover = useRef(0)
   const hoverTarget = useRef(0)
   const press = useRef(0)
   const pressTarget = useRef(0)
   const lift = spot.lift ?? 0.12
-  const [bx, by, bz] = spot.local
 
   useFrame((_, dt) => {
     const k = Math.min(1, dt * 14)
     hover.current += (hoverTarget.current - hover.current) * k
     press.current += (pressTarget.current - press.current) * Math.min(1, dt * 22)
-    const g = root.current
+    const g = visual.current
     if (!g) return
-    g.position.set(bx, by + hover.current * lift - press.current * 0.05, bz)
-    const s = 1 + hover.current * 0.02 + (selected ? 0.03 : 0)
+    g.position.y = hover.current * lift - press.current * 0.05
+    // Scale only on hover — selected uses the ring, not a jump in size.
+    const s = 1 + hover.current * 0.015
     g.scale.setScalar(s)
   })
 
   return (
     <group
-      ref={root}
       position={spot.local}
       onPointerOver={(e) => {
         e.stopPropagation()
@@ -96,15 +112,19 @@ function BoardPart({
       }}
     >
       <HitBox args={spot.hit} />
-      {children}
-      {selected && (
-        <mesh position={[0, -spot.hit[1] * 0.4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry
-            args={[Math.max(spot.hit[0], spot.hit[2]) * 0.38, Math.max(spot.hit[0], spot.hit[2]) * 0.48, 48]}
-          />
-          <meshBasicMaterial color="#1aa3a1" transparent opacity={0.8} depthWrite={false} side={THREE.DoubleSide} />
-        </mesh>
-      )}
+      <group ref={visual}>
+        <VisualOnly>
+          {children}
+          {selected && (
+            <mesh position={[0, -spot.hit[1] * 0.4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <ringGeometry
+                args={[Math.max(spot.hit[0], spot.hit[2]) * 0.38, Math.max(spot.hit[0], spot.hit[2]) * 0.48, 48]}
+              />
+              <meshBasicMaterial color="#1aa3a1" transparent opacity={0.8} depthWrite={false} side={THREE.DoubleSide} />
+            </mesh>
+          )}
+        </VisualOnly>
+      </group>
     </group>
   )
 }
@@ -207,6 +227,44 @@ function TactSwitch() {
   )
 }
 
+function MountHole({ x, z }: { x: number; z: number }) {
+  return (
+    <mesh position={[x, PCB_TOP + 0.001, z]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.06, 0.1, 20]} />
+      <meshStandardMaterial color="#0e1014" roughness={0.7} metalness={0.4} />
+    </mesh>
+  )
+}
+
+function LedDome({
+  color,
+  emissive,
+  intensity,
+}: {
+  color: string
+  emissive: string
+  intensity: number
+}) {
+  return (
+    <group>
+      <mesh>
+        <boxGeometry args={[0.12, 0.04, 0.08]} />
+        <meshStandardMaterial color="#1a1c20" roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.05, 0]}>
+        <sphereGeometry args={[0.045, 12, 10]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={emissive}
+          emissiveIntensity={intensity}
+          roughness={0.25}
+          toneMapped={intensity <= 0.05}
+        />
+      </mesh>
+    </group>
+  )
+}
+
 function spot(id: string) {
   const found = BOARD_HOTSPOTS.find((x) => x.id === id)
   if (!found) throw new Error(`Unknown board hotspot ${id}`)
@@ -227,11 +285,24 @@ export function Esp32Board({
 
   return (
     <group position={[BOARD_X, 0, 0]}>
-      <mesh position={[0, PCB_BOTTOM + PCB_T / 2, 0]}>
+      <mesh position={[0, PCB_BOTTOM + PCB_T / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[PCB_W, PCB_T, PCB_D]} />
         <meshStandardMaterial color="#1f2226" roughness={0.55} />
       </mesh>
+      {/* Edge bevel strip */}
+      <mesh position={[0, PCB_TOP - 0.01, PCB_D / 2 - 0.02]}>
+        <boxGeometry args={[PCB_W - 0.08, 0.02, 0.04]} />
+        <meshStandardMaterial color="#2a2e34" roughness={0.5} />
+      </mesh>
+      <mesh position={[0, PCB_TOP - 0.01, -PCB_D / 2 + 0.02]}>
+        <boxGeometry args={[PCB_W - 0.08, 0.02, 0.04]} />
+        <meshStandardMaterial color="#2a2e34" roughness={0.5} />
+      </mesh>
       <Silkscreen />
+      <MountHole x={-PCB_W / 2 + 0.28} z={-PCB_D / 2 + 0.28} />
+      <MountHole x={PCB_W / 2 - 0.28} z={-PCB_D / 2 + 0.28} />
+      <MountHole x={-PCB_W / 2 + 0.28} z={PCB_D / 2 - 0.28} />
+      <MountHole x={PCB_W / 2 - 0.28} z={PCB_D / 2 - 0.28} />
 
       <BoardPart spot={spot('pins-l')} selected={isSel('pins-l')} onPick={pick}>
         <HeaderStrip />
@@ -245,22 +316,29 @@ export function Esp32Board({
           <boxGeometry args={[2.55, 0.08, 1.8]} />
           <meshStandardMaterial color="#2a2d33" roughness={0.6} />
         </mesh>
-        <mesh>
+        <mesh castShadow>
           <boxGeometry args={[1.75, 0.25, 1.6]} />
           <meshStandardMaterial color="#c2c6cb" metalness={0.75} roughness={0.32} />
         </mesh>
+        {/* Shield vents */}
+        {[-0.45, -0.15, 0.15, 0.45].map((z) => (
+          <mesh key={z} position={[0.55, 0.14, z]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.03, 0.03, 0.35, 8]} />
+            <meshStandardMaterial color="#8a9098" metalness={0.7} roughness={0.35} />
+          </mesh>
+        ))}
         <ShieldTop />
       </BoardPart>
 
       <BoardPart spot={spot('antenna')} selected={isSel('antenna')} onPick={pick}>
         {[2.2, 2.34, 2.48, 2.62].map((x) => (
-          <mesh key={x} position={[x - 2.4, -0.035, 0]}>
+          <mesh key={x} position={[x - 2.45, -0.035, 0]}>
             <boxGeometry args={[0.035, 0.008, 1.3]} />
             <meshStandardMaterial color="#c8a24a" metalness={0.9} roughness={0.3} />
           </mesh>
         ))}
         {[2.2, 2.34, 2.48].map((x, i) => (
-          <mesh key={`c${x}`} position={[x + 0.07 - 2.4, -0.035, i % 2 === 0 ? 0.65 : -0.65]}>
+          <mesh key={`c${x}`} position={[x + 0.07 - 2.45, -0.035, i % 2 === 0 ? 0.65 : -0.65]}>
             <boxGeometry args={[0.175, 0.008, 0.035]} />
             <meshStandardMaterial color="#c8a24a" metalness={0.9} roughness={0.3} />
           </mesh>
@@ -272,6 +350,10 @@ export function Esp32Board({
           <boxGeometry args={[0.55, 0.22, 0.62]} />
           <meshStandardMaterial color="#cfd3d7" metalness={0.85} roughness={0.25} />
         </mesh>
+        <mesh position={[-0.02, 0, 0]}>
+          <boxGeometry args={[0.42, 0.14, 0.5]} />
+          <meshStandardMaterial color="#9aa0a6" metalness={0.7} roughness={0.3} />
+        </mesh>
         <mesh position={[-0.276, 0, 0]}>
           <boxGeometry args={[0.01, 0.12, 0.46]} />
           <meshStandardMaterial color="#111215" />
@@ -281,14 +363,22 @@ export function Esp32Board({
       <BoardPart spot={spot('uart')} selected={isSel('uart')} onPick={pick}>
         <mesh>
           <boxGeometry args={[0.42, 0.08, 0.42]} />
-          <meshStandardMaterial color="#17181b" roughness={0.6} />
+          <meshStandardMaterial color="#17181b" roughness={0.55} />
+        </mesh>
+        <mesh position={[0, 0.045, 0]}>
+          <boxGeometry args={[0.28, 0.01, 0.28]} />
+          <meshStandardMaterial color="#2a2e36" roughness={0.4} />
         </mesh>
       </BoardPart>
 
       <BoardPart spot={spot('ldo')} selected={isSel('ldo')} onPick={pick}>
         <mesh>
           <boxGeometry args={[0.38, 0.13, 0.26]} />
-          <meshStandardMaterial color="#17181b" roughness={0.6} />
+          <meshStandardMaterial color="#17181b" roughness={0.55} />
+        </mesh>
+        <mesh position={[0, 0.07, 0]}>
+          <boxGeometry args={[0.22, 0.01, 0.14]} />
+          <meshStandardMaterial color="#3a4048" roughness={0.4} />
         </mesh>
         <mesh position={[0, -0.07, -0.25]}>
           <boxGeometry args={[0.3, 0.05, 0.16]} />
@@ -298,23 +388,30 @@ export function Esp32Board({
 
       <BoardPart spot={spot('crystal')} selected={isSel('crystal')} onPick={pick}>
         <mesh>
-          <boxGeometry args={[0.14, 0.08, 0.08]} />
-          <meshStandardMaterial color="#c9a65a" roughness={0.6} />
+          <cylinderGeometry args={[0.055, 0.055, 0.1, 16]} />
+          <meshStandardMaterial color="#c9a65a" metalness={0.55} roughness={0.35} />
+        </mesh>
+        <mesh position={[0, 0.06, 0]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
+          <meshStandardMaterial color="#e8d5a0" metalness={0.4} roughness={0.4} />
         </mesh>
       </BoardPart>
 
-      {/* Decorative passives */}
-      <mesh position={[-0.7, PCB_TOP + 0.03, 0.45]}>
-        <boxGeometry args={[0.12, 0.06, 0.06]} />
-        <meshStandardMaterial color="#7b6a4d" roughness={0.6} />
-      </mesh>
-      <mesh position={[-0.5, PCB_TOP + 0.03, 0.45]}>
-        <boxGeometry args={[0.12, 0.06, 0.06]} />
-        <meshStandardMaterial color="#7b6a4d" roughness={0.6} />
-      </mesh>
+      {/* Passives */}
+      {[
+        [-0.7, 0.45],
+        [-0.5, 0.45],
+        [-0.85, 0.2],
+        [-0.55, 0.2],
+      ].map(([x, z], i) => (
+        <mesh key={i} position={[x, PCB_TOP + 0.03, z]}>
+          <boxGeometry args={[0.12, 0.055, 0.06]} />
+          <meshStandardMaterial color="#7b6a4d" roughness={0.55} />
+        </mesh>
+      ))}
       <mesh position={[-1.45, PCB_TOP + 0.03, -0.15]}>
         <boxGeometry args={[0.06, 0.06, 0.12]} />
-        <meshStandardMaterial color="#2a2a2a" roughness={0.6} />
+        <meshStandardMaterial color="#2a2a2a" roughness={0.55} />
       </mesh>
 
       <BoardPart spot={spot('en')} selected={isSel('en')} onPick={pick}>
@@ -325,29 +422,22 @@ export function Esp32Board({
       </BoardPart>
 
       <BoardPart spot={spot('pwr')} selected={isSel('pwr')} onPick={pick}>
-        <mesh>
-          <boxGeometry args={[0.1, 0.06, 0.06]} />
-          <meshStandardMaterial color="#ff4b3a" emissive="#ff3b2a" emissiveIntensity={1.6} toneMapped={false} />
-        </mesh>
+        <LedDome color="#ff4b3a" emissive="#ff3b2a" intensity={1.8} />
       </BoardPart>
 
       <BoardPart spot={spot('led')} selected={isSel('led')} onPick={pick}>
-        <mesh>
-          <boxGeometry args={[0.1, 0.06, 0.06]} />
-          <meshStandardMaterial
-            color={onboard > 0 ? '#9cc8ff' : '#7f8fa6'}
-            emissive="#3d8bff"
-            emissiveIntensity={onboard * 4}
-            toneMapped={onboard <= 0}
-          />
-        </mesh>
+        <LedDome
+          color={onboard > 0 ? '#9cc8ff' : '#7f8fa6'}
+          emissive="#3d8bff"
+          intensity={onboard * 4}
+        />
         {onboard > 0 && (
           <>
-            <mesh position={[0, 0.02, 0]}>
-              <sphereGeometry args={[0.18, 16, 12]} />
-              <meshBasicMaterial color="#5aa0ff" transparent opacity={onboard * 0.35} depthWrite={false} />
+            <mesh position={[0, 0.06, 0]}>
+              <sphereGeometry args={[0.16, 14, 10]} />
+              <meshBasicMaterial color="#5aa0ff" transparent opacity={onboard * 0.32} depthWrite={false} />
             </mesh>
-            <pointLight position={[0, 0.2, 0]} color="#4d94ff" intensity={onboard * 1.2} distance={1.6} />
+            <pointLight position={[0, 0.22, 0]} color="#4d94ff" intensity={onboard * 1.15} distance={1.5} />
           </>
         )}
       </BoardPart>

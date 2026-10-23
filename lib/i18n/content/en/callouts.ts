@@ -70,8 +70,8 @@ export const CALLOUTS_EN: Partial<Record<LessonId, CalloutText[]>> = {
   ],
   'ultrasonic': [
     { title: 'HC-SR04', body: 'Sends ultrasound and hears the echo' },
-    { title: 'TRIG → GPIO5', body: 'Sends a 10μs trigger pulse' },
     { title: 'Distance readout', body: 'Drag to simulate target distance' },
+    { title: 'TRIG → GPIO5', body: 'Sends a 10μs trigger pulse' },
   ],
   'relay': [
     { title: 'Relay module', body: 'GPIO16 drives the coil' },

@@ -7,7 +7,7 @@ User-facing copy is **never** special-cased by language at call sites.
 1. **English (`en`) is the fallback**, not Chinese.
 2. **Every locale is a peer pack** under `content/{locale}/` (or `*-copy-{locale}.ts`).
 3. Resolvers (`localize-lesson`, `localize-advanced`, `localize-info`, `callouts`, diagrams) pick `packs[locale]` then fall back to `en`.
-4. Structural data (ids, icons, pin geometry, graph topology) stays language-neutral / English-canonical in `lib/lessons.ts`, `lib/advanced-lessons.ts`, etc.
+4. Structural data (ids, icons, pin geometry, graph topology) stays language-neutral in scene code — e.g. `components/lab/three/circuits.tsx`, `board-hotspots.ts`. **No user-facing title/body strings there.** Callout copy lives only in `content/{locale}/callouts.ts` (same lesson keys + same array lengths across locales).
 
 ## Add a language (e.g. `ja`)
 

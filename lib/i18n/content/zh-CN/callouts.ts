@@ -70,8 +70,8 @@ export const CALLOUTS_ZH: Partial<Record<LessonId, CalloutText[]>> = {
   ],
   'ultrasonic': [
     { title: 'HC-SR04', body: '发射超声波并接收回波' },
-    { title: 'TRIG → GPIO5', body: '发送 10μs 触发脉冲' },
     { title: '距离读数', body: '拖动滑块模拟目标距离' },
+    { title: 'TRIG → GPIO5', body: '发送 10μs 触发脉冲' },
   ],
   'relay': [
     { title: '继电器模块', body: 'GPIO16 控制线圈吸合' },
