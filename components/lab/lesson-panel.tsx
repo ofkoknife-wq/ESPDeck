@@ -1,13 +1,15 @@
 'use client'
 
 import { ArrowRight, CircuitBoard, Cpu } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useI18n } from '@/lib/i18n/provider'
 import type { Lesson } from '@/lib/lessons'
 import { cn } from '@/lib/utils'
 import type { StageViewMode } from './stage-toolbar'
 
-const TAB_IDS = ['overview', 'wiring', 'steps', 'specs'] as const
+const CONTENT_TABS = ['overview', 'wiring', 'steps', 'specs'] as const
+const DIAGRAM_TABS = ['schematic', 'pinout'] as const
+const TAB_IDS = [...CONTENT_TABS, ...DIAGRAM_TABS] as const
 type TabId = (typeof TAB_IDS)[number]
 
 type Props = {
@@ -16,16 +18,37 @@ type Props = {
   total: number
   stageMode: StageViewMode
   onOpenDiagram: (mode: Extract<StageViewMode, 'schematic' | 'pinout'>) => void
+  onBackToScene?: () => void
 }
 
-export function LessonPanel({ lesson, index, total, stageMode, onOpenDiagram }: Props) {
+function isDiagramTab(tab: TabId): tab is 'schematic' | 'pinout' {
+  return tab === 'schematic' || tab === 'pinout'
+}
+
+export function LessonPanel({ lesson, index, total, stageMode, onOpenDiagram, onBackToScene }: Props) {
   const { t } = useI18n()
   const [tab, setTab] = useState<TabId>('overview')
-  const tabs = TAB_IDS.map((id) => ({ id, label: t(`panel.${id}`) }))
+
+  useEffect(() => {
+    setTab('overview')
+  }, [lesson.id])
+
+  useEffect(() => {
+    if (stageMode === 'schematic' || stageMode === 'pinout') setTab(stageMode)
+    else if (isDiagramTab(tab)) setTab('overview')
+    // Only sync when stage mode changes from toolbar / other entry points.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageMode])
+
+  const selectTab = (next: TabId) => {
+    setTab(next)
+    if (isDiagramTab(next)) onOpenDiagram(next)
+    else onBackToScene?.()
+  }
 
   return (
     <section aria-label={t('panel.info')} className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--soft-shadow)]">
-      <header className="border-b border-border px-4 pb-3 pt-3.5">
+      <header className="shrink-0 border-b border-border px-4 pb-2.5 pt-3">
         <div className="flex items-center justify-between gap-2">
           <p className="font-mono text-[10px] font-semibold tracking-[0.14em] text-primary uppercase">
             {t('lab.lessonOf', {
@@ -35,27 +58,22 @@ export function LessonPanel({ lesson, index, total, stageMode, onOpenDiagram }: 
           </p>
           <p className="font-mono text-[10px] text-muted-foreground">{t('lab.systemReady')}</p>
         </div>
-        <h2 className="mt-1 text-pretty text-lg font-extrabold tracking-tight text-foreground">{lesson.title}</h2>
-        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{lesson.summary}</p>
+        <h2 className="mt-0.5 truncate text-base font-extrabold tracking-tight text-foreground">{lesson.title}</h2>
       </header>
 
-      <div role="tablist" aria-label={t('panel.tabs')} className="flex gap-0.5 overflow-x-auto border-b border-border px-2 pt-2 scrollbar-none">
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            role="tab"
-            id={`tab-${item.id}`}
-            aria-selected={tab === item.id}
-            aria-controls={`panel-${item.id}`}
-            onClick={() => setTab(item.id)}
-            className={cn(
-              'relative shrink-0 rounded-t-lg px-3 pb-2.5 pt-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground',
-              tab === item.id &&
-                'font-bold text-foreground after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary',
-            )}
-          >
-            {item.label}
-          </button>
+      <div role="tablist" aria-label={t('panel.tabs')} className="flex shrink-0 gap-0.5 overflow-x-auto border-b border-border px-1.5 pt-1.5 scrollbar-none">
+        {CONTENT_TABS.map((id) => (
+          <TabButton key={id} id={id} label={t(`panel.${id}`)} selected={tab === id} onSelect={selectTab} />
+        ))}
+        <span className="mx-0.5 my-2 w-px shrink-0 bg-border" aria-hidden />
+        {DIAGRAM_TABS.map((id) => (
+          <TabButton
+            key={id}
+            id={id}
+            label={t(id === 'schematic' ? 'panel.openSchematic' : 'panel.openPinout')}
+            selected={tab === id}
+            onSelect={selectTab}
+          />
         ))}
       </div>
 
@@ -119,68 +137,81 @@ export function LessonPanel({ lesson, index, total, stageMode, onOpenDiagram }: 
             ))}
           </dl>
         )}
-      </div>
 
-      <div className="border-t border-border bg-muted/35 p-3">
-        <p className="mb-2 px-0.5 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{t('panel.diagrams')}</p>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-          <DiagramAction
-            active={stageMode === 'schematic'}
+        {tab === 'schematic' && (
+          <DiagramGuide
             icon={CircuitBoard}
             title={t('panel.openSchematic')}
-            body={t('panel.openSchematicHint')}
-            onClick={() => onOpenDiagram('schematic')}
+            body={t('panel.schematicGuide')}
+            hint={t('panel.diagramStageHint')}
           />
-          <DiagramAction
-            active={stageMode === 'pinout'}
+        )}
+
+        {tab === 'pinout' && (
+          <DiagramGuide
             icon={Cpu}
             title={t('panel.openPinout')}
-            body={t('panel.openPinoutHint')}
-            onClick={() => onOpenDiagram('pinout')}
+            body={t('panel.pinoutGuide')}
+            hint={t('panel.diagramStageHint')}
           />
-        </div>
+        )}
       </div>
     </section>
   )
 }
 
-function DiagramAction({
-  active,
-  icon: Icon,
-  title,
-  body,
-  onClick,
+function TabButton({
+  id,
+  label,
+  selected,
+  onSelect,
 }: {
-  active: boolean
-  icon: typeof CircuitBoard
-  title: string
-  body: string
-  onClick: () => void
+  id: TabId
+  label: string
+  selected: boolean
+  onSelect: (id: TabId) => void
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      aria-pressed={active}
+      role="tab"
+      id={`tab-${id}`}
+      aria-selected={selected}
+      aria-controls={`panel-${id}`}
+      onClick={() => onSelect(id)}
       className={cn(
-        'flex w-full items-start gap-2.5 rounded-xl border px-2.5 py-2.5 text-left transition',
-        active
-          ? 'border-primary/50 bg-secondary shadow-[var(--soft-shadow)]'
-          : 'border-border bg-card hover:border-primary/35 hover:bg-secondary/60',
+        'relative shrink-0 rounded-t-lg px-2.5 pb-2 pt-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground',
+        selected && 'font-bold text-foreground after:absolute after:inset-x-1.5 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary',
       )}
     >
-      <span
-        className={cn(
-          'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border',
-          active ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-primary',
-        )}
-      >
-        <Icon className="size-4" aria-hidden />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-xs font-bold text-foreground">{title}</span>
-        <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">{body}</span>
-      </span>
+      {label}
     </button>
+  )
+}
+
+function DiagramGuide({
+  icon: Icon,
+  title,
+  body,
+  hint,
+}: {
+  icon: typeof CircuitBoard
+  title: string
+  body: string
+  hint: string
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start gap-3 rounded-2xl border border-border bg-secondary/50 p-3.5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+          <Icon className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-extrabold text-foreground">{title}</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</p>
+        </div>
+      </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>
+    </div>
   )
 }

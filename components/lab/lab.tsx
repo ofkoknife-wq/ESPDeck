@@ -182,6 +182,7 @@ export function Lab() {
                   total={lessons.length}
                   stageMode={stageMode}
                   onOpenDiagram={openDiagram}
+                  onBackToScene={() => setStageMode('scene')}
                 />
               </div>
               <div className="flex h-[420px] min-h-0 flex-col lg:h-auto lg:flex-[1.1_1_0%]">
