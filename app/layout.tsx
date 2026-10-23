@@ -1,8 +1,11 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { JetBrains_Mono, Noto_Sans_SC } from 'next/font/google'
-import { SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/lib/site'
+import { Providers } from '@/components/site/providers'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
+
+const SITE_TAGLINE_EN = 'Open the page. Get hands-on with ESP32.'
 
 const notoSansSC = Noto_Sans_SC({
   weight: ['400', '500', '700', '900'],
@@ -20,13 +23,13 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} · ESP32 实验室`,
+    default: `${SITE_NAME} · ESP32 Lab`,
     template: '%s',
   },
-  description: `${SITE_TAGLINE}。交互式 3D 课程与进阶工位：点灯、传感器、原理图、PCB，一课一件事。`,
+  description: `${SITE_TAGLINE_EN} Interactive 3D lessons and an advanced station: blink, sensors, schematics, PCB—one idea per lesson.`,
   applicationName: SITE_NAME,
   authors: [{ name: 'Pixzens', url: SITE_URL }],
-  keywords: ['ESP32', 'ESPDeck', '硬件入门', '嵌入式', '物联网', 'Arduino', '3D 实验台', '原理图'],
+  keywords: ['ESP32', 'ESPDeck', 'embedded', 'IoT', 'Arduino', 'hardware lab', 'schematic', 'PCB'],
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -40,18 +43,19 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: `${SITE_NAME} · ESP32 实验室`,
-    description: SITE_TAGLINE,
+    title: `${SITE_NAME} · ESP32 Lab`,
+    description: SITE_TAGLINE_EN,
     url: SITE_URL,
     siteName: SITE_NAME,
-    locale: 'zh_CN',
+    locale: 'en_US',
+    alternateLocale: ['zh_CN'],
     type: 'website',
     images: [
       {
         url: '/og-image.svg',
         width: 1280,
         height: 720,
-        alt: 'ESPDeck — ESP32 实验室',
+        alt: 'ESPDeck — ESP32 Lab',
       },
       {
         url: '/logo.png',
@@ -63,8 +67,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} · ESP32 实验室`,
-    description: SITE_TAGLINE,
+    title: `${SITE_NAME} · ESP32 Lab`,
+    description: SITE_TAGLINE_EN,
     images: ['/og-image.svg'],
   },
   alternates: {
@@ -84,10 +88,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="zh-CN" className={`bg-background ${notoSansSC.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`bg-background ${notoSansSC.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased">
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <Providers>
+          {children}
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+        </Providers>
       </body>
     </html>
   )

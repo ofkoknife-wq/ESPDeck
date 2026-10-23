@@ -4,6 +4,7 @@ import { Check, Copy, Eye, EyeOff, Play, Square } from 'lucide-react'
 import { useState } from 'react'
 import { runCodeTests } from '@/lib/code-tests'
 import type { CodeChallenge } from '@/lib/advanced-types'
+import { useI18n } from '@/lib/i18n/provider'
 import type { Phase } from '@/lib/use-simulation'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +23,7 @@ export function CodeChallengePanel({
   onRun: () => void
   onStop: () => void
 }) {
+  const { t } = useI18n()
   const results = runCodeTests(code, challenge.tests)
   const busy = phase !== 'idle'
   const [showAnswer, setShowAnswer] = useState(false)
@@ -56,7 +58,7 @@ export function CodeChallengePanel({
         onChange={(event) => onChange(event.target.value)}
         spellCheck={false}
         className="h-44 min-h-40 w-full resize-y rounded-xl bg-[#020826] p-3 font-mono text-[12px] leading-5 text-[#fffffe] outline-none ring-primary/30 focus:ring-2"
-        aria-label="代码挑战编辑器"
+        aria-label={t('code.editor')}
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
@@ -68,7 +70,7 @@ export function CodeChallengePanel({
             )}
           >
             {busy ? <Square className="size-3.5 fill-current" /> : <Play className="size-3.5 fill-current" />}
-            {busy ? '停止' : '运行仿真'}
+            {busy ? t('code.stop') : t('code.runSim')}
           </button>
           <button
             type="button"
@@ -76,24 +78,27 @@ export function CodeChallengePanel({
             className="flex h-8 items-center gap-1.5 rounded-md border px-3 text-sm font-bold hover:bg-secondary"
           >
             {showAnswer ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-            {showAnswer ? '收起答案' : '显示答案'}
+            {showAnswer ? t('code.hideAnswer') : t('code.showAnswer')}
           </button>
         </div>
         <p className="font-mono text-xs">
-          {results.filter((item) => item.ok).length}/{results.length} 项测试通过
+          {t('code.testsPassed', {
+            ok: results.filter((item) => item.ok).length,
+            total: results.length,
+          })}
         </p>
       </div>
       <ul className="space-y-1 text-xs">
         {results.map((item) => (
           <li key={item.name} className={item.ok ? 'text-emerald-700' : 'text-destructive'}>
-            {item.ok ? '通过' : '未通过'} · {item.name}
+            {item.ok ? t('code.pass') : t('code.fail')} · {item.name}
           </li>
         ))}
       </ul>
       {showAnswer && (
         <div className="space-y-3 rounded-xl border bg-secondary/40 p-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">分步提示</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('code.stepsTitle')}</p>
             <ol className="mt-2 space-y-2">
               {challenge.guide.map((step, index) => (
                 <li key={step.title} className="text-sm">
@@ -107,7 +112,7 @@ export function CodeChallengePanel({
           </div>
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">参考答案</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('code.solutionTitle')}</p>
               <div className="flex gap-1.5">
                 <button
                   type="button"
@@ -115,14 +120,14 @@ export function CodeChallengePanel({
                   className="flex h-7 items-center gap-1 rounded-md border bg-card px-2 text-[11px] font-bold hover:bg-muted"
                 >
                   {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-                  {copied ? '已复制' : '复制代码'}
+                  {copied ? t('code.copied') : t('code.copyCode')}
                 </button>
                 <button
                   type="button"
                   onClick={fillSolution}
                   className="flex h-7 items-center gap-1 rounded-md bg-foreground px-2 text-[11px] font-bold text-background"
                 >
-                  填入编辑器
+                  {t('code.fillEditor')}
                 </button>
               </div>
             </div>

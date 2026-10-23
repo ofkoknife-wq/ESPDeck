@@ -1,6 +1,7 @@
 'use client'
 
 import { Lightbulb, LightbulbOff, Volume2, VolumeX, Wifi } from 'lucide-react'
+import { useI18n } from '@/lib/i18n/provider'
 import type { Lesson } from '@/lib/lessons'
 import type { Phase, SimInputs, SimOutputs } from '@/lib/use-simulation'
 import { cn } from '@/lib/utils'
@@ -69,17 +70,18 @@ function Slider({
 }
 
 export function SimControls({ lesson, phase, inputs, outputs, setInput }: Props) {
+  const { t } = useI18n()
   const running = phase === 'running'
   let body: React.ReactNode = null
 
   switch (lesson.id) {
     case 'button':
-      body = <HoldButton label="按住按钮" active={inputs.button} onChange={(v) => setInput('button', v)} />
+      body = <HoldButton label={t('sim.holdButton')} active={inputs.button} onChange={(v) => setInput('button', v)} />
       break
     case 'touch':
       body = (
         <div className="flex flex-col gap-2">
-          <HoldButton label="触摸铜片" active={inputs.touch} onChange={(v) => setInput('touch', v)} />
+          <HoldButton label={t('sim.touch')} active={inputs.touch} onChange={(v) => setInput('touch', v)} />
           <p className="font-mono text-xs text-muted-foreground">
             touchRead = <span className="font-bold text-foreground">{running ? outputs.touchValue : '--'}</span>
           </p>
@@ -89,7 +91,7 @@ export function SimControls({ lesson, phase, inputs, outputs, setInput }: Props)
     case 'pot':
       body = (
         <Slider
-          label="旋转电位器"
+          label={t('sim.pot')}
           value={inputs.pot}
           min={0}
           max={4095}
@@ -101,7 +103,7 @@ export function SimControls({ lesson, phase, inputs, outputs, setInput }: Props)
     case 'dht':
       body = (
         <Slider
-          label="环境温度"
+          label={t('sim.temp')}
           value={inputs.temp}
           min={10}
           max={40}
@@ -119,7 +121,7 @@ export function SimControls({ lesson, phase, inputs, outputs, setInput }: Props)
           className="flex h-10 w-full items-center justify-center gap-2 rounded-md border bg-background text-sm font-bold"
         >
           {inputs.sound ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
-          {inputs.sound ? '声音已开启' : '声音已关闭'}
+          {inputs.sound ? t('sim.soundOn') : t('sim.soundOff')}
         </button>
       )
       break
@@ -130,7 +132,9 @@ export function SimControls({ lesson, phase, inputs, outputs, setInput }: Props)
             <span className="font-bold">192.168.1.42</span>
             <Wifi className={cn('size-3.5', outputs.wifi ? 'text-accent' : 'text-muted-foreground')} aria-hidden="true" />
           </div>
-          <p className="text-xs text-muted-foreground">{outputs.wifi ? '已连接到 ESP32' : running || phase === 'uploading' ? '等待 ESP32 连接网络…' : '请先运行程序'}</p>
+          <p className="text-xs text-muted-foreground">
+            {outputs.wifi ? t('sim.wifiConnected') : running || phase === 'uploading' ? t('sim.wifiWaiting') : t('sim.wifiRunFirst')}
+          </p>
           <div className="grid grid-cols-2 gap-2">
             <button
               disabled={!outputs.wifi}
@@ -166,7 +170,7 @@ export function SimControls({ lesson, phase, inputs, outputs, setInput }: Props)
         />
         <div>
           <p className="text-sm font-bold leading-snug text-foreground">
-            {running ? '程序运行中' : phase === 'uploading' ? '正在上传…' : '准备就绪'}
+            {running ? t('sim.running') : phase === 'uploading' ? t('sim.uploading') : t('sim.ready')}
           </p>
           <p className="text-xs leading-relaxed text-muted-foreground">{lesson.hint}</p>
         </div>

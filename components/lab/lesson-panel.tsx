@@ -2,50 +2,42 @@
 
 import { ArrowRight } from 'lucide-react'
 import { useState } from 'react'
+import { useI18n } from '@/lib/i18n/provider'
 import type { Lesson } from '@/lib/lessons'
 import { cn } from '@/lib/utils'
 
-const TABS = [
-  { id: 'overview', label: '概述' },
-  { id: 'wiring', label: '接线' },
-  { id: 'steps', label: '步骤' },
-  { id: 'specs', label: '规格' },
-] as const
-
-type TabId = (typeof TABS)[number]['id']
+const TAB_IDS = ['overview', 'wiring', 'steps', 'specs'] as const
+type TabId = (typeof TAB_IDS)[number]
 
 export function LessonPanel({ lesson, index }: { lesson: Lesson; index: number }) {
+  const { t } = useI18n()
   const [tab, setTab] = useState<TabId>('overview')
+  const tabs = TAB_IDS.map((id) => ({ id, label: t(`panel.${id}`) }))
 
   return (
-    <section aria-label="课程信息" className="flex min-h-0 flex-col rounded-xl border bg-card shadow-sm">
-      <div role="tablist" aria-label="课程内容" className="flex gap-1 border-b px-2 pt-2">
-        {TABS.map((t) => (
+    <section aria-label={t('panel.info')} className="flex min-h-0 flex-col rounded-xl border bg-card shadow-sm">
+      <div role="tablist" aria-label={t('panel.tabs')} className="flex gap-1 border-b px-2 pt-2">
+        {tabs.map((item) => (
           <button
-            key={t.id}
+            key={item.id}
             role="tab"
-            id={`tab-${t.id}`}
-            aria-selected={tab === t.id}
-            aria-controls={`panel-${t.id}`}
-            onClick={() => setTab(t.id)}
+            id={`tab-${item.id}`}
+            aria-selected={tab === item.id}
+            aria-controls={`panel-${item.id}`}
+            onClick={() => setTab(item.id)}
             className={cn(
               'relative px-3 pb-2.5 pt-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground',
-              tab === t.id &&
+              tab === item.id &&
                 'font-bold text-foreground after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary',
             )}
           >
-            {t.label}
+            {item.label}
           </button>
         ))}
       </div>
 
-      <div
-        role="tabpanel"
-        id={`panel-${tab}`}
-        aria-labelledby={`tab-${tab}`}
-        className="min-h-0 flex-1 overflow-y-auto p-4"
-      >
-        <p className="font-mono text-xs font-bold tracking-widest text-primary">第 {index + 1} 课</p>
+      <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="min-h-0 flex-1 overflow-y-auto p-4">
+        <p className="font-mono text-xs font-bold tracking-widest text-primary">{t('lab.lessonN', { n: index + 1 })}</p>
         <h2 className="mt-1 text-pretty text-xl font-black text-foreground">{lesson.title}</h2>
 
         {tab === 'overview' && (
@@ -60,9 +52,7 @@ export function LessonPanel({ lesson, index }: { lesson: Lesson; index: number }
                   <span className="text-sm leading-relaxed text-foreground">
                     {p.text}
                     {p.code && (
-                      <code className="ml-1.5 rounded bg-accent/10 px-1.5 py-0.5 font-mono text-xs text-accent">
-                        {p.code}
-                      </code>
+                      <code className="ml-1.5 rounded bg-accent/10 px-1.5 py-0.5 font-mono text-xs text-accent">{p.code}</code>
                     )}
                   </span>
                 </li>

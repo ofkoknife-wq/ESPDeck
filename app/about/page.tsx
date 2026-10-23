@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { DocShell } from '@/components/site/doc-shell'
-import { ABOUT_CONTACT, INFO_PAGES } from '@/lib/info-pages'
-import { SITE_URL, SUPPORT_EMAIL } from '@/lib/site'
+import { InfoArticle } from '@/components/site/info-article'
+import { INFO_PAGES_EN } from '@/lib/i18n/info-copy-en'
 
-const page = INFO_PAGES.about
+const page = INFO_PAGES_EN.about
 
 export const metadata: Metadata = {
   title: page.seoTitle,
@@ -14,39 +13,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <DocShell>
-      <article className="prose-lab">
-        <p className="eyebrow">开发故事</p>
-        <h1>{page.title}</h1>
-        <p className="lead">{page.lead}</p>
-        {page.sections.map((section) => (
-          <section key={section.heading}>
-            <h2>{section.heading}</h2>
-            {section.paragraphs.map((paragraph) => (
-              <p key={paragraph.slice(0, 24)}>{paragraph}</p>
-            ))}
-          </section>
-        ))}
-        <section>
-          <h2>{ABOUT_CONTACT.heading}</h2>
-          <p>{ABOUT_CONTACT.intro}</p>
-          <ul className="about-contact">
-            <li>
-              {ABOUT_CONTACT.siteLabel}
-              <a href={SITE_URL} target="_blank" rel="noopener noreferrer">
-                espdeck.pixzens.com
-              </a>
-            </li>
-            <li>
-              {ABOUT_CONTACT.mailLabel}
-              <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
-            </li>
-          </ul>
-          <p>
-            <Link href="/support">{ABOUT_CONTACT.supportLink}</Link>
-          </p>
-        </section>
-        <p className="updated">最后更新：2026 年 10 月</p>
-      </article>
+      <InfoArticle slug="about" showContact />
     </DocShell>
   )
 }

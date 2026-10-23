@@ -1,18 +1,30 @@
+'use client'
+
 import Link from 'next/link'
-import { FOOTER_LINKS, SITE_NAME, SITE_TAGLINE } from '@/lib/site'
+import { useI18n } from '@/lib/i18n/provider'
+import { SITE_NAME } from '@/lib/site'
+
+const LINKS = [
+  { href: '/about', key: 'footer.about' },
+  { href: '/guide', key: 'footer.guide' },
+  { href: '/support', key: 'footer.support' },
+  { href: '/terms', key: 'footer.terms' },
+  { href: '/privacy', key: 'footer.privacy' },
+] as const
 
 export function SiteFooter() {
+  const { t } = useI18n()
   return (
     <footer className="site-footer">
-      <nav aria-label="页脚导航" className="site-footer-nav">
-        {FOOTER_LINKS.map((item) => (
+      <nav aria-label={t('footer.nav')} className="site-footer-nav">
+        {LINKS.map((item) => (
           <Link key={item.href} href={item.href}>
-            {item.label}
+            {t(item.key)}
           </Link>
         ))}
       </nav>
       <p>
-        © {new Date().getFullYear()} {SITE_NAME} · {SITE_TAGLINE}
+        © {new Date().getFullYear()} {SITE_NAME} · {t('footer.tagline')}
       </p>
     </footer>
   )

@@ -3,9 +3,11 @@
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import type { Quiz } from '@/lib/advanced-types'
+import { useI18n } from '@/lib/i18n/provider'
 import { cn } from '@/lib/utils'
 
 export function QuizPanel({ quiz, savedScore, onScored }: { quiz: Quiz; savedScore: number; onScored: (score: number) => void }) {
+  const { t } = useI18n()
   const [picks, setPicks] = useState<number[]>(() => quiz.questions.map(() => -1))
   const [submitted, setSubmitted] = useState(savedScore > 0)
   const [reveal, setReveal] = useState(false)
@@ -43,7 +45,7 @@ export function QuizPanel({ quiz, savedScore, onScored }: { quiz: Quiz; savedSco
                 />
                 {choice}
                 {showKey && ci === question.answer && (
-                  <span className="ml-auto font-mono text-[10px] font-bold text-emerald-700">正确答案</span>
+                  <span className="ml-auto font-mono text-[10px] font-bold text-emerald-700">{t('quiz.correct')}</span>
                 )}
               </label>
             ))}
@@ -60,7 +62,7 @@ export function QuizPanel({ quiz, savedScore, onScored }: { quiz: Quiz; savedSco
           }}
           className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
         >
-          提交测验
+          {t('quiz.submit')}
         </button>
         <button
           type="button"
@@ -68,12 +70,16 @@ export function QuizPanel({ quiz, savedScore, onScored }: { quiz: Quiz; savedSco
           className="flex items-center gap-1.5 rounded-xl border px-4 py-2 text-sm font-bold hover:bg-secondary"
         >
           {reveal ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-          {reveal ? '收起答案' : '显示答案'}
+          {reveal ? t('quiz.hideAnswer') : t('quiz.showAnswer')}
         </button>
       </div>
       {(submitted || savedScore > 0) && (
         <p className="text-sm font-bold">
-          得分 {submitted ? score : savedScore} / {quiz.questions.length} · 及格线 {quiz.passScore}
+          {t('quiz.score', {
+            score: submitted ? score : savedScore,
+            total: quiz.questions.length,
+            pass: quiz.passScore,
+          })}
         </p>
       )}
     </div>

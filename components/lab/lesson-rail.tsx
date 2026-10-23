@@ -1,18 +1,21 @@
 'use client'
 
-import { CircleCheck, ChevronLeft, ChevronRight, Layers } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CircleCheck, Layers } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { LESSONS, type LessonId } from '@/lib/lessons'
+import { useI18n } from '@/lib/i18n/provider'
+import type { Lesson, LessonId } from '@/lib/lessons'
 import { cn } from '@/lib/utils'
 
 type Props = {
+  lessons: Lesson[]
   activeIndex: number
   completed: LessonId[]
   onSelect: (index: number) => void
   onOpenAdvanced?: () => void
 }
 
-export function LessonRail({ activeIndex, completed, onSelect, onOpenAdvanced }: Props) {
+export function LessonRail({ lessons, activeIndex, completed, onSelect, onOpenAdvanced }: Props) {
+  const { t } = useI18n()
   const listRef = useRef<HTMLOListElement>(null)
 
   useEffect(() => {
@@ -23,31 +26,37 @@ export function LessonRail({ activeIndex, completed, onSelect, onOpenAdvanced }:
   }, [activeIndex])
 
   return (
-    <nav aria-label="课程列表" className="lesson-rail flex min-h-0 flex-col gap-4 border-b border-border bg-card/70 px-4 py-4 lg:w-80 lg:shrink-0 lg:border-b-0 lg:border-r lg:px-8 lg:py-6">
+    <nav
+      aria-label={t('lab.courseList')}
+      className="lesson-rail flex min-h-0 flex-col gap-4 border-b border-border bg-card/70 px-4 py-4 lg:w-80 lg:shrink-0 lg:border-b-0 lg:border-r lg:px-8 lg:py-6"
+    >
       <div className="grid grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-2 text-center">
         <button
           onClick={() => onSelect(Math.max(0, activeIndex - 1))}
           disabled={activeIndex === 0}
           className="flex size-8 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:-translate-y-0.5 hover:bg-secondary disabled:pointer-events-none disabled:opacity-30"
-          aria-label="上一课"
+          aria-label={t('lab.prevLesson')}
         >
           <ChevronLeft className="size-4" />
         </button>
         <div className="min-w-0">
-          <p className="eyebrow">学习路径</p>
-          <h2 className="text-sm font-black tracking-widest">课程路线</h2>
+          <p className="eyebrow">{t('lab.learningPath')}</p>
+          <h2 className="text-sm font-black tracking-widest">{t('lab.courseRoute')}</h2>
         </div>
         <button
-          onClick={() => onSelect(Math.min(LESSONS.length - 1, activeIndex + 1))}
-          disabled={activeIndex === LESSONS.length - 1}
+          onClick={() => onSelect(Math.min(lessons.length - 1, activeIndex + 1))}
+          disabled={activeIndex === lessons.length - 1}
           className="ml-auto flex size-8 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:-translate-y-0.5 hover:bg-secondary disabled:pointer-events-none disabled:opacity-30"
-          aria-label="下一课"
+          aria-label={t('lab.nextLesson')}
         >
           <ChevronRight className="size-4" />
         </button>
       </div>
-      <ol ref={listRef} className="scrollbar-none relative flex min-h-0 snap-x gap-2 overflow-x-auto pb-1 lg:flex-1 lg:flex-col lg:items-center lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1">
-        {LESSONS.map((lesson, i) => {
+      <ol
+        ref={listRef}
+        className="scrollbar-none relative flex min-h-0 snap-x gap-2 overflow-x-auto pb-1 lg:flex-1 lg:flex-col lg:items-center lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1"
+      >
+        {lessons.map((lesson, i) => {
           const active = i === activeIndex
           const done = completed.includes(lesson.id)
           return (
@@ -70,8 +79,8 @@ export function LessonRail({ activeIndex, completed, onSelect, onOpenAdvanced }:
                 </span>
                 <span className="flex min-w-0 flex-col">
                   <span className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
-                    第 {i + 1} 课
-                    {done && <CircleCheck className="size-3.5 text-accent" aria-label="已完成" />}
+                    {t('lab.lessonN', { n: i + 1 })}
+                    {done && <CircleCheck className="size-3.5 text-accent" aria-label={t('lab.done')} />}
                   </span>
                   <span className="truncate text-sm font-bold text-foreground">{lesson.title}</span>
                 </span>
@@ -89,8 +98,8 @@ export function LessonRail({ activeIndex, completed, onSelect, onOpenAdvanced }:
                 <Layers className="size-5" aria-hidden="true" />
               </span>
               <span className="flex min-w-0 flex-col">
-                <span className="font-mono text-xs text-muted-foreground">接下来</span>
-                <span className="truncate text-sm font-bold text-foreground">进阶工作台</span>
+                <span className="font-mono text-xs text-muted-foreground">{t('lab.nextUp')}</span>
+                <span className="truncate text-sm font-bold text-foreground">{t('lab.advancedEntry')}</span>
               </span>
             </button>
           </li>

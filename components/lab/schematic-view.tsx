@@ -1,6 +1,7 @@
 'use client'
 
 import type { CircuitGraph, Fault } from '@/lib/advanced-types'
+import { useI18n } from '@/lib/i18n/provider'
 import { cn } from '@/lib/utils'
 
 const KIND_FILL: Record<string, string> = {
@@ -32,11 +33,12 @@ export function SchematicView({
   onSelectNet: (id: string) => void
   onSelectPart: (id: string) => void
 }) {
+  const { t } = useI18n()
   const part = (id: string) => graph.parts.find((item) => item.id === id)
   const sizeOf = (kind: string) => (kind === 'mcu' ? BOX.mcu : BOX.default)
 
   return (
-    <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" className="h-full w-full" role="img" aria-label="原理图">
+    <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" className="h-full w-full" role="img" aria-label={t('views.schematicAria')}>
       <defs>
         <pattern id="sch-grid" width="20" height="20" patternUnits="userSpaceOnUse">
           <path d="M20 0H0V20" fill="none" stroke="#d8cbb8" strokeWidth="0.8" />
@@ -70,7 +72,7 @@ export function SchematicView({
             />
             <text x={midX + 6} y={(y1 + y2) / 2 - 6} fontSize="11" fill="#716040">
               {net.label}
-              {broken ? ' · 开路' : ''}
+              {broken ? t('views.openCircuit') : ''}
             </text>
           </g>
         )

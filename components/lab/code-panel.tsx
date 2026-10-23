@@ -3,6 +3,7 @@
 import { Check, Copy, Play, Square, Terminal, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { TOKEN_CLASS, tokenizeLine } from '@/lib/highlight'
+import { useI18n } from '@/lib/i18n/provider'
 import type { LogLine, Phase } from '@/lib/use-simulation'
 import { cn } from '@/lib/utils'
 
@@ -15,10 +16,10 @@ type Props = {
   onCloseMonitor: () => void
 }
 
-const PHASE_LABEL: Record<Phase, string> = { idle: '已停止', uploading: '上传中', running: '运行中' }
-
 export function CodePanel({ code, phase, logs, onRun, onStop, onCloseMonitor }: Props) {
+  const { t } = useI18n()
   const [copied, setCopied] = useState(false)
+  const phaseLabel = { idle: t('code.idle'), uploading: t('code.uploading'), running: t('code.running') }
   const lines = useMemo(() => code.split('\n').map(tokenizeLine), [code])
   const logRef = useRef<HTMLDivElement>(null)
   const showMonitor = phase !== 'idle' || logs.length > 0
@@ -39,14 +40,14 @@ export function CodePanel({ code, phase, logs, onRun, onStop, onCloseMonitor }: 
   const busy = phase !== 'idle'
 
   return (
-    <section aria-label="动手试试" className="flex min-w-0 min-h-0 w-full max-w-full flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
+    <section aria-label={t('panel.tryIt')} className="flex min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
       <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5">
-        <h2 className="text-sm font-bold">动手试试</h2>
+        <h2 className="text-sm font-bold">{t('panel.tryIt')}</h2>
         <div className="flex items-center gap-1.5">
           <button
             onClick={copy}
             className="flex size-8 items-center justify-center rounded-md border bg-background text-foreground transition-colors hover:bg-muted"
-            aria-label={copied ? '已复制' : '复制代码'}
+            aria-label={copied ? t('code.copied') : t('code.copy')}
           >
             {copied ? <Check className="size-4 text-accent" /> : <Copy className="size-4" />}
           </button>
@@ -64,7 +65,7 @@ export function CodePanel({ code, phase, logs, onRun, onStop, onCloseMonitor }: 
             ) : (
               <Play className="size-3.5 fill-current" aria-hidden="true" />
             )}
-            {busy ? '停止' : '运行'}
+            {busy ? t('code.stop') : t('code.run')}
           </button>
         </div>
       </div>
@@ -92,7 +93,7 @@ export function CodePanel({ code, phase, logs, onRun, onStop, onCloseMonitor }: 
             <div className="flex items-center justify-between px-3 py-1.5">
               <div className="flex items-center gap-2 font-mono text-xs">
                 <Terminal className="size-3.5" aria-hidden="true" />
-                <span className="font-bold">串口监视器</span>
+                <span className="font-bold">{t('instruments.serial')}</span>
                 <span className="text-background/50">115200 baud</span>
                 <span
                   className={cn(
@@ -103,13 +104,13 @@ export function CodePanel({ code, phase, logs, onRun, onStop, onCloseMonitor }: 
                   )}
                 >
                   {phase !== 'idle' && <span className="size-1.5 animate-pulse rounded-full bg-current" />}
-                  {PHASE_LABEL[phase]}
+                  {phaseLabel[phase]}
                 </span>
               </div>
               <button
                 onClick={onCloseMonitor}
                 className="flex size-6 items-center justify-center rounded text-background/70 hover:bg-background/10 hover:text-background"
-                aria-label="关闭串口监视器"
+                aria-label={t('code.closeMonitor')}
               >
                 <X className="size-3.5" />
               </button>

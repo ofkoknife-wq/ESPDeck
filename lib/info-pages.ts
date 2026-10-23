@@ -5,6 +5,7 @@ export type InfoSection = { heading: string; paragraphs: string[] }
 export type InfoPage = {
   slug: 'about' | 'guide' | 'terms' | 'privacy'
   title: string
+  eyebrow: string
   lead: string
   sections: InfoSection[]
   seoTitle: string
@@ -15,6 +16,7 @@ export const INFO_PAGES: Record<InfoPage['slug'], InfoPage> = {
   about: {
     slug: 'about',
     title: '关于我们',
+    eyebrow: '开发故事',
     lead: 'ESPDeck 是给新手练手的 ESP32 实验室：一课一件事，打开网页就能练。',
     seoTitle: '关于我们 · 开发故事 · ESPDeck',
     seoDescription: 'ESPDeck 开发故事：受推特上 Arduino 入门网页启发，个人开发者为新手搭的 ESP32 练手站。官网 espdeck.pixzens.com。',
@@ -38,6 +40,7 @@ export const INFO_PAGES: Record<InfoPage['slug'], InfoPage> = {
   guide: {
     slug: 'guide',
     title: '使用指南',
+    eyebrow: '怎么用',
     lead: '五分钟走进实验室：先跑通一课，再决定要不要进工位。',
     seoTitle: '使用指南 · ESPDeck',
     seoDescription: 'ESPDeck 使用指南：零基础 3D 实验台、跳课学习、进阶原理图/PCB、故障注入、代码补全与测验。',
@@ -82,6 +85,7 @@ export const INFO_PAGES: Record<InfoPage['slug'], InfoPage> = {
   terms: {
     slug: 'terms',
     title: '服务条款',
+    eyebrow: '条款',
     lead: 'ESPDeck 是免费的个人学习网站。使用即表示你理解下面这些边界。',
     seoTitle: '服务条款 · ESPDeck',
     seoDescription: 'ESPDeck 服务条款：免费个人学习工具，网页仿真不能代替数据手册和真实硬件安全规范。',
@@ -118,6 +122,7 @@ export const INFO_PAGES: Record<InfoPage['slug'], InfoPage> = {
   privacy: {
     slug: 'privacy',
     title: '隐私政策',
+    eyebrow: '隐私',
     lead: '实验室不要求注册。练习默认留在这台设备的浏览器里。',
     seoTitle: '隐私政策 · ESPDeck',
     seoDescription: `ESPDeck 隐私政策：进度保存在本地浏览器。反馈邮箱 ${SUPPORT_EMAIL}。`,
@@ -158,12 +163,14 @@ export const SUPPORT_COPY = {
   seoTitle: '赞赏支持 · ESPDeck',
   seoDescription: `如果 ESPDeck 帮你练起了 ESP32，欢迎用微信或 Ko-fi 支持。${SITE_TAGLINE}。`,
   back: '返回实验台',
+  eyebrow: '请一杯咖啡',
   greetingTitle: '谢谢你愿意点开这里',
   greetingP1: '如果这间实验室对你有用，欢迎用赞赏表达支持。',
   greetingP2: '我是个人开发者，你的支持会变成继续拆课、修 3D、补工位的力气——也可以当成请我喝杯咖啡。',
   waysTitle: '支持方式',
   wechatTitle: '微信赞赏',
   wechatDesc: '扫描上方二维码，用微信打赏。',
+  wechatAlt: '微信赞赏码',
   kofiTitle: 'Ko-fi',
   kofiDesc: '海外朋友也可以通过 Ko-fi 支持。',
   kofiButton: '前往 Ko-fi 支持',

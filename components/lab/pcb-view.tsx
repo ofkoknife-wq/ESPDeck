@@ -1,6 +1,7 @@
 'use client'
 
 import type { CircuitGraph, Fault } from '@/lib/advanced-types'
+import { useI18n } from '@/lib/i18n/provider'
 
 export function PcbView({
   graph,
@@ -15,10 +16,11 @@ export function PcbView({
   onSelectNet: (id: string) => void
   onSelectPart: (id: string) => void
 }) {
+  const { t } = useI18n()
   const part = (id: string) => graph.parts.find((item) => item.id === id)
 
   return (
-    <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" className="h-full w-full" role="img" aria-label="PCB 俯视图">
+    <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" className="h-full w-full" role="img" aria-label={t('views.pcbAria')}>
       <defs>
         <pattern id="pcb-grid" width="12" height="12" patternUnits="userSpaceOnUse">
           <circle cx="1" cy="1" r="0.7" fill="#1f5a3c" />
@@ -60,13 +62,13 @@ export function PcbView({
           )}
           {fault?.partId === item.id && (
             <text x={item.x} y={item.y - 8} fontSize="11" fill="#f25042">
-              检查此封装
+              {t('views.inspectFootprint')}
             </text>
           )}
         </g>
       ))}
       <text x="36" y="48" fontSize="12" fill="#8fbc8f">
-        TOP · 3.3V 覆铜 · 滚轮缩放 · 拖动平移 · 点击走线
+        {t('views.pcbHint')}
       </text>
     </svg>
   )

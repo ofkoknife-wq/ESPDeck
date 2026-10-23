@@ -3,87 +3,62 @@
 import { Check, Coffee, Share2, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/lib/site'
+import { useI18n } from '@/lib/i18n/provider'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
 import { THANKS_EVENT } from '@/lib/thanks'
 
-type Product = {
+type ProductBase = {
   name: string
   url: string
-  cta: string
-  badge: string
-  tagline: string
+  ctaKey: string
+  tagKey: string
   gradient: string
   border: string
 }
 
-const PRODUCTS: Product[] = [
+const PRODUCTS: ProductBase[] = [
   {
     name: 'PinyinDock',
     url: 'https://pinyindock.pixzens.com/',
-    cta: '试试拼音坞',
-    badge: '免费',
-    tagline: '一篇课文，一键备齐注音阅读、听写与练习纸。',
+    ctaKey: 'thanks.tryPinyin',
+    tagKey: 'thanks.pinyinTag',
     gradient: 'linear-gradient(135deg, #1d3557 0%, #457b9d 55%, #e63946 160%)',
     border: '#1d3557',
   },
   {
     name: 'Solfist',
     url: 'https://solfist.pixzens.com/',
-    cta: '试试 Solfist',
-    badge: '免费',
-    tagline: '中小学视唱练耳备课台：能生成、能播、能印。',
+    ctaKey: 'thanks.trySolfist',
+    tagKey: 'thanks.solfistTag',
     gradient: 'linear-gradient(135deg, #1c3a32 0%, #2f6b5a 55%, #c4a35a 160%)',
     border: '#163029',
   },
   {
     name: 'PaperMe',
     url: 'https://paperme.pixzens.com/',
-    cta: '试试 PaperMe',
-    badge: '免费',
-    tagline: '自定义打印纸张模板，笔记、学习、创作都好用。',
+    ctaKey: 'thanks.tryPaperMe',
+    tagKey: 'thanks.papermeTag',
     gradient: 'linear-gradient(135deg, #344F1F 0%, #5a7a3a 55%, #F4991A 160%)',
     border: '#2a4018',
   },
   {
     name: 'FolkStitch',
     url: 'https://folkstitch.pixzens.com/',
-    cta: '试试 FolkStitch',
-    badge: '免费',
-    tagline: '照片一键变十字绣图纸，DMC 色号，本地处理不上传。',
+    ctaKey: 'thanks.tryFolkStitch',
+    tagKey: 'thanks.folkTag',
     gradient: 'linear-gradient(135deg, #078080 0%, #0a9a9a 55%, #f45d48 160%)',
     border: '#067070',
   },
 ]
 
-const COPY: Record<string, { title: string; body: string }> = {
-  'milestone-5': {
-    title: '五节课练下来了',
-    body: '点灯、按钮这些台阶已经踩过了。如果 ESPDeck 对你有用，欢迎请开发者喝杯咖啡。',
-  },
-  'milestone-10': {
-    title: '十节课了',
-    body: '传感器和显示也上手了。愿意的话，赞赏会变成下一课更清楚的台阶。',
-  },
-  'milestone-15': {
-    title: '十五节课',
-    body: '你已经走完半程基础路线。继续跳着学也行，进阶工位随时能进。',
-  },
-  'milestone-20': {
-    title: '二十节课',
-    body: '越练越熟。若实验室帮到你，欢迎打赏支持个人开发者。',
-  },
-  'milestone-25': {
-    title: '二十五节课',
-    body: '再几课就走完零基础了。感谢陪练到这里。',
-  },
-  'all-basic': {
-    title: '零基础路线走完了',
-    body: '三十课练下来不容易。欢迎打赏支持，或从课程列表末尾进入进阶工作台。',
-  },
-  default: {
-    title: '又往前走了一步',
-    body: '如果 ESPDeck 帮你练起了 ESP32，欢迎请开发者喝杯咖啡，让它继续免费、继续改。',
-  },
+const REASON_KEYS: Record<string, { title: string; body: string }> = {
+  'milestone-5': { title: 'thanks.m5Title', body: 'thanks.m5Body' },
+  'milestone-10': { title: 'thanks.m10Title', body: 'thanks.m10Body' },
+  'milestone-15': { title: 'thanks.m15Title', body: 'thanks.m15Body' },
+  'milestone-20': { title: 'thanks.m20Title', body: 'thanks.m20Body' },
+  'milestone-25': { title: 'thanks.m25Title', body: 'thanks.m25Body' },
+  'all-basic': { title: 'thanks.allTitle', body: 'thanks.allBody' },
+  default: { title: 'thanks.defaultTitle', body: 'thanks.defaultBody' },
 }
 
 export function ThanksHost() {
@@ -102,11 +77,12 @@ export function ThanksHost() {
 }
 
 function ThanksModal({ reason, onClose }: { reason: string | null; onClose: () => void }) {
+  const { t } = useI18n()
   const product = useMemo(() => {
     if (!reason) return PRODUCTS[0]
     return PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)]
   }, [reason])
-  const copy = COPY[reason ?? ''] ?? COPY.default
+  const keys = REASON_KEYS[reason ?? ''] ?? REASON_KEYS.default
 
   useEffect(() => {
     if (!reason) return
@@ -125,7 +101,7 @@ function ThanksModal({ reason, onClose }: { reason: string | null; onClose: () =
   if (!reason) return null
 
   const share = async () => {
-    const text = `推荐 ESPDeck —— ${SITE_TAGLINE}。给新手练手的 ESP32 实验室。`
+    const text = t('thanks.shareText', { tagline: t('footer.tagline') })
     try {
       if (navigator.share) {
         await navigator.share({ title: SITE_NAME, text, url: SITE_URL })
@@ -150,20 +126,20 @@ function ThanksModal({ reason, onClose }: { reason: string | null; onClose: () =
         aria-labelledby="thanks-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <button type="button" className="thanks-close" onClick={onClose} aria-label="关闭">
+        <button type="button" className="thanks-close" onClick={onClose} aria-label={t('thanks.close')}>
           <X className="size-4" aria-hidden />
         </button>
         <div className="thanks-hero">
           <div className="thanks-logo-wrap">
             <Check className="size-5" strokeWidth={3} />
           </div>
-          <h2 id="thanks-title">{copy.title}</h2>
-          <p>{copy.body}</p>
+          <h2 id="thanks-title">{t(keys.title)}</h2>
+          <p>{t(keys.body)}</p>
         </div>
         <div className="thanks-actions">
           <Link href="/support" className="thanks-primary" onClick={onClose}>
             <Coffee aria-hidden className="size-4" />
-            赞赏支持
+            {t('thanks.support')}
           </Link>
           <a
             href={product.url}
@@ -175,20 +151,20 @@ function ThanksModal({ reason, onClose }: { reason: string | null; onClose: () =
           >
             <span className="thanks-product-text">
               <span className="thanks-product-row">
-                <span>{product.cta}</span>
-                <span className="thanks-badge">{product.badge}</span>
+                <span>{t(product.ctaKey)}</span>
+                <span className="thanks-badge">{t('thanks.free')}</span>
               </span>
-              <span className="thanks-tagline">{product.tagline}</span>
+              <span className="thanks-tagline">{t(product.tagKey)}</span>
             </span>
             <span aria-hidden>→</span>
           </a>
           <button type="button" className="thanks-share" onClick={() => void share()}>
             <Share2 aria-hidden className="size-4" />
-            分享实验室
+            {t('thanks.share')}
           </button>
         </div>
         <button type="button" className="thanks-continue" onClick={onClose}>
-          继续学习
+          {t('thanks.continue')}
         </button>
       </div>
     </div>

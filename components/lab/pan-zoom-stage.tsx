@@ -2,6 +2,7 @@
 
 import { Locate, ZoomIn, ZoomOut } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { useI18n } from '@/lib/i18n/provider'
 
 const MIN = 0.45
 const MAX = 5
@@ -40,7 +41,9 @@ function contentBox(rect: DOMRect) {
   return { renderW, renderH, offsetX: 0, offsetY: (rect.height - renderH) / 2 }
 }
 
-export function PanZoomStage({ children, hint }: { children: (viewBox: string) => ReactNode; hint: string }) {
+export function PanZoomStage({ children, hint }: { children: (viewBox: string) => ReactNode; hint?: string }) {
+  const { t } = useI18n()
+  const hintText = hint ?? t('stage.panHint')
   const [view, setView] = useState<View>({ x: 0, y: 0, zoom: 1 })
   const viewRef = useRef(view)
   viewRef.current = view
@@ -154,20 +157,20 @@ export function PanZoomStage({ children, hint }: { children: (viewBox: string) =
     >
       {children(viewBox)}
       <div className="pointer-events-none absolute inset-x-0 bottom-3 flex flex-col items-center gap-2">
-        <p className="hidden rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background md:block">{hint}</p>
+        <p className="hidden rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background md:block">{hintText}</p>
         <div
           role="toolbar"
-          aria-label="视图控制"
+          aria-label={t('stage.viewControls')}
           className="pointer-events-auto flex items-center gap-0.5 rounded-lg border bg-card p-1 shadow-sm"
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <button className="flex size-8 items-center justify-center rounded-md hover:bg-muted" onClick={() => zoomBy(-1)} aria-label="缩小">
+          <button className="flex size-8 items-center justify-center rounded-md hover:bg-muted" onClick={() => zoomBy(-1)} aria-label={t('stage.zoomOut')}>
             <ZoomOut className="size-4" />
           </button>
-          <button className="flex size-8 items-center justify-center rounded-md hover:bg-muted" onClick={() => zoomBy(1)} aria-label="放大">
+          <button className="flex size-8 items-center justify-center rounded-md hover:bg-muted" onClick={() => zoomBy(1)} aria-label={t('stage.zoomIn')}>
             <ZoomIn className="size-4" />
           </button>
-          <button className="flex size-8 items-center justify-center rounded-md hover:bg-muted" onClick={reset} aria-label="重置视角">
+          <button className="flex size-8 items-center justify-center rounded-md hover:bg-muted" onClick={reset} aria-label={t('stage.reset')}>
             <Locate className="size-4" />
           </button>
           <span className="px-2 font-mono text-[10px] text-muted-foreground">{Math.round(view.zoom * 100)}%</span>
