@@ -85,10 +85,17 @@ export function Lab() {
     if (part) focusPart(part)
   }
 
+  const focusBoardHotspot = (id: string) => {
+    const part = sceneParts.find((p) => p.key === `board-${id}`)
+    if (part) focusPart(part)
+  }
+
   const clearFocus = () => {
     setFocusedPart(null)
     focusTargetRef.current = null
   }
+
+  const selectedBoardHotspot = focusedPart?.key.startsWith('board-') ? focusedPart.key.slice('board-'.length) : null
 
   const openDiagram = (mode: Extract<StageViewMode, 'schematic' | 'pinout'>) => {
     setStageMode(mode)
@@ -143,6 +150,8 @@ export function Lab() {
                     focusElRef={focusElRef}
                     focusAt={focusedPart?.at ?? null}
                     onPickCallout={focusByCallout}
+                    onPickBoardHotspot={focusBoardHotspot}
+                    selectedBoardHotspot={selectedBoardHotspot}
                   />
                   {showLabels && (
                     <CalloutLayer

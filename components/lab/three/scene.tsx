@@ -45,6 +45,8 @@ type SceneProps = {
   focusElRef?: RefObject<HTMLDivElement | null>
   focusAt?: [number, number, number] | null
   onPickCallout?: (index: number) => void
+  onPickBoardHotspot?: (id: string) => void
+  selectedBoardHotspot?: string | null
 }
 
 function Controls({ extent, viewRef }: { extent: number; viewRef: RefObject<ViewApi | null> }) {
@@ -239,6 +241,8 @@ export default function Scene({
   focusElRef,
   focusAt = null,
   onPickCallout,
+  onPickBoardHotspot,
+  selectedBoardHotspot = null,
 }: SceneProps) {
   const { extent } = LESSON_SCENES[lessonId]
   return (
@@ -274,6 +278,8 @@ export default function Scene({
           inputs={inputs}
           setInput={setInput}
           onPickCallout={onPickCallout}
+          onPickBoardHotspot={onPickBoardHotspot}
+          selectedBoardHotspot={selectedBoardHotspot}
         />
       </ShadowCasters>
       <SelectionRing at={focusAt} />

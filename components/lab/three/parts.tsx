@@ -677,6 +677,8 @@ export type CalloutSpec = {
   interactive?: boolean
   pickable?: boolean
   icon?: CalloutIcon
+  /** When set, scene-part key becomes `board-${hotspotId}` for Esp32Board picks. */
+  hotspotId?: string
   /** Prefer `controls` (multiple rows). `control` kept for single-control lessons. */
   control?: PartControl
   controls?: PartControl[]

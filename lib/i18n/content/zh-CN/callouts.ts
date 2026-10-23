@@ -5,11 +5,17 @@ export type CalloutText = { title: string; body: string }
 export const CALLOUTS_ZH: Partial<Record<LessonId, CalloutText[]>> = {
   'board': [
     { title: 'USB 口', body: '供电、烧录程序和串口通信' },
+    { title: 'USB 转串口', body: '把 USB 数据转成 UART，电脑才能和 ESP32 对话' },
+    { title: '3.3V 稳压', body: '把 USB 5V 稳到 3.3V，给芯片和外设供电' },
+    { title: '晶振', body: '给 USB 转串口芯片提供精确时钟' },
+    { title: 'EN 复位键', body: '按下重启芯片，程序从头执行' },
+    { title: 'BOOT 键', body: '上传卡住 Connecting… 时按住它进入下载模式' },
+    { title: '电源灯', body: '板子有电时亮起的红色指示灯' },
+    { title: '板载 LED', body: '接在 GPIO2，示例程序常用来闪灯' },
     { title: 'ESP32 模组', body: '双核处理器 + 4MB Flash，金属罩防干扰' },
     { title: 'PCB 天线', body: 'Wi-Fi 和蓝牙信号从这里收发' },
-    { title: 'BOOT / EN 按键', body: 'EN 复位重启；BOOT 进入下载模式' },
-    { title: '板载 LED', body: '多数开发板接在 GPIO2' },
-    { title: 'GPIO 引脚', body: '两排共 38 针，连接各种元件' },
+    { title: '左侧排针', body: '3V3、EN、ADC、DAC、GND、5V 等' },
+    { title: '右侧排针', body: 'UART、I²C、SPI、常用 GPIO' },
   ],
   'blink': [
     { title: 'GPIO2', body: '程序控制它输出 3.3V 或 0V' },

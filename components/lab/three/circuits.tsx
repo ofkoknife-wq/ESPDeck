@@ -1,9 +1,10 @@
 'use client'
 
-import { BB_TOP, BOARD_X, HEADER_Z, PCB_TOP, type Vec3, hole, mid, pinPos, up } from '@/lib/geometry'
+import { BB_TOP, BOARD_X, PCB_TOP, type Vec3, hole, mid, pinPos, up } from '@/lib/geometry'
 import type { LessonId } from '@/lib/lessons'
 import type { SimInputs, SimOutputs } from '@/lib/use-simulation'
 import { Esp32Board } from './board'
+import { boardHotspotsAsCallouts } from './board-hotspots'
 import { Breadboard } from './breadboard'
 import {
   Buzzer,
@@ -41,6 +42,8 @@ type CircuitProps = {
   inputs: SimInputs
   setInput: <K extends keyof SimInputs>(key: K, value: SimInputs[K] | ((prev: SimInputs[K]) => SimInputs[K])) => void
   onPickCallout?: (index: number) => void
+  onPickBoardHotspot?: (id: string) => void
+  selectedBoardHotspot?: string | null
 }
 
 const LED_ANODE = hole(7, 1)
@@ -87,38 +90,16 @@ const GND_CALLOUT: CalloutSpec = {
   pickable: true,
 }
 
-const BOARD_CALLOUTS: CalloutSpec[] = [
-  { at: [BOARD_X - 2.8, PCB_TOP + 0.1, 0], title: 'USB 口', body: '供电、烧录程序和串口通信', dx: -60, dy: 110, pickable: true },
-  {
-    at: [BOARD_X + 1.175, PCB_TOP + 0.35, 0],
-    title: 'ESP32 模组',
-    body: '双核处理器 + 4MB Flash，金属罩防干扰',
-    dx: -30,
-    dy: -150,
-    pickable: true,
-  },
-  { at: [BOARD_X + 2.45, PCB_TOP + 0.1, 0.4], title: 'PCB 天线', body: 'Wi-Fi 和蓝牙信号从这里收发', dx: 80, dy: -90, pickable: true },
-  {
-    at: [BOARD_X - 2.2, PCB_TOP + 0.2, 0.72],
-    title: 'BOOT / EN 按键',
-    body: 'EN 复位重启；BOOT 进入下载模式',
-    dx: -40,
-    dy: -150,
-    pickable: true,
-  },
-  { at: [BOARD_X - 1.3, PCB_TOP + 0.1, 0.82], title: '板载 LED', body: '多数开发板接在 GPIO2', dx: 20, dy: 140, pickable: true },
-  {
-    at: [BOARD_X + 0.5, PCB_TOP + 0.35, HEADER_Z],
-    title: 'GPIO 引脚',
-    body: '两排共 38 针，连接各种元件',
-    dx: 120,
-    dy: 100,
-    pickable: true,
-  },
-]
+const BOARD_CALLOUTS: CalloutSpec[] = boardHotspotsAsCallouts()
 
-function BoardLesson({ outputs }: CircuitProps) {
-  return <Esp32Board onboard={outputs.onboard} />
+function BoardLesson({ outputs, onPickBoardHotspot, selectedBoardHotspot }: CircuitProps) {
+  return (
+    <Esp32Board
+      onboard={outputs.onboard}
+      selectedId={selectedBoardHotspot}
+      onPickHotspot={onPickBoardHotspot}
+    />
+  )
 }
 
 function BlinkLesson({ outputs, onPickCallout }: CircuitProps) {
@@ -1025,7 +1006,13 @@ export function LessonCircuit({ lessonId, ...props }: CircuitProps & { lessonId:
   const { Component } = scene
   return (
     <group position={[scene.offsetX, 0, 0]}>
-      {lessonId !== 'board' && <Esp32Board onboard={props.outputs.onboard} />}
+      {lessonId !== 'board' && (
+        <Esp32Board
+          onboard={props.outputs.onboard}
+          selectedId={props.selectedBoardHotspot}
+          onPickHotspot={props.onPickBoardHotspot}
+        />
+      )}
       {scene.breadboard && <Breadboard />}
       <Component {...props} />
     </group>

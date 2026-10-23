@@ -5,11 +5,17 @@ export type CalloutText = { title: string; body: string }
 export const CALLOUTS_EN: Partial<Record<LessonId, CalloutText[]>> = {
   'board': [
     { title: 'USB port', body: 'Power, flashing, and serial' },
-    { title: 'ESP32 module', body: 'Dual-core + 4MB flash, shield for RF' },
+    { title: 'USB-UART bridge', body: 'Turns USB into UART so your PC can talk to the ESP32' },
+    { title: '3.3V regulator', body: 'Steps USB 5V down to a steady 3.3V for the chip' },
+    { title: 'Crystal', body: 'Clocks the USB-UART bridge accurately' },
+    { title: 'EN (reset)', body: 'Press to reboot — your sketch starts over' },
+    { title: 'BOOT button', body: 'Hold if upload sticks on Connecting… to enter download mode' },
+    { title: 'Power LED', body: 'Red light whenever the board is powered' },
+    { title: 'Onboard LED', body: 'Wired to GPIO2 — classic blink target' },
+    { title: 'ESP32 module', body: 'Dual-core + 4MB flash, metal shield for RF' },
     { title: 'PCB antenna', body: 'Wi-Fi and Bluetooth radiate here' },
-    { title: 'BOOT / EN buttons', body: 'EN resets; BOOT enters download mode' },
-    { title: 'Onboard LED', body: 'Usually wired to GPIO2' },
-    { title: 'GPIO headers', body: 'Two rows, 38 pins for peripherals' },
+    { title: 'Left header', body: '3V3, EN, ADC, DAC, GND, 5V, and more' },
+    { title: 'Right header', body: 'UART, I²C, SPI, and common GPIOs' },
   ],
   'blink': [
     { title: 'GPIO2', body: 'Firmware drives it to 3.3V or 0V' },
